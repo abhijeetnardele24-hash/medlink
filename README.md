@@ -70,6 +70,129 @@ flowchart TB
 | WebRTC + STUN/TURN | Low-latency audio/video media transport and connectivity traversal. |
 | Object storage | Access-controlled attachments and metadata/checksums; attachments are not stored as database blobs. |
 
+### Technical reference architecture — production target
+
+The diagram below is the senior-engineering reference design for a scalable deployment. The academic demo can run the same logical services locally with Docker; cloud networking, managed services, replicas and monitoring are future production hardening layers.
+
+```mermaid
+flowchart TB
+    subgraph Clients[Client Layer]
+        PA[Patient App<br/>Flutter Android]
+        DW[Doctor Dashboard<br/>React Web]
+        CW[Coordinator Console<br/>React Web]
+    end
+
+    subgraph Edge[Public Edge and Trust Boundary]
+        DNS[DNS and TLS]
+        WAF[WAF / Rate Limiting]
+        CDN[CDN / Static Web Hosting]
+        GW[API Gateway / Reverse Proxy<br/>HTTPS + WSS termination]
+    end
+
+    subgraph Identity[Identity and Access]
+        IDP[Identity Provider<br/>Firebase Auth / OIDC]
+        RBAC[Authorisation Policy Layer<br/>RBAC + ownership + consent]
+        SECRETS[Secrets Manager<br/>tokens, TURN credentials, storage keys]
+    end
+
+    subgraph PrivateRuntime[Private Application Network]
+        API[API Service<br/>Node.js + TypeScript<br/>REST / OpenAPI]
+        RT[Realtime Signalling Service<br/>Socket.IO / WebSocket]
+        SYNC[Sync Worker<br/>idempotency + conflict handling]
+        SCHED[Scheduling and Task Worker<br/>slots, reminders, escalation]
+        MATCH[Recommendation Service<br/>explainable speciality ranking]
+        NOTIFY[Notification Adapter<br/>in-app first, external adapters later]
+    end
+
+    subgraph Data[Private Data Layer]
+        PG[(PostgreSQL Primary<br/>records, appointments, audit)]
+        REPLICA[(Read Replica<br/>future scale option)]
+        REDIS[(Redis<br/>presence, rate limits, queue)]
+        OBJECT[(Object Storage<br/>encrypted attachments)]
+        BACKUP[(Encrypted Backup / Restore<br/>future production requirement)]
+    end
+
+    subgraph Media[Real-Time Media Plane]
+        STUN[STUN Service]
+        TURN[TURN Relay<br/>coturn]
+    end
+
+    PA -->|HTTPS REST / WSS| DNS
+    DW -->|HTTPS REST / WSS| DNS
+    CW -->|HTTPS REST / WSS| DNS
+    DNS --> WAF --> GW
+    CDN --> DW
+    CDN --> CW
+    GW --> API
+    GW --> RT
+
+    PA -->|OIDC sign-in| IDP
+    DW -->|OIDC sign-in| IDP
+    CW -->|OIDC sign-in| IDP
+    API -->|verify identity token| IDP
+    API --> RBAC
+    API --> SECRETS
+    RT --> SECRETS
+
+    API --> PG
+    API --> OBJECT
+    API --> REDIS
+    RT --> REDIS
+    SYNC --> PG
+    SCHED --> PG
+    SCHED --> REDIS
+    MATCH --> PG
+    NOTIFY --> REDIS
+    PG -. asynchronous replication .-> REPLICA
+    PG -. encrypted backup .-> BACKUP
+
+    PA <-->|WebRTC media| STUN
+    DW <-->|WebRTC media| STUN
+    PA <-->|relayed media when required| TURN
+    DW <-->|relayed media when required| TURN
+    RT -->|offer, answer, ICE candidates only| PA
+    RT -->|offer, answer, ICE candidates only| DW
+```
+
+#### Network and security boundaries
+
+| Zone | Components | Engineering rule |
+|---|---|---|
+| Public edge | DNS, TLS termination, WAF, static-web delivery, gateway | Expose only HTTPS/WSS and required TURN ports; rate-limit and reject malformed traffic before it reaches services. |
+| Identity boundary | OIDC/Firebase identity provider and backend token verification | Clients authenticate with the identity provider; APIs trust only validated, unexpired tokens and never client-provided roles. |
+| Private runtime | API, signalling, sync, scheduling, recommendation and notification services | Services are not directly internet-facing. They receive traffic only through the gateway and use least-privilege service credentials. |
+| Data boundary | PostgreSQL, Redis, object storage, backups | No public database access. Encrypt in transit/at rest, use private network rules, versioned migrations and tested restore processes. |
+| Media plane | STUN/TURN | WebRTC media is separate from APIs. TURN credentials are short-lived and media telemetry excludes clinical content. |
+
+### DevSecOps, delivery and observability architecture
+
+```mermaid
+flowchart LR
+    DEV[Developer Workstation]
+    GH[GitHub Repository<br/>main branch + pull requests]
+    CI[CI Pipeline<br/>lint, unit test, API contract test,<br/>dependency scan, secret scan]
+    BUILD[Build and Package<br/>Flutter APK, web bundle,<br/>versioned backend container]
+    REG[Artifact / Container Registry]
+    CD[Deployment Pipeline<br/>staging → approval → production]
+    IAC[Infrastructure as Code<br/>network, runtime, data policies]
+    RUN[Runtime Services]
+    OBS[Observability Stack<br/>metrics, structured logs, traces,<br/>uptime checks, alert rules]
+    SEC[Security Operations<br/>audit review, vulnerability triage,<br/>backup/restore verification]
+
+    DEV -->|commit / pull request| GH
+    GH --> CI
+    CI -->|quality gate passed| BUILD
+    BUILD --> REG
+    IAC --> CD
+    REG --> CD
+    CD --> RUN
+    RUN -->|health, metrics, logs, traces| OBS
+    OBS -->|alerts and dashboards| SEC
+    RUN -->|security and access events| SEC
+```
+
+The minimum release quality gate is: formatting/lint checks, unit tests, API validation tests, role-access tests, offline-sync tests, dependency/secret scan, and a manually verified degraded-network consultation scenario. Production deployment should additionally require database migration review, backup/restore evidence, monitored error budgets and a rollback plan.
+
 ## Users, roles and access model
 
 MedLink separates clinical care from platform operations. Every request is authorised by the backend; hiding a screen option is never treated as access control.
