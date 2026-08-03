@@ -322,12 +322,120 @@ Each queued operation has an `operation_id`, record version, retry state and err
 | User, Patient, Doctor | Identity and role-specific profile data. |
 | DoctorVerification, AvailabilitySlot | Verification state and publicly bookable time slots. |
 | Appointment, Encounter | Scheduled care relationship and actual consultation lifecycle. |
-| Message, Prescription, Attachment | Authorised communication and clinical artefacts. |
+| ConsultationNote, ConsultationSummary | Doctor-authored draft/final clinical documentation and a patient-visible final summary. |
+| Prescription, Attachment | Issued prescription versions and authorised clinical documents/reports. |
+| PatientHealthDiaryEntry | Patient-owned journal entry; never shared with a doctor unless the patient explicitly chooses to share it. |
 | ConsentGrant | Purpose-, scope- and time-bound data-sharing permission. |
 | ReminderTask | Coordinator-owned operational follow-up task and outcome. |
-| PaymentRecord (demo only) | `FREE_DEMO`, `PENDING`, `SUCCESS`, `FAILED` or `REFUNDED`; no real payment information. |
+| Invoice, PaymentRecord (demo only) | Price snapshot and `FREE_DEMO`, `PENDING`, `SUCCESS`, `FAILED` or `REFUNDED` status; no real payment information. |
+| RecordingAsset (future) | Consent-bound encrypted recording metadata, checksum, retention date and access-audit trail; media remains in protected object storage. |
 | RecommendationEvent | Matching input/output/explanation version for transparency and evaluation. |
 | SyncOperation, AuditEvent | Reliable synchronisation evidence and minimally necessary security/operational audit trail. |
+
+## Clinical, financial and media records
+
+MedLink treats clinical records, payment information and recorded media as separate protected domains. The system stores only the minimum data required for each purpose, applies purpose-specific consent, and records access to sensitive artefacts.
+
+### Visibility and ownership model
+
+| Record | Patient | Assigned doctor | Coordinator/admin | Rules |
+|---|---:|---:|---:|---|
+| Appointment and slot status | View | View/manage | View/manage | Coordinator sees operational status only. |
+| Doctor draft consultation note | No | Create/view/edit until finalised | No | Clinical working document; never exposed by default. |
+| Final consultation summary | View/download | Create/finalise/view | No | Immutable/versioned after finalisation; amendment creates a new version. |
+| Prescription | View/download | Issue/amend/view | No | Signed/issued version is immutable; correction is an amendment, not silent edit. |
+| Patient report or image | View/manage consent | View only with active consent | No | Attachment access is time- and encounter-scoped. |
+| Patient health diary | View/create/edit | Only if patient shares it | No | Patient-owned by default; sharing can be revoked for future access. |
+| Invoice and receipt | View/download | View consultation fee/settlement state | View/manage payment status | No card, UPI, bank or gateway secrets stored by MedLink. |
+| Consultation recording | View only with explicit recording consent | View only with explicit recording consent | No by default | Disabled by default; access is audited and expires under retention policy. |
+
+### Consultation notes, prescriptions and patient diary
+
+```text
+Doctor creates consultation note as DRAFT
+        ↓
+Doctor reviews and FINALISES the clinical summary
+        ↓
+Patient receives authorised final summary and prescription
+        ↓
+If correction is required: create AMENDMENT linked to original version
+
+Patient health diary remains private
+        ↓
+Patient selects “Share with doctor for this encounter”
+        ↓
+Doctor receives time-bound, consent-scoped access
+```
+
+This separation prevents accidental disclosure of unfinished clinical notes while giving the patient access to the agreed consultation outcome. All finalisation, amendment, access, export and consent-revocation actions create audit events.
+
+### Price, invoice, receipt and payment status
+
+MedLink supports the booking and accounting workflow without handling real payment in the educational prototype.
+
+```text
+Doctor publishes consultation fee
+        ↓
+Patient selects a slot
+        ↓
+System creates immutable fee snapshot in Invoice
+        ↓
+Demo PaymentRecord transitions:
+FREE_DEMO → PENDING → SUCCESS / FAILED / REFUNDED
+        ↓
+After doctor acceptance, patient receives booking confirmation and demo receipt
+```
+
+`Invoice` stores the displayed consultation fee, optional discount, total, currency and status at booking time. `PaymentRecord` stores only a demo status and non-sensitive reference. MedLink must never store payment-card number, CVV, UPI PIN, bank account information or payment-gateway secret. A production payment-provider integration is future scope and requires refund, dispute, reconciliation and legal/compliance workflows.
+
+### Consent-first consultation recording — future phase
+
+Recording is not part of the first MVP. It is a high-sensitivity feature that requires a dedicated media pipeline, clear consent, storage budgeting, retention policy, secure deletion and access auditing. The core MVP stores the encounter timeline, messages, notes, prescription, reports, invoice/receipt and network-mode history instead.
+
+If recording is enabled in a later phase, it follows this explicit workflow:
+
+```mermaid
+sequenceDiagram
+    participant Patient
+    participant Doctor
+    participant App as MedLink Client
+    participant API as Consent and Recording Service
+    participant Recorder as Media Recorder / SFU
+    participant Storage as Encrypted Object Storage
+
+    Patient->>App: Accept recording purpose, retention and access notice
+    Doctor->>App: Accept recording purpose, retention and access notice
+    App->>API: Submit both recording-consent events
+    API-->>App: Recording permitted; show persistent recording indicator
+    App->>Recorder: Start media recording for authorised encounter
+    Recorder->>Storage: Store encrypted media and checksum
+    Recorder->>API: Save RecordingAsset metadata and retention date
+    Patient->>API: Request authorised playback/download
+    API-->>Patient: Time-limited audited access link
+    Doctor->>API: Request authorised playback/download
+    API-->>Doctor: Time-limited audited access link
+```
+
+The architecture requirement is important: a normal peer-to-peer WebRTC call does not automatically create a server-side recording. Production recording needs a separate media recorder or SFU/recording service. It must write encrypted media to protected object storage rather than through the main Node.js API process.
+
+```text
+Patient / Doctor WebRTC media
+             ↓
+Media recorder or SFU recording worker
+             ↓
+Encrypt + checksum + malware/media validation
+             ↓
+Protected object storage
+             ↓
+RecordingAsset metadata in PostgreSQL
+  - encounter ID, both consent IDs, storage key, checksum
+  - started/ended timestamps, retention-until, deletion status
+  - access audit events, no recording content in application logs
+             ↓
+RBAC + consent check → short-lived signed playback/download URL
+```
+
+Mandatory recording controls are: recording disabled by default, explicit consent from both patient and doctor, always-visible recording indicator, start/stop audit events, encryption in transit and at rest, no coordinator access by default, retention date, secure deletion workflow, and an access log for every playback/download. In the free presentation demo, a short synthetic recording may be used only as an optional proof of concept; no real patient data or real consultation recording is permitted.
 
 ## Security and privacy architecture
 
