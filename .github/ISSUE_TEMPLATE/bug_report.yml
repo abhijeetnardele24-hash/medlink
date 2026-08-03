@@ -1,0 +1,46 @@
+name: Bug report
+description: Report a reproducible defect in MedLink.
+title: "fix(scope): "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: "Use synthetic data only. Never include credentials, medical data, recordings, or personal information."
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Provide minimal, safe steps to reproduce the issue.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Include safe logs, screenshots with synthetic data, or error messages.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Patient mobile app
+        - Doctor/coordinator web dashboard
+        - API/authentication
+        - Offline sync
+        - WebRTC/network switching
+        - Documentation
+        - Other
+    validations:
+      required: true

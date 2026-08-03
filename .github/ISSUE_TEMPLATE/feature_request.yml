@@ -1,0 +1,43 @@
+name: Feature request
+description: Propose a scoped, evidence-based MedLink improvement.
+title: "feat(scope): "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: "Describe the user outcome. Do not include real patient, medical, financial or credential data."
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: Which user has this problem and why does it matter?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful solution, roles affected and expected flow.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that prove the feature works.
+      placeholder: |
+        - [ ] ...
+        - [ ] ...
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - MVP
+        - Next milestone
+        - Future scope
+    validations:
+      required: true

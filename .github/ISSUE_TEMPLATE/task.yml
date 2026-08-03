@@ -1,0 +1,27 @@
+name: Development task
+description: Track a small, testable engineering or documentation task.
+title: "chore(scope): "
+labels:
+  - task
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: State the concrete result to deliver.
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation plan
+      description: List intended files/components and technical approach.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List validation steps and the expected result.
+    validations:
+      required: true

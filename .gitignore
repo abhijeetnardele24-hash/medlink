@@ -60,3 +60,6 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Generated documentation artefacts (README.md is the canonical source)
+README.pdf
