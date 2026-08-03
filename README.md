@@ -406,7 +406,7 @@ sequenceDiagram
     Patient->>App: Accept recording purpose, retention and access notice
     Doctor->>App: Accept recording purpose, retention and access notice
     App->>API: Submit both recording-consent events
-    API-->>App: Recording permitted; show persistent recording indicator
+    API-->>App: Recording permitted - display recording indicator
     App->>Recorder: Start media recording for authorised encounter
     Recorder->>Storage: Store encrypted media and checksum
     Recorder->>API: Save RecordingAsset metadata and retention date
