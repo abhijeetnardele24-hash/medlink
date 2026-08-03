@@ -7,6 +7,8 @@ npm install
 cp .env.example .env
 ```
 
+Set real DB values in `.env` before running the API.
+
 ## Run locally
 
 ```bash

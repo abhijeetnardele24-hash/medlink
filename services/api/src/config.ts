@@ -20,8 +20,10 @@ const parsePort = (value: string | undefined): number => {
 };
 
 export const getApiConfig = (): ApiConfig => {
-  const databaseUrl =
-    process.env.DATABASE_URL ?? "postgres://medlink:medlink@localhost:5432/medlink";
+  const databaseUrl = process.env.DATABASE_URL;
+  if (databaseUrl === undefined || databaseUrl.trim().length === 0) {
+    throw new Error("DATABASE_URL is required");
+  }
 
   return {
     port: parsePort(process.env.PORT),

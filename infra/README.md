@@ -7,6 +7,7 @@ This folder contains local infrastructure setup for MedLink services.
 Run from `infra/docker-compose.yml`:
 
 ```bash
+cp infra/.env.example infra/.env
 docker compose -f infra/docker-compose.yml up --build
 ```
 
