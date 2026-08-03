@@ -8,6 +8,19 @@ The platform manages the complete telemedicine lifecycle: verified doctor discov
 
 > **Academic scope:** MedLink is an educational prototype built with synthetic/demo data. It is not a certified medical device, does not make diagnoses, does not process real payments, and must not be used for emergencies or real clinical deployment without legal, clinical, security and operational approval.
 
+## Repository workspace
+
+```text
+medlink/
+├── apps/
+│   ├── patient-mobile/      Flutter app
+│   └── doctor-web/          React dashboard
+├── services/
+│   └── api/                 Node.js + TypeScript backend
+├── infra/                   Docker and infrastructure files
+└── docs/                    Architecture decisions
+```
+
 ## Project objective
 
 Conventional telemedicine applications are commonly designed around stable video connectivity. In rural or remote areas, unstable mobile data can interrupt a consultation, prevent appointment updates and lose information entered during the call.

@@ -14,11 +14,13 @@
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "pg": "^8.22.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
+    "@types/pg": "^8.20.3",
     "ts-node-dev": "^2.0.0",
     "typescript": "^7.0.2"
   }
