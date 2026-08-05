@@ -16,7 +16,7 @@
 
 import { Router, type Request, type Response } from "express";
 import { eq, and } from "drizzle-orm";
-import { db } from "../db";
+import { getDb } from "../db";
 import {
   appointments,
   patients,
@@ -41,7 +41,7 @@ const router = Router();
 // ─── Helper: get the patient record for the current user ──────────────────────
 
 const getPatientForUser = async (firebaseUid: string) => {
-  const rows = await db
+  const rows = await getDb()
     .select({ id: patients.id })
     .from(patients)
     .innerJoin(users, eq(users.id, patients.userId))
@@ -53,7 +53,7 @@ const getPatientForUser = async (firebaseUid: string) => {
 // ─── Helper: get the doctor record for the current user ───────────────────────
 
 const getDoctorForUser = async (firebaseUid: string) => {
-  const rows = await db
+  const rows = await getDb()
     .select({ id: doctors.id })
     .from(doctors)
     .innerJoin(users, eq(users.id, doctors.userId))
@@ -65,7 +65,7 @@ const getDoctorForUser = async (firebaseUid: string) => {
 // ─── Helper: get user id from firebase uid ────────────────────────────────────
 
 const getUserIdForFirebaseUid = async (firebaseUid: string) => {
-  const rows = await db
+  const rows = await getDb()
     .select({ id: users.id })
     .from(users)
     .where(eq(users.firebaseUid, firebaseUid))
@@ -95,7 +95,7 @@ router.post(
     if (!patient) throw new NotFoundError("Patient profile");
 
     // Verify the target doctor exists and is verified
-    const doctorRows = await db
+    const doctorRows = await getDb()
       .select({ id: doctors.id, verificationStatus: doctors.verificationStatus })
       .from(doctors)
       .where(eq(doctors.id, body.doctorId))
@@ -105,7 +105,7 @@ router.post(
       throw new NotFoundError("Verified doctor");
     }
 
-    const [appointment] = await db
+    const [appointment] = await getDb()
       .insert(appointments)
       .values({
         patientId: patient.id,
@@ -122,7 +122,7 @@ router.post(
     // Write audit event — no clinical content
     const userId = await getUserIdForFirebaseUid(uid);
     if (userId) {
-      await db.insert(auditEvents).values({
+      await getDb().insert(auditEvents).values({
         actorId: userId,
         actorRole: "patient",
         action: "appointment.create",
@@ -171,7 +171,7 @@ router.get(
     const conditions = ownerCondition ? [ownerCondition] : [];
     if (status) conditions.push(eq(appointments.status, status));
 
-    const rows = await db
+    const rows = await getDb()
       .select()
       .from(appointments)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
@@ -190,9 +190,9 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const { uid, role } = res.locals.user;
-    const { id } = _req.params;
+    const id = _req.params.id as string;
 
-    const rows = await db
+    const rows = await getDb()
       .select()
       .from(appointments)
       .where(eq(appointments.id, id))
@@ -222,7 +222,7 @@ router.patch(
   validateBody(patchAppointmentSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const { uid, role } = res.locals.user;
-    const { id } = _req.params;
+    const id = _req.params.id as string;
     const body = _req.body as {
       action: string;
       scheduledAt?: string;
@@ -230,7 +230,7 @@ router.patch(
       version: number;
     };
 
-    const rows = await db
+    const rows = await getDb()
       .select()
       .from(appointments)
       .where(eq(appointments.id, id))
@@ -275,7 +275,7 @@ router.patch(
     if (!newStatus) throw new UnprocessableError(`Unknown action: ${body.action}`);
 
     // Reservation: confirm action books the slot atomically
-    await db.transaction(async (tx) => {
+    await getDb().transaction(async (tx) => {
       if (body.action === "confirm" && appt.slotId) {
         await tx
           .update(availabilitySlots)
@@ -307,7 +307,7 @@ router.patch(
     // Write audit event
     const userId = await getUserIdForFirebaseUid(uid);
     if (userId) {
-      await db.insert(auditEvents).values({
+      await getDb().insert(auditEvents).values({
         actorId: userId,
         actorRole: role as "patient" | "doctor" | "coordinator" | "admin",
         action: `appointment.${body.action}`,
@@ -323,7 +323,7 @@ router.patch(
     );
 
     // Return the updated record
-    const updated = await db
+    const updated = await getDb()
       .select()
       .from(appointments)
       .where(eq(appointments.id, id))

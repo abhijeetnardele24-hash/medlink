@@ -16,7 +16,7 @@
 
 import { Router, type Request, type Response } from "express";
 import { eq, and, gte, sql } from "drizzle-orm";
-import { db } from "../db";
+import { getDb } from "../db";
 import { doctors, availabilitySlots, users } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
@@ -47,7 +47,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   const conditions = [eq(doctors.verificationStatus, "verified")];
   if (speciality) conditions.push(eq(doctors.speciality, speciality));
 
-  const rows = await db
+  const rows = await getDb()
     .select({
       id: doctors.id,
       fullName: doctors.fullName,
@@ -73,9 +73,9 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 // ─── GET /doctors/:id ─────────────────────────────────────────────────────────
 
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
-  const result = await db
+  const result = await getDb()
     .select({
       id: doctors.id,
       fullName: doctors.fullName,
@@ -117,7 +117,7 @@ router.post(
     };
 
     // Find the doctor record for the authenticated user
-    const doctorRows = await db
+    const doctorRows = await getDb()
       .select({ id: doctors.id, verificationStatus: doctors.verificationStatus })
       .from(doctors)
       .innerJoin(users, eq(users.id, doctors.userId))
@@ -137,7 +137,7 @@ router.post(
       );
     }
 
-    const [updated] = await db
+    const [updated] = await getDb()
       .update(doctors)
       .set({
         fullName: body.fullName,
@@ -178,7 +178,7 @@ router.post(
       supportedModes: ("video" | "audio" | "async_chat" | "offline")[];
     };
 
-    const doctorRows = await db
+    const doctorRows = await getDb()
       .select({ id: doctors.id, verificationStatus: doctors.verificationStatus })
       .from(doctors)
       .innerJoin(users, eq(users.id, doctors.userId))
@@ -195,7 +195,7 @@ router.post(
       );
     }
 
-    const [slot] = await db
+    const [slot] = await getDb()
       .insert(availabilitySlots)
       .values({
         doctorId: doctor.id,
@@ -214,12 +214,12 @@ router.post(
 // ─── GET /doctors/:id/availability ───────────────────────────────────────────
 
 router.get("/:id/availability", async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   // Only show future available slots to patients
   const now = new Date();
 
-  const slots = await db
+  const slots = await getDb()
     .select({
       id: availabilitySlots.id,
       startsAt: availabilitySlots.startsAt,

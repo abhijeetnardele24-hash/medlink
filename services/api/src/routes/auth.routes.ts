@@ -16,7 +16,7 @@
 
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { getDb } from "../db";
 import { users, patients, doctors } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { validateBody } from "../middleware/validateBody";
@@ -49,7 +49,7 @@ router.post(
     const name = displayName ?? decoded.name ?? "";
 
     // Idempotency: return existing user if already registered
-    const existing = await db
+    const existing = await getDb()
       .select()
       .from(users)
       .where(eq(users.firebaseUid, firebaseUid))
@@ -74,7 +74,7 @@ router.post(
     }
 
     // Create user + role-specific profile in a transaction
-    await db.transaction(async (tx) => {
+    await getDb().transaction(async (tx) => {
       const [newUser] = await tx
         .insert(users)
         .values({
@@ -125,7 +125,7 @@ router.get(
   async (_req: Request, res: Response): Promise<void> => {
     const { uid } = res.locals.user;
 
-    const result = await db
+    const result = await getDb()
       .select()
       .from(users)
       .where(eq(users.firebaseUid, uid))

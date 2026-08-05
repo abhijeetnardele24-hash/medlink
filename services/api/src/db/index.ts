@@ -1,8 +1,8 @@
 /**
  * MedLink — Drizzle DB client
  *
- * Lazily initialises the pg Pool and Drizzle client on first use.
- * This avoids DATABASE_URL being required at module import time.
+ * Call `getDb()` inside route handlers and services to get the typed
+ * Drizzle client. The pool is created on first call and reused.
  */
 
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
@@ -13,24 +13,15 @@ type Schema = typeof schema;
 
 let _db: NodePgDatabase<Schema> | null = null;
 
-const createDb = (): NodePgDatabase<Schema> => {
-  const databaseUrl = process.env.DATABASE_URL;
+export const getDb = (): NodePgDatabase<Schema> => {
+  if (_db) return _db;
+  const databaseUrl = process.env["DATABASE_URL"];
   if (!databaseUrl || databaseUrl.trim().length === 0) {
     throw new Error("DATABASE_URL environment variable is required");
   }
   const pool = new Pool({ connectionString: databaseUrl });
-  return drizzle(pool, { schema });
+  _db = drizzle(pool, { schema });
+  return _db;
 };
-
-/**
- * Lazily-initialised Drizzle client.
- * Import `db` wherever you need to run queries.
- */
-export const db = new Proxy({} as NodePgDatabase<Schema>, {
-  get(_target, prop) {
-    if (!_db) _db = createDb();
-    return (_db as unknown as Record<string | symbol, unknown>)[prop];
-  },
-});
 
 export type DrizzleDb = NodePgDatabase<Schema>;

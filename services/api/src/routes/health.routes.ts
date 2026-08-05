@@ -8,8 +8,8 @@
  */
 
 import { Router } from "express";
-import { db } from "../db";
 import { sql } from "drizzle-orm";
+import { getDb } from "../db";
 import { logger } from "../logger";
 
 const router = Router();
@@ -20,7 +20,7 @@ router.get("/health", (_req, res) => {
 
 router.get("/health/ready", async (_req, res) => {
   try {
-    await db.execute(sql`SELECT 1`);
+    await getDb().execute(sql`SELECT 1`);
     res.json({ status: "ok", service: "medlink-api", database: "up" });
   } catch (err) {
     logger.warn({ err }, "Database readiness check failed");
