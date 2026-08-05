@@ -17,6 +17,19 @@ services:
       retries: 5
       start_period: 10s
 
+  migrate:
+    build:
+      context: ../services/api
+      dockerfile: Dockerfile
+    container_name: medlink-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    command: ["npm", "run", "db:push"]
+    restart: "no"
+
   api:
     build:
       context: ../services/api
@@ -25,10 +38,16 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: development
       PORT: 3000
       DATABASE_URL: ${DATABASE_URL}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${FIREBASE_SERVICE_ACCOUNT_JSON}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3001}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     ports:
       - "3000:3000"
     restart: unless-stopped
