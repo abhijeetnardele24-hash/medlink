@@ -1,12 +1,11 @@
 import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
-import { getApiConfig } from "./config";
 
-const config = getApiConfig();
+const port = parseInt(process.env.PORT ?? "3000", 10);
 const app = createServer();
 
-app.listen(config.port, () => {
-  console.log(`medlink-api listening on port ${config.port}`);
+app.listen(port, () => {
+  console.log(`medlink-api listening on port ${port}`);
 });
 
 void verifyDatabaseConnection()
