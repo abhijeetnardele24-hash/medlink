@@ -515,3 +515,7 @@ Useful project metrics include mode-switch latency, consultation continuity rate
 The detailed research, rationale, system design, security considerations, sync protocol, algorithms, risks, test plan and references are maintained in [PROJECT_RESEARCH_AND_ANALYSIS.md](PROJECT_RESEARCH_AND_ANALYSIS.md).
 
 Key reference directions include WHO digital-health and AI governance guidance, ABDM/HPR verification context, HL7 FHIR interoperability and WebRTC/TURN technical documentation. These sources inform the architecture but do not constitute an operational compliance certification.
+
+## Contributors
+
+- [@team-narcos](https://github.com/team-narcos)
