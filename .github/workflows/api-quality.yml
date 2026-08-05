@@ -1,0 +1,43 @@
+name: API quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-quality.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "services/api/**"
+      - ".github/workflows/api-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck-and-build:
+    name: Type-check and build API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/api/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
