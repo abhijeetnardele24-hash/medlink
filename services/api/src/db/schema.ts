@@ -213,8 +213,12 @@ export const doctors = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     fullName: text("full_name").notNull(),
-    speciality: text("speciality").notNull(),
-    registrationNumber: text("registration_number").notNull(), // professional licence (demo: synthetic)
+    contactNumber: text("contact_number"),
+    speciality: text("speciality"),
+    registrationNumber: text("registration_number"), // professional licence
+    educationBackground: text("education_background"),
+    experienceYears: integer("experience_years"),
+    isPartTime: boolean("is_part_time"),
     facilityName: text("facility_name"),
     languagesSpoken: text("languages_spoken").array().notNull().default([]),
     supportedModes: text("supported_modes")
