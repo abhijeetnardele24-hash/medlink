@@ -1,122 +1,142 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  /* Premium Dark Mode Colors for Coordinator */
-  --bg-base: #0f172a; /* Slate 900 */
-  --bg-surface: #1e293b; /* Slate 800 */
-  --bg-surface-elevated: #334155; /* Slate 700 */
+  /* Vercel-inspired Minimalist Light Theme */
+  --bg-base: #fafafa;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f5f5f5;
   
-  --primary: #8b5cf6; /* Violet */
-  --primary-hover: #7c3aed;
-  --secondary: #3b82f6; /* Blue */
+  --primary: #000000; 
+  --primary-invert: #ffffff;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
   
-  --text-main: #f8fafc; /* Slate 50 */
-  --text-muted: #94a3b8; /* Slate 400 */
+  --text-main: #171717;
+  --text-muted: #666666;
+  --border: #eaeaea;
   
-  --border: rgba(255, 255, 255, 0.1);
-  --border-focus: rgba(139, 92, 246, 0.5);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Outfit', sans-serif;
 }
 
 body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
-  min-height: 100vh;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism Utilities */
+/* Minimalist Panels */
 .glass-panel {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border-radius: 8px; /* Sharper Vercel-like corners */
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease;
 }
 
-.input-field {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text-main);
-  font-size: 1rem;
-  transition: all 0.2s ease;
+.glass-panel:hover {
+  box-shadow: var(--shadow-md);
 }
 
-.input-field:focus {
-  outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
-}
-
+/* Premium Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-weight: 600;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px; /* Vercel uses tight 6px corners */
+  font-weight: 500;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
-  font-size: 1rem;
+  cursor: pointer;
+  border: none;
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: white;
+  background-color: var(--primary);
+  color: var(--primary-invert);
+  border: 1px solid var(--primary);
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+  background-color: #333333;
+  border-color: #333333;
 }
 
 .btn-primary:disabled {
-  background: var(--bg-surface-elevated);
+  background-color: #e5e5e5;
+  color: #a3a3a3;
+  border-color: #e5e5e5;
   cursor: not-allowed;
-  transform: none;
 }
 
 .btn-secondary {
-  background: transparent;
-  border: 1px solid var(--border);
+  background-color: var(--bg-surface);
   color: var(--text-main);
+  border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-surface-elevated);
+  border-color: #d4d4d4;
 }
 
-.fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+/* Inputs */
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.input-field:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 1px #000000; /* Vercel crisp black focus ring */
+}
+
+.input-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+/* Animations */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .spinner {
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.1);
   border-radius: 50%;
-  border-top: 3px solid var(--primary);
-  width: 20px;
-  height: 20px;
-  animation: spin 1s linear infinite;
+  border-top-color: currentColor;
+  animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }

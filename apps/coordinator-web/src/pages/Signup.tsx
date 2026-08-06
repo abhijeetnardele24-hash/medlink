@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { api } from '../lib/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Mail, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const Login: React.FC = () => {
+export const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      // 1. Create Firebase User
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // 2. Register Coordinator in backend (requires generic auth endpoint or just custom claims, but for demo we will just rely on firebase)
+      // Since coordinators don't have a specific table yet, Firebase Auth is sufficient for this demo.
+      // In a real app, you'd add them to an admins table.
+      
       navigate('/');
     } catch (err: any) {
       console.error(err);
-      setError('Invalid coordinator credentials.');
+      setError(err.message || 'Failed to create account.');
     } finally {
       setLoading(false);
     }
@@ -42,8 +49,8 @@ export const Login: React.FC = () => {
           <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border)', marginBottom: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
             <ShieldCheck size={32} color="var(--primary)" />
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>Coordinator Console</h1>
-          <p style={{ color: 'var(--text-muted)' }}>Secure access for MedLink Administrators</p>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>Coordinator Signup</h1>
+          <p style={{ color: 'var(--text-muted)' }}>Create a MedLink Administrator account</p>
         </div>
 
         {error && (
@@ -57,7 +64,7 @@ export const Login: React.FC = () => {
           </motion.div>
         )}
 
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSignup}>
           <div style={{ marginBottom: '1.25rem' }}>
             <label className="input-label">Work Email</label>
             <div style={{ position: 'relative' }}>
@@ -90,6 +97,7 @@ export const Login: React.FC = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={6}
               />
             </div>
           </div>
@@ -100,11 +108,11 @@ export const Login: React.FC = () => {
             style={{ width: '100%', padding: '1rem', marginBottom: '1.5rem' }}
             disabled={loading}
           >
-            {loading ? <div className="spinner"></div> : 'Authenticate'}
+            {loading ? <div className="spinner"></div> : 'Create Account'}
           </button>
 
           <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Need an admin account? <Link to="/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Sign up</Link>
+            Already have an account? <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Sign in</Link>
           </div>
         </form>
 

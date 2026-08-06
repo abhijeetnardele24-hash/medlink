@@ -14,6 +14,10 @@ interface DoctorVerification {
     speciality: string;
     registrationNumber: string;
     facilityName: string | null;
+    educationBackground: string;
+    experienceYears: number;
+    isPartTime: boolean;
+    contactNumber: string;
   };
 }
 
@@ -125,14 +129,28 @@ export const Dashboard: React.FC = () => {
                   </span>
                 </div>
                 
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)', width: '120px' }}>Reg. Number:</span>
-                    <span style={{ fontWeight: 500 }}>{v.doctor.registrationNumber}</span>
+                <div style={{ background: 'rgba(0,0,0,0.02)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Reg. Number</span>
+                      <span style={{ fontWeight: 500 }}>{v.doctor.registrationNumber}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Experience</span>
+                      <span style={{ fontWeight: 500 }}>{v.doctor.experienceYears} Years</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Facility / Hospital</span>
+                      <span>{v.doctor.facilityName || 'Independent Practice'}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>Employment Type</span>
+                      <span style={{ fontWeight: 500 }}>{v.doctor.isPartTime ? 'Part-Time' : 'Full-Time'}</span>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)', width: '120px' }}>Facility:</span>
-                    <span>{v.doctor.facilityName || 'Independent Practice'}</span>
+                  <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', display: 'block' }}>Education Background</span>
+                    <span style={{ fontWeight: 500 }}>{v.doctor.educationBackground}</span>
                   </div>
                 </div>
                 
