@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Activity, Calendar, Clock, User, LogOut, Users } from 'lucide-react';
+import { HeartPulse, Calendar, Clock, User, LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Layout: React.FC = () => {
@@ -13,23 +13,17 @@ export const Layout: React.FC = () => {
         
         <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)' }}>
           <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Activity color="white" size={24} />
+            <HeartPulse color="white" size={24} />
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>MedLink Doc</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>MedLink</h2>
         </div>
 
         <nav style={{ padding: '2rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <NavLink to="/" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`} end>
-            <Calendar size={20} /> Dashboard
+            <Calendar size={20} /> Appointments
           </NavLink>
-          <NavLink to="/patients" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <Users size={20} /> My Patients
-          </NavLink>
-          <NavLink to="/availability" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <Clock size={20} /> Availability
-          </NavLink>
-          <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <User size={20} /> Profile
+          <NavLink to="/history" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <Clock size={20} /> Medical History
           </NavLink>
         </nav>
 
@@ -39,8 +33,8 @@ export const Layout: React.FC = () => {
               <User size={18} color="var(--text-muted)" />
             </div>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user?.displayName || 'Doctor'}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.email}</div>
+              <div style={{ fontSize: '0.875rem', fontWeight: 600, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user?.displayName || user?.email}</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Patient</div>
             </div>
           </div>
           

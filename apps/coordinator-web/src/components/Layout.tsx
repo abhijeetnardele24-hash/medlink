@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldCheck, LogOut, CheckSquare, Users, UserCog, Settings } from 'lucide-react';
+import { ShieldCheck, LogOut, CheckSquare, Users, UserCog, Settings, Calendar, ListTodo } from 'lucide-react';
 
 export const Layout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -9,6 +9,8 @@ export const Layout: React.FC = () => {
 
   const navItems = [
     { path: '/', icon: <CheckSquare size={20} />, label: 'Verification Queue' },
+    { path: '/tasks', icon: <ListTodo size={20} />, label: 'Task Queue' },
+    { path: '/appointments', icon: <Calendar size={20} />, label: 'Appointments' },
     { path: '/doctors', icon: <UserCog size={20} />, label: 'Doctor Directory' },
     { path: '/patients', icon: <Users size={20} />, label: 'Patient Directory' },
     { path: '/settings', icon: <Settings size={20} />, label: 'System Settings' },
@@ -64,7 +66,7 @@ export const Layout: React.FC = () => {
             <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{user?.email}</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Coordinator</div>
           </div>
-          <button onClick={logout} className="btn btn-secondary" style={{ padding: '0.5rem', border: 'none', background: 'rgba(239,68,68,0.1)', color: '#ef4444' }} title="Log out">
+          <button onClick={logout} className="btn btn-secondary" style={{ padding: '0.5rem', border: 'none', background: 'rgba(239,68,68,0.1)', color: 'var(--danger)' }} title="Log out">
             <LogOut size={18} />
           </button>
         </div>
