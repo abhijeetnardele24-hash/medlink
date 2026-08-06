@@ -50,7 +50,12 @@ export const authenticate = async (
     // In local dev, checkRevoked can sometimes fail. We skip it here.
     const decoded = await admin.auth().verifyIdToken(idToken);
 
-    let role = decoded["role"] as string | undefined;
+    let role = decoded["role"] as
+      | "patient"
+      | "doctor"
+      | "coordinator"
+      | "admin"
+      | undefined;
 
     // Fallback: If custom claims haven't propagated to the client JWT yet,
     // look up the role from the database.
