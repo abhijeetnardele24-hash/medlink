@@ -49,28 +49,8 @@ export const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <div className="app-container" style={{ background: 'var(--bg-base)', minHeight: '100vh' }}>
-      {/* Header */}
-      <header className="glass-panel" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', padding: '1rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <HeartPulse color="white" size={24} />
-          </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>MedLink</h2>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>{user?.displayName || user?.email}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Patient</div>
-          </div>
-          <button onClick={logout} className="btn btn-secondary" style={{ padding: '0.5rem', borderRadius: '8px' }} title="Log out">
-            <LogOut size={18} />
-          </button>
-        </div>
-      </header>
-
-      <main className="main-content fade-in" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="fade-in" style={{ minHeight: '100vh', padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
+      <main>
         
         {/* Appointments Section */}
         <div style={{ marginBottom: '3rem' }}>
@@ -101,7 +81,7 @@ export const Dashboard: React.FC = () => {
                     <span style={{ fontWeight: 500 }}>{new Date(appt.scheduledAt).toLocaleString()}</span>
                   </div>
                   {appt.status === 'confirmed' && (
-                    <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '0.5rem' }}>
+                    <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', marginTop: '1rem', padding: '0.5rem' }}>
                       Join Consultation
                     </button>
                   )}

@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctorVerifications, doctors } from "../db/schema";
+import { doctorVerifications, doctors, appointments, patients, reminderTasks } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError } from "../errors";
@@ -84,6 +84,112 @@ router.patch(
     });
 
     res.json({ success: true, message: `Doctor verification updated to ${status}` });
+  }
+);
+
+// ─── GET /admin/appointments ──────────────────────────────────────────────
+// Get all appointments (for coordinator oversight)
+router.get(
+  "/appointments",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    // In a real app we'd paginate this
+    const rows = await getDb()
+      .select({
+        id: appointments.id,
+        scheduledAt: appointments.scheduledAt,
+        status: appointments.status,
+        concernCategory: appointments.concernCategory,
+        patient: {
+          id: patients.id,
+          userId: patients.userId,
+        },
+        doctor: {
+          id: doctors.id,
+          fullName: doctors.fullName,
+          speciality: doctors.speciality,
+        }
+      })
+      .from(appointments)
+      .innerJoin(patients, eq(appointments.patientId, patients.id))
+      .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+      .orderBy(appointments.scheduledAt);
+
+    res.json(rows);
+  }
+);
+
+// ─── GET /admin/tasks ───────────────────────────────────────────────────────
+// Get all reminder tasks
+router.get(
+  "/tasks",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const rows = await getDb()
+      .select({
+        id: reminderTasks.id,
+        taskType: reminderTasks.taskType,
+        dueAt: reminderTasks.dueAt,
+        outcome: reminderTasks.outcome,
+        attemptCount: reminderTasks.attemptCount,
+        coordinatorNote: reminderTasks.coordinatorNote,
+        appointment: {
+          id: appointments.id,
+          scheduledAt: appointments.scheduledAt,
+          status: appointments.status,
+        },
+        patient: {
+          id: patients.id,
+        },
+        doctor: {
+          id: doctors.id,
+          fullName: doctors.fullName,
+        }
+      })
+      .from(reminderTasks)
+      .innerJoin(appointments, eq(reminderTasks.appointmentId, appointments.id))
+      .innerJoin(patients, eq(appointments.patientId, patients.id))
+      .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+      .orderBy(reminderTasks.dueAt);
+
+    res.json(rows);
+  }
+);
+
+// ─── PATCH /admin/tasks/:id ─────────────────────────────────────────────────
+// Update a reminder task (e.g. mark reached, confirmed)
+router.patch(
+  "/tasks/:id",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const { id } = _req.params;
+    const { outcome, coordinatorNote } = _req.body as { outcome: string; coordinatorNote?: string };
+
+    const taskRows = await getDb()
+      .select()
+      .from(reminderTasks)
+      .where(eq(reminderTasks.id, id))
+      .limit(1);
+
+    if (taskRows.length === 0) throw new NotFoundError("Reminder Task");
+    const task = taskRows[0];
+
+    const updated = await getDb()
+      .update(reminderTasks)
+      .set({
+        outcome: outcome as any,
+        coordinatorNote: coordinatorNote || task.coordinatorNote,
+        attemptCount: task.attemptCount + 1,
+        resolvedAt: outcome !== "pending" && outcome !== "attempted" ? new Date() : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(reminderTasks.id, id))
+      .returning();
+
+    res.json(updated[0]);
   }
 );
 

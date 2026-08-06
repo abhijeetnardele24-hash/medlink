@@ -5,6 +5,9 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { DoctorProfile } from './pages/DoctorProfile';
+import { History } from './pages/History';
+import { Consultation } from './pages/Consultation';
+import { Layout } from './components/Layout';
 import './index.css';
 
 function App() {
@@ -16,8 +19,13 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/doctor/:id" element={<DoctorProfile />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/doctor/:id" element={<DoctorProfile />} />
+              <Route path="/history" element={<History />} />
+            </Route>
+            {/* Consultation is full screen, no sidebar */}
+            <Route path="/consultation/:id" element={<Consultation />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

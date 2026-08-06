@@ -9,6 +9,8 @@ import { Dashboard } from './pages/Dashboard';
 import { Availability } from './pages/Availability';
 import { Consultation } from './pages/Consultation';
 import { Profile } from './pages/Profile';
+import { Patients } from './pages/Patients';
+import { PatientDetail } from './pages/PatientDetail';
 import './index.css';
 
 function App() {
@@ -25,6 +27,8 @@ function App() {
             {/* Authenticated Doctor Layout */}
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/patients" element={<Patients />} />
+              <Route path="/patients/:id" element={<PatientDetail />} />
               <Route path="/availability" element={<Availability />} />
               <Route path="/profile" element={<Profile />} />
             </Route>

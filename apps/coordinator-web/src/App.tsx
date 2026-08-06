@@ -7,6 +7,8 @@ import { Layout } from './components/Layout';
 import { VerificationQueue } from './pages/VerificationQueue';
 import { DoctorsDirectory } from './pages/DoctorsDirectory';
 import { PatientsDirectory } from './pages/PatientsDirectory';
+import { AppointmentsOverview } from './pages/AppointmentsOverview';
+import { Tasks } from './pages/Tasks';
 import { Settings } from './pages/Settings';
 import './index.css';
 
@@ -23,6 +25,8 @@ function App() {
               <Route path="/" element={<VerificationQueue />} />
               <Route path="/doctors" element={<DoctorsDirectory />} />
               <Route path="/patients" element={<PatientsDirectory />} />
+              <Route path="/appointments" element={<AppointmentsOverview />} />
+              <Route path="/tasks" element={<Tasks />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
