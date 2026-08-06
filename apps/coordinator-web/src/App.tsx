@@ -2,7 +2,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
+import { Signup } from './pages/Signup';
+import { Layout } from './components/Layout';
+import { VerificationQueue } from './pages/VerificationQueue';
+import { DoctorsDirectory } from './pages/DoctorsDirectory';
+import { PatientsDirectory } from './pages/PatientsDirectory';
 import './index.css';
 
 function App() {
@@ -11,9 +15,15 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route element={<Layout />}>
+              <Route path="/" element={<VerificationQueue />} />
+              <Route path="/doctors" element={<DoctorsDirectory />} />
+              <Route path="/patients" element={<PatientsDirectory />} />
+              <Route path="/settings" element={<div style={{ padding: '3rem' }}><h1>Settings</h1></div>} />
+            </Route>
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

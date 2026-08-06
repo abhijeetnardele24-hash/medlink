@@ -110,6 +110,9 @@ router.post(
       fullName: string;
       speciality: string;
       registrationNumber: string;
+      educationBackground: string;
+      experienceYears: number;
+      isPartTime: boolean;
       facilityName?: string;
       languagesSpoken: string[];
       supportedModes: ("video" | "audio" | "async_chat" | "offline")[];
@@ -137,24 +140,39 @@ router.post(
       );
     }
 
-    const [updated] = await getDb()
-      .update(doctors)
-      .set({
-        fullName: body.fullName,
-        speciality: body.speciality,
-        registrationNumber: body.registrationNumber,
-        facilityName: body.facilityName,
-        languagesSpoken: body.languagesSpoken,
-        supportedModes: body.supportedModes,
-        bio: body.bio,
-        // Transition to pending_verification on profile submission
-        verificationStatus: "pending_verification",
-        updatedAt: new Date(),
-      })
-      .where(eq(doctors.id, doctor.id))
-      .returning({ id: doctors.id, verificationStatus: doctors.verificationStatus });
+    const [updated] = await getDb().transaction(async (tx) => {
+      const [doc] = await tx
+        .update(doctors)
+        .set({
+          fullName: body.fullName,
+          speciality: body.speciality,
+          registrationNumber: body.registrationNumber,
+          educationBackground: body.educationBackground,
+          experienceYears: body.experienceYears,
+          isPartTime: body.isPartTime,
+          facilityName: body.facilityName,
+          languagesSpoken: body.languagesSpoken,
+          supportedModes: body.supportedModes,
+          bio: body.bio,
+          // Transition to pending_verification on profile submission
+          verificationStatus: "pending_verification",
+          updatedAt: new Date(),
+        })
+        .where(eq(doctors.id, doctor.id))
+        .returning({ id: doctors.id, verificationStatus: doctors.verificationStatus });
 
-    logger.info({ doctorId: doctor.id }, "Doctor profile submitted for verification");
+      // Create the initial verification record
+      const { doctorVerifications } = await import("../db/schema");
+      await tx.insert(doctorVerifications).values({
+        doctorId: doctor.id,
+        status: "pending_verification",
+        submittedDocumentsMeta: { note: "Uploaded via Onboarding Portal" },
+      });
+
+      return [doc];
+    });
+
+    logger.info({ doctorId: doctor.id }, "Doctor application submitted for verification");
 
     res.status(200).json({
       message: "Profile submitted. Awaiting coordinator verification.",

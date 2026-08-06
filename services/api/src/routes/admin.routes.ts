@@ -29,6 +29,10 @@ router.get(
           speciality: doctors.speciality,
           registrationNumber: doctors.registrationNumber,
           facilityName: doctors.facilityName,
+          educationBackground: doctors.educationBackground,
+          experienceYears: doctors.experienceYears,
+          isPartTime: doctors.isPartTime,
+          contactNumber: doctors.contactNumber,
         }
       })
       .from(doctorVerifications)

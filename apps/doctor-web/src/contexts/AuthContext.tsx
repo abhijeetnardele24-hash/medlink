@@ -17,6 +17,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -26,11 +31,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = async () => {
+    if (!auth) return;
     await signOut(auth);
   };
 
   const getToken = async () => {
-    if (!auth.currentUser) return null;
+    if (!auth?.currentUser) return null;
     return await auth.currentUser.getIdToken(true);
   };
 

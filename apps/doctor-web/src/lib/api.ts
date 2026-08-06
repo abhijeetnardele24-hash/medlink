@@ -14,7 +14,7 @@ export const api = axios.create({
 // Request interceptor to attach the Firebase ID token to every request
 api.interceptors.request.use(
   async (config) => {
-    const user = auth.currentUser;
+    const user = auth?.currentUser;
     if (user) {
       // Force refresh only if token is expired, otherwise get cached token
       const token = await user.getIdToken(false);

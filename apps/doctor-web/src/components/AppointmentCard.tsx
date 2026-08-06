@@ -1,5 +1,4 @@
-import React from 'react';
-import { Appointment } from '../types';
+import type { Appointment } from '../types';
 import { Video, Phone, MessageSquare, WifiOff, Clock, User, Check, X } from 'lucide-react';
 
 interface AppointmentCardProps {
@@ -96,6 +95,18 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
           >
             {isActionLoading ? 'Processing...' : <><Check size={16} /> Accept Appointment</>}
           </button>
+        </div>
+      )}
+
+      {appointment.status === 'confirmed' && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+          <a 
+            href={`/consultation/${appointment.id}`}
+            className="btn btn-primary" 
+            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: '#3b82f6', textDecoration: 'none' }}
+          >
+            <Video size={16} /> Start Consultation
+          </a>
         </div>
       )}
     </div>

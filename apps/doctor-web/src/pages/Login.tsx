@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Stethoscope, Lock, Mail, AlertCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,51 +21,54 @@ export const Login: React.FC = () => {
       await signInWithEmailAndPassword(auth, email, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Failed to login. Please check your credentials.');
+      console.error(err);
+      setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="app-container" style={{ alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, var(--bg-base) 0%, #1e1b4b 100%)' }}>
-      
-      {/* Decorative background elements */}
-      <div style={{ position: 'absolute', width: '400px', height: '400px', background: 'var(--primary)', filter: 'blur(150px)', borderRadius: '50%', opacity: 0.15, top: '-10%', left: '-10%' }}></div>
-      <div style={{ position: 'absolute', width: '300px', height: '300px', background: 'var(--secondary)', filter: 'blur(150px)', borderRadius: '50%', opacity: 0.1, bottom: '-10%', right: '-10%' }}></div>
-
-      <div className="glass-panel fade-in" style={{ padding: '3rem', width: '100%', maxWidth: '440px', position: 'relative', zIndex: 10 }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        className="glass-panel" 
+        style={{ width: '100%', maxWidth: '450px', padding: '2.5rem', background: 'var(--bg-surface)' }}
+      >
         
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '16px', marginBottom: '1.5rem' }}>
-            <Stethoscope size={40} color="var(--primary)" />
+          <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px', borderRadius: '16px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border)', marginBottom: '1.5rem', boxShadow: 'var(--shadow-sm)' }}>
+            <Stethoscope size={32} color="var(--primary)" />
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem', background: 'linear-gradient(to right, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            MedLink Doctor Portal
-          </h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem' }}>Doctor Portal</h1>
           <p style={{ color: 'var(--text-muted)' }}>Sign in to manage your appointments</p>
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '8px', color: '#fca5a5', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem' }}>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '1rem', background: '#fef2f2', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '8px', marginBottom: '1.5rem', fontSize: '0.875rem' }}
+          >
             <AlertCircle size={18} />
             <span>{error}</span>
-          </div>
+          </motion.div>
         )}
 
         <form onSubmit={handleLogin}>
-          <div className="input-group">
-            <label className="input-label" htmlFor="email">Email Address</label>
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label className="input-label">Email Address</label>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
                 <Mail size={18} />
               </div>
               <input 
-                id="email"
                 type="email" 
                 className="input-field" 
+                style={{ paddingLeft: '2.75rem' }} 
                 placeholder="doctor@medlink.com"
-                style={{ paddingLeft: '2.75rem' }}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -72,21 +76,20 @@ export const Login: React.FC = () => {
             </div>
           </div>
 
-          <div className="input-group" style={{ marginBottom: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <label className="input-label" htmlFor="password">Password</label>
-              <a href="#" style={{ fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none' }}>Forgot?</a>
+          <div style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <label className="input-label" style={{ marginBottom: 0 }}>Password</label>
+              <a href="#" style={{ fontSize: '0.75rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Forgot?</a>
             </div>
             <div style={{ position: 'relative' }}>
               <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>
                 <Lock size={18} />
               </div>
               <input 
-                id="password"
                 type="password" 
                 className="input-field" 
+                style={{ paddingLeft: '2.75rem' }} 
                 placeholder="••••••••"
-                style={{ paddingLeft: '2.75rem' }}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -94,16 +97,21 @@ export const Login: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '1rem' }} disabled={loading}>
-            {loading ? (
-              <div className="spinner" style={{ width: '24px', height: '24px' }}></div>
-            ) : (
-              'Sign In'
-            )}
+          <button 
+            type="submit" 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '1rem', marginBottom: '1.5rem' }}
+            disabled={loading}
+          >
+            {loading ? <div className="spinner"></div> : 'Sign In'}
           </button>
+
+          <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+            Don't have an account? <Link to="/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Sign up</Link>
+          </div>
         </form>
 
-      </div>
+      </motion.div>
     </div>
   );
 };

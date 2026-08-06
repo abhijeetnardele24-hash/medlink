@@ -1,10 +1,13 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
+import { Onboarding } from './pages/Onboarding';
 import { Dashboard } from './pages/Dashboard';
 import { Availability } from './pages/Availability';
+import { Consultation } from './pages/Consultation';
 import './index.css';
 
 function App() {
@@ -13,10 +16,20 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/availability" element={<Availability />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            
+            {/* Authenticated Doctor Layout */}
+            <Route element={<Layout />}>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/availability" element={<Availability />} />
+              <Route path="/profile" element={<div style={{ padding: '3rem' }}><h1>My Profile</h1></div>} />
+            </Route>
+
+            {/* Video Consultation (Full screen) */}
+            <Route path="/consultation/:id" element={<Consultation />} />
           </Route>
           
           <Route path="*" element={<Navigate to="/" replace />} />

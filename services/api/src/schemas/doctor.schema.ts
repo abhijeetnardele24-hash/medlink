@@ -8,13 +8,16 @@ const consultationModeSchema = z.enum(["video", "audio", "async_chat", "offline"
 
 /** POST /doctors/me/profile (doctor completes profile after registration) */
 export const createDoctorProfileSchema = z.object({
-  fullName: z.string().min(2).max(120),
-  speciality: z.string().min(2).max(80),
-  registrationNumber: z.string().min(1).max(80),
-  facilityName: z.string().max(120).optional(),
-  languagesSpoken: z.array(z.string().min(2).max(20)).min(1).max(10),
-  supportedModes: z.array(consultationModeSchema).min(1),
-  bio: z.string().max(500).optional(),
+  fullName: z.string().min(1).max(120),
+  speciality: z.string().min(1).max(120),
+  registrationNumber: z.string().min(1).max(50),
+  educationBackground: z.string().min(1, "Education background is required"),
+  experienceYears: z.number().min(0),
+  isPartTime: z.boolean(),
+  facilityName: z.string().optional(),
+  languagesSpoken: z.array(z.string()).default([]),
+  supportedModes: z.array(z.enum(["video", "audio", "async_chat", "offline"])).default([]),
+  bio: z.string().max(1000).optional(),
 });
 
 export type CreateDoctorProfileInput = z.infer<typeof createDoctorProfileSchema>;

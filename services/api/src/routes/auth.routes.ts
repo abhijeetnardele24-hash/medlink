@@ -95,8 +95,7 @@ router.post(
         await tx.insert(doctors).values({
           userId: newUser.id,
           fullName: name,
-          speciality: "not_set",
-          registrationNumber: "not_set",
+          contactNumber: req.body.contactNumber, // optional
         });
       }
 
