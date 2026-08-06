@@ -15,14 +15,69 @@ if (fs.existsSync(envPath)) {
   });
 }
 
+import { createServer as createHttpServer } from "http";
+import { Server } from "socket.io";
 import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
 
+import healthRoutes from "./routes/health.routes";
+import authRoutes from "./routes/auth.routes";
+import doctorRoutes from "./routes/doctors.routes";
+import appointmentRoutes from "./routes/appointments.routes";
+import encounterRoutes from "./routes/encounters.routes";
+import adminRoutes from "./routes/admin.routes";
+import { authenticate } from "./middleware/auth";
+import { requireRole } from "./middleware/requireRole";
+
 const port = parseInt(process.env.PORT ?? "3000", 10);
 const app = createServer();
+const httpServer = createHttpServer(app);
 
-app.listen(port, () => {
-  console.log(`medlink-api listening on port ${port}`);
+// Public routes
+app.use("/health", healthRoutes);
+app.use("/auth", authRoutes);
+
+// Protected routes
+app.use("/admin", authenticate, requireRole("coordinator"), adminRoutes);
+app.use("/doctors", authenticate, requireRole("doctor"), doctorRoutes);
+app.use("/appointments", authenticate, appointmentRoutes);
+app.use("/encounters", authenticate, encounterRoutes);
+
+// Socket.io WebRTC Signalling Server
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : ["http://localhost:5173", "http://localhost:3001"],
+    credentials: true,
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(`[Socket.io] Connected: ${socket.id}`);
+  
+  socket.on("join-encounter", (encounterId: string) => {
+    socket.join(encounterId);
+    console.log(`[Socket.io] ${socket.id} joined encounter room: ${encounterId}`);
+  });
+
+  socket.on("webrtc-offer", ({ encounterId, offer }) => {
+    socket.to(encounterId).emit("webrtc-offer", { offer });
+  });
+
+  socket.on("webrtc-answer", ({ encounterId, answer }) => {
+    socket.to(encounterId).emit("webrtc-answer", { answer });
+  });
+
+  socket.on("webrtc-ice-candidate", ({ encounterId, candidate }) => {
+    socket.to(encounterId).emit("webrtc-ice-candidate", { candidate });
+  });
+
+  socket.on("disconnect", () => {
+    console.log(`[Socket.io] Disconnected: ${socket.id}`);
+  });
+});
+
+httpServer.listen(port, () => {
+  console.log(`medlink-api listening on port ${port} (HTTP & WebSockets)`);
 });
 
 void verifyDatabaseConnection()
