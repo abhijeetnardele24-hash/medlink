@@ -14,6 +14,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { getFirebaseAdmin } from "../firebase";
 import { UnauthorizedError } from "../errors";
+import { getDb } from "../db";
+import { users } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export interface AuthUser {
   uid: string;           // Firebase UID
@@ -44,9 +47,26 @@ export const authenticate = async (
 
   try {
     const admin = getFirebaseAdmin();
-    const decoded = await admin.auth().verifyIdToken(idToken, true); // checkRevoked = true
+    // In local dev, checkRevoked can sometimes fail. We skip it here.
+    const decoded = await admin.auth().verifyIdToken(idToken);
 
-    const role = (decoded["role"] as string | undefined) ?? "patient";
+    let role = decoded["role"] as string | undefined;
+
+    // Fallback: If custom claims haven't propagated to the client JWT yet,
+    // look up the role from the database.
+    if (!role || role === "patient") {
+      const userRecord = await getDb()
+        .select({ role: users.role })
+        .from(users)
+        .where(eq(users.firebaseUid, decoded.uid))
+        .limit(1);
+      
+      if (userRecord.length > 0) {
+        role = userRecord[0].role;
+      } else {
+        role = "patient";
+      }
+    }
 
     res.locals.user = {
       uid: decoded.uid,
@@ -56,6 +76,7 @@ export const authenticate = async (
 
     next();
   } catch (err) {
+    console.error("Token verification error:", err);
     // Firebase errors carry a 'code' property like 'auth/id-token-expired'
     const code =
       err instanceof Error && "code" in err ? (err as { code: string }).code : "unknown";

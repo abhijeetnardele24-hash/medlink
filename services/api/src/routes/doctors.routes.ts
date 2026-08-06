@@ -70,6 +70,39 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   res.json({ data: filtered, page, limit });
 });
 
+// ─── GET /doctors/me ──────────────────────────────────────────────────────────
+
+router.get("/me", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const { uid } = res.locals.user;
+
+  const result = await getDb()
+    .select({
+      id: doctors.id,
+      fullName: doctors.fullName,
+      speciality: doctors.speciality,
+      facilityName: doctors.facilityName,
+      languagesSpoken: doctors.languagesSpoken,
+      supportedModes: doctors.supportedModes,
+      verificationStatus: doctors.verificationStatus,
+      bio: doctors.bio,
+      contactNumber: doctors.contactNumber,
+      registrationNumber: doctors.registrationNumber,
+      educationBackground: doctors.educationBackground,
+      experienceYears: doctors.experienceYears,
+      isPartTime: doctors.isPartTime,
+    })
+    .from(doctors)
+    .innerJoin(users, eq(users.id, doctors.userId))
+    .where(eq(users.firebaseUid, uid))
+    .limit(1);
+
+  if (result.length === 0) {
+    throw new NotFoundError("Doctor profile");
+  }
+
+  res.json(result[0]);
+});
+
 // ─── GET /doctors/:id ─────────────────────────────────────────────────────────
 
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {

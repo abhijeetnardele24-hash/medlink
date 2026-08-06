@@ -25,6 +25,7 @@ import healthRouter from "./routes/health.routes";
 import authRouter from "./routes/auth.routes";
 import doctorsRouter from "./routes/doctors.routes";
 import appointmentsRouter from "./routes/appointments.routes";
+import adminRouter from "./routes/admin.routes";
 
 export const createServer = (): Express => {
   const app = express();
@@ -96,6 +97,7 @@ export const createServer = (): Express => {
   app.use("/auth", authLimiter, authRouter);
   app.use("/doctors", doctorsRouter);
   app.use("/appointments", appointmentsRouter);
+  app.use("/admin", adminRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

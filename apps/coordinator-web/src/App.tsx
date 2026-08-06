@@ -7,6 +7,7 @@ import { Layout } from './components/Layout';
 import { VerificationQueue } from './pages/VerificationQueue';
 import { DoctorsDirectory } from './pages/DoctorsDirectory';
 import { PatientsDirectory } from './pages/PatientsDirectory';
+import { Settings } from './pages/Settings';
 import './index.css';
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
               <Route path="/" element={<VerificationQueue />} />
               <Route path="/doctors" element={<DoctorsDirectory />} />
               <Route path="/patients" element={<PatientsDirectory />} />
-              <Route path="/settings" element={<div style={{ padding: '3rem' }}><h1>Settings</h1></div>} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
           

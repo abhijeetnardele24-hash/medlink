@@ -8,6 +8,7 @@ import { Onboarding } from './pages/Onboarding';
 import { Dashboard } from './pages/Dashboard';
 import { Availability } from './pages/Availability';
 import { Consultation } from './pages/Consultation';
+import { Profile } from './pages/Profile';
 import './index.css';
 
 function App() {
@@ -25,7 +26,7 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/availability" element={<Availability />} />
-              <Route path="/profile" element={<div style={{ padding: '3rem' }}><h1>My Profile</h1></div>} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Video Consultation (Full screen) */}

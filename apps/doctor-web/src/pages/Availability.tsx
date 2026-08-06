@@ -39,7 +39,7 @@ export const Availability = () => {
       
       setMessage({ text: `Successfully generated availability for ${date} from ${startTime} to ${endTime}!`, type: 'success' });
     } catch (err: any) {
-      setMessage({ text: err.response?.data?.message || err.message || 'Failed to generate availability. Are you verified by the coordinator?', type: 'error' });
+      setMessage({ text: err.response?.data?.error || err.message || 'Failed to generate availability. Are you verified by the coordinator?', type: 'error' });
     } finally {
       setLoading(false);
     }

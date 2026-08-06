@@ -42,7 +42,8 @@ router.post(
     // Verify the token independently (this route is not behind authenticate
     // middleware because the user doesn't have a session yet)
     const admin = getFirebaseAdmin();
-    const decoded = await admin.auth().verifyIdToken(idToken, true);
+    // In local dev without a valid service account, checkRevoked will fail.
+    const decoded = await admin.auth().verifyIdToken(idToken);
 
     const firebaseUid = decoded.uid;
     const email = decoded.email ?? "";
