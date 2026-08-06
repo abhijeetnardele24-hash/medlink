@@ -1,22 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap');
 
 :root {
-  /* Vercel-inspired Minimalist Light Theme */
-  --bg-base: #fafafa;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f5f5f5;
+  /* Forma.ai Color Palette */
+  --bg-base: #ffffff;
+  --bg-surface: #f9f9fb;
+  --bg-surface-elevated: #ffffff;
   
-  --primary: #000000; 
-  --primary-invert: #ffffff;
-  --accent: #3b82f6;
-  --accent-hover: #2563eb;
+  --text-main: #000000;
+  --text-muted: #4b5563; /* slightly darker for readability on white */
+  --border: #e5e7eb;
   
-  --text-main: #171717;
-  --text-muted: #666666;
-  --border: #eaeaea;
+  --accent: #423FDE;
+  --accent-hover: #3634b8;
   
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --danger: #ef4444;
+  --success: #10b981;
 }
 
 * {
@@ -26,117 +24,131 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Minimalist Panels */
-.glass-panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px; /* Sharper Vercel-like corners */
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
+/* Typography Overrides */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
 }
 
-.glass-panel:hover {
-  box-shadow: var(--shadow-md);
-}
-
-/* Premium Buttons */
+/* Button Overrides */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px; /* Vercel uses tight 6px corners */
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
+  padding: 12px 24px;
+  border-radius: 320px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   border: none;
+  text-decoration: none;
 }
 
 .btn-primary {
-  background-color: var(--primary);
-  color: var(--primary-invert);
-  border: 1px solid var(--primary);
+  background-color: var(--accent);
+  color: white;
 }
 
 .btn-primary:hover {
-  background-color: #333333;
-  border-color: #333333;
-}
-
-.btn-primary:disabled {
-  background-color: #e5e5e5;
-  color: #a3a3a3;
-  border-color: #e5e5e5;
-  cursor: not-allowed;
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(66, 63, 222, 0.25);
 }
 
 .btn-secondary {
-  background-color: var(--bg-surface);
+  background-color: white;
   color: var(--text-main);
   border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background-color: var(--bg-surface-elevated);
-  border-color: #d4d4d4;
+  background-color: var(--bg-surface);
+  border-color: #d1d5db;
 }
 
-/* Inputs */
+/* Specific UI elements */
+.glass-panel {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: 20px; /* softer radius for modern look */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
 .input-field {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
   border: 1px solid var(--border);
-  background-color: var(--bg-surface);
+  border-radius: 12px;
   color: var(--text-main);
-  font-size: 0.875rem;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
   transition: all 0.2s ease;
 }
 
 .input-field:focus {
   outline: none;
-  border-color: #000000;
-  box-shadow: 0 0 0 1px #000000; /* Vercel crisp black focus ring */
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(66, 63, 222, 0.1);
 }
 
 .input-label {
   display: block;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--text-main);
   margin-bottom: 0.5rem;
+}
+
+.hero-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
   color: var(--text-main);
 }
 
-/* Animations */
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  max-width: 600px;
+  margin-bottom: 2rem;
+  font-weight: 400;
 }
 
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(0,0,0,0.1);
-  border-radius: 50%;
-  border-top-color: currentColor;
-  animation: spin 0.8s linear infinite;
-}
-
+/* Animation utilities */
 .fade-in {
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-left-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
