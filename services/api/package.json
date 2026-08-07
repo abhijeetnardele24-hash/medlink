@@ -32,9 +32,11 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.6",
+    "@types/multer": "^1.4.12",
     "@types/node": "^26.1.2",
     "@types/pg": "^8.20.3",
     "@types/socket.io": "^3.0.1",
+    "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.30.5",
     "pino-pretty": "^13.0.0",
     "ts-node-dev": "^2.0.0",
