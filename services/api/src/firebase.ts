@@ -24,10 +24,14 @@ export const getFirebaseAdmin = (): admin.app.App => {
     const serviceAccount = JSON.parse(serviceAccountJson) as admin.ServiceAccount;
     _app = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "medlink-f0762.firebasestorage.app",
     });
   } else if (projectId) {
     // Local dev fallback: uses Application Default Credentials
-    _app = admin.initializeApp({ projectId });
+    _app = admin.initializeApp({ 
+      projectId,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || "medlink-f0762.firebasestorage.app",
+    });
   } else {
     throw new Error(
       "Either FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID must be set"
