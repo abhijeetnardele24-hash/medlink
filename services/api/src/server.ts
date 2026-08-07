@@ -26,6 +26,9 @@ import authRouter from "./routes/auth.routes";
 import doctorsRouter from "./routes/doctors.routes";
 import appointmentsRouter from "./routes/appointments.routes";
 import adminRouter from "./routes/admin.routes";
+import encountersRouter from "./routes/encounters.routes";
+import { authenticate } from "./middleware/auth";
+import { requireRole } from "./middleware/requireRole";
 
 export const createServer = (): Express => {
   const app = express();
@@ -96,8 +99,9 @@ export const createServer = (): Express => {
   app.use("/", healthRouter);
   app.use("/auth", authLimiter, authRouter);
   app.use("/doctors", doctorsRouter);
-  app.use("/appointments", appointmentsRouter);
-  app.use("/admin", adminRouter);
+  app.use("/appointments", authenticate, appointmentsRouter);
+  app.use("/encounters", authenticate, encountersRouter);
+  app.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

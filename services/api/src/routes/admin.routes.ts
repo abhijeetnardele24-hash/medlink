@@ -193,4 +193,59 @@ router.patch(
   }
 );
 
+
+// ─── GET|POST /admin/seed-test-appointment ──────────────────────────────────
+// DEV ONLY: Creates a confirmed appointment between the first doctor and first
+// patient in the DB. No auth required. Works via browser URL bar (GET) or curl (POST).
+router.all(
+  "/seed-test-appointment",
+  async (_req: Request, res: Response): Promise<void> => {
+    const db = getDb();
+
+    const allDoctors = await db.select().from(doctors).limit(1);
+    const allPatients = await db.select().from(patients).limit(1);
+
+    if (allDoctors.length === 0) {
+      res.status(404).json({ error: "No doctors found. Run seed-users.bat first." });
+      return;
+    }
+    if (allPatients.length === 0) {
+      res.status(404).json({ error: "No patients found. Run seed-users.bat first." });
+      return;
+    }
+
+    const doctor = allDoctors[0];
+    const patient = allPatients[0];
+
+    const [appointment] = await db
+      .insert(appointments)
+      .values({
+        patientId: patient.id,
+        doctorId: doctor.id,
+        scheduledAt: new Date(),
+        status: "confirmed",
+        concernCategory: "general_consultation",
+        version: 1,
+      })
+      .returning();
+
+    res.json({
+      success: true,
+      message: "Test appointment created! Refresh both portals to see it.",
+      appointment: {
+        id: appointment.id,
+        status: appointment.status,
+        doctorId: doctor.id,
+        patientId: patient.id,
+        scheduledAt: appointment.scheduledAt,
+      },
+      portals: {
+        patient: "http://localhost:5176",
+        doctor: "http://localhost:5173",
+      },
+    });
+  }
+);
+
 export default router;
+

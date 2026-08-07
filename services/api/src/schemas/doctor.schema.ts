@@ -17,6 +17,7 @@ export const createDoctorProfileSchema = z.object({
   facilityName: z.string().optional(),
   languagesSpoken: z.array(z.string()).default([]),
   supportedModes: z.array(z.enum(["video", "audio", "async_chat", "offline"])).default([]),
+  consultationFee: z.number().min(0).default(500),
   bio: z.string().max(1000).optional(),
 });
 

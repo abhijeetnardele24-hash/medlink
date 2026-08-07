@@ -55,6 +55,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
       facilityName: doctors.facilityName,
       languagesSpoken: doctors.languagesSpoken,
       supportedModes: doctors.supportedModes,
+      consultationFee: doctors.consultationFee,
       bio: doctors.bio,
     })
     .from(doctors)
@@ -83,6 +84,7 @@ router.get("/me", authenticate, requireRole("doctor"), async (req: Request, res:
       facilityName: doctors.facilityName,
       languagesSpoken: doctors.languagesSpoken,
       supportedModes: doctors.supportedModes,
+      consultationFee: doctors.consultationFee,
       verificationStatus: doctors.verificationStatus,
       bio: doctors.bio,
       contactNumber: doctors.contactNumber,
@@ -116,6 +118,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
       facilityName: doctors.facilityName,
       languagesSpoken: doctors.languagesSpoken,
       supportedModes: doctors.supportedModes,
+      consultationFee: doctors.consultationFee,
       verificationStatus: doctors.verificationStatus,
       bio: doctors.bio,
     })
@@ -149,6 +152,7 @@ router.post(
       facilityName?: string;
       languagesSpoken: string[];
       supportedModes: ("video" | "audio" | "async_chat" | "offline")[];
+      consultationFee: number;
       bio?: string;
     };
 
@@ -186,6 +190,7 @@ router.post(
           facilityName: body.facilityName,
           languagesSpoken: body.languagesSpoken,
           supportedModes: body.supportedModes,
+          consultationFee: body.consultationFee,
           bio: body.bio,
           // Transition to pending_verification on profile submission
           verificationStatus: "pending_verification",

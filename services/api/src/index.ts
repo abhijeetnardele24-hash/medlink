@@ -20,28 +20,11 @@ import { Server } from "socket.io";
 import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
 
-import healthRoutes from "./routes/health.routes";
-import authRoutes from "./routes/auth.routes";
-import doctorRoutes from "./routes/doctors.routes";
-import appointmentRoutes from "./routes/appointments.routes";
-import encounterRoutes from "./routes/encounters.routes";
-import adminRoutes from "./routes/admin.routes";
-import { authenticate } from "./middleware/auth";
-import { requireRole } from "./middleware/requireRole";
+// Routes are mounted inside server.ts (createServer)
 
 const port = parseInt(process.env.PORT ?? "3000", 10);
 const app = createServer();
 const httpServer = createHttpServer(app);
-
-// Public routes
-app.use("/health", healthRoutes);
-app.use("/auth", authRoutes);
-
-// Protected routes
-app.use("/admin", authenticate, requireRole("coordinator"), adminRoutes);
-app.use("/doctors", authenticate, requireRole("doctor"), doctorRoutes);
-app.use("/appointments", authenticate, appointmentRoutes);
-app.use("/encounters", authenticate, encounterRoutes);
 
 // Socket.io WebRTC Signalling Server
 const io = new Server(httpServer, {

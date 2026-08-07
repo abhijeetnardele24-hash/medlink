@@ -24,8 +24,11 @@ import {
   availabilitySlots,
   auditEvents,
   users,
+  paymentRecords,
 } from "../db/schema";
 import { authenticate } from "../middleware/auth";
+import Razorpay from "razorpay";
+import crypto from "crypto";
 import { requireRole } from "../middleware/requireRole";
 import { validateBody } from "../middleware/validateBody";
 import {
@@ -330,6 +333,129 @@ router.patch(
       .limit(1);
 
     res.json(updated[0]);
+  }
+);
+
+// ─── POST /appointments/:id/create-payment ─────────────────────────────────────
+
+router.post(
+  "/:id/create-payment",
+  authenticate,
+  requireRole("patient"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    const { uid } = res.locals.user;
+
+    const patient = await getPatientForUser(uid);
+    if (!patient) throw new NotFoundError("Patient profile");
+
+    const apptRows = await getDb()
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId,
+        doctorId: appointments.doctorId,
+        status: appointments.status,
+      })
+      .from(appointments)
+      .where(eq(appointments.id, id))
+      .limit(1);
+
+    if (apptRows.length === 0) throw new NotFoundError("Appointment");
+    if (apptRows[0].patientId !== patient.id) throw new ForbiddenError();
+
+    // Fetch the doctor's consultation fee
+    const doctorRows = await getDb()
+      .select({ consultationFee: doctors.consultationFee })
+      .from(doctors)
+      .where(eq(doctors.id, apptRows[0].doctorId))
+      .limit(1);
+
+    if (doctorRows.length === 0) throw new NotFoundError("Doctor");
+    const fee = doctorRows[0].consultationFee;
+
+    // Initialize Razorpay (using test keys if env vars missing for demo)
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_demo",
+      key_secret: process.env.RAZORPAY_KEY_SECRET || "demo_secret",
+    });
+
+    try {
+      const order = await razorpay.orders.create({
+        amount: fee * 100, // Razorpay amount is in paise
+        currency: "INR",
+        receipt: `receipt_${id}`,
+      });
+
+      // Upsert payment record
+      const existingPayment = await getDb()
+        .select()
+        .from(paymentRecords)
+        .where(eq(paymentRecords.appointmentId, id))
+        .limit(1);
+
+      if (existingPayment.length === 0) {
+        await getDb().insert(paymentRecords).values({
+          appointmentId: id,
+          state: "pending",
+          razorpayOrderId: order.id,
+        });
+      } else {
+        await getDb()
+          .update(paymentRecords)
+          .set({ razorpayOrderId: order.id, state: "pending", updatedAt: new Date() })
+          .where(eq(paymentRecords.appointmentId, id));
+      }
+
+      res.status(200).json({ order, fee });
+    } catch (err: any) {
+      logger.error({ err, appointmentId: id }, "Failed to create Razorpay order");
+      res.status(500).json({ error: "Failed to create payment order" });
+    }
+  }
+);
+
+// ─── POST /appointments/:id/verify-payment ─────────────────────────────────────
+
+router.post(
+  "/:id/verify-payment",
+  authenticate,
+  requireRole("patient"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = _req.body;
+
+    const secret = process.env.RAZORPAY_KEY_SECRET || "demo_secret";
+    const generated_signature = crypto
+      .createHmac("sha256", secret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (generated_signature !== razorpay_signature) {
+      // Allow bypass if test demo
+      if (secret !== "demo_secret") {
+        throw new ForbiddenError("Invalid payment signature");
+      }
+    }
+
+    // Update payment record to success
+    await getDb()
+      .update(paymentRecords)
+      .set({
+        state: "success",
+        razorpayPaymentId: razorpay_payment_id,
+        updatedAt: new Date(),
+      })
+      .where(eq(paymentRecords.appointmentId, id));
+
+    // Confirm the appointment
+    await getDb()
+      .update(appointments)
+      .set({ status: "confirmed", updatedAt: new Date() })
+      .where(eq(appointments.id, id));
+
+    logger.info({ appointmentId: id, paymentId: razorpay_payment_id }, "Payment verified and appointment confirmed");
+
+    res.status(200).json({ success: true });
   }
 );
 

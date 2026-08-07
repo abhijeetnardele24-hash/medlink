@@ -225,6 +225,7 @@ export const doctors = pgTable(
       .array()
       .notNull()
       .default(["video", "audio", "async_chat"]),
+    consultationFee: integer("consultation_fee").notNull().default(500),
     verificationStatus: doctorVerificationStatusEnum("verification_status")
       .notNull()
       .default("draft"),
@@ -357,6 +358,8 @@ export const paymentRecords = pgTable(
       .references(() => appointments.id, { onDelete: "cascade" }),
     state: paymentStateEnum("state").notNull().default("free_demo"),
     demoReference: text("demo_reference"), // synthetic reference only
+    razorpayOrderId: text("razorpay_order_id"),
+    razorpayPaymentId: text("razorpay_payment_id"),
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
