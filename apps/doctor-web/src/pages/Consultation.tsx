@@ -1,270 +1,236 @@
-import type { FormEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { io } from 'socket.io-client';
-import type { Socket } from 'socket.io-client';
-import { api } from '../lib/api';
-import { useAuth } from '../contexts/AuthContext';
-import { Video, Mic, MicOff, VideoOff, PhoneOff, FileText, Pill, Save, Activity } from 'lucide-react';
+import { Video, Mic, MicOff, VideoOff, PhoneOff, Maximize, Play, Square, UploadCloud, Loader2 } from 'lucide-react';
+import { useWebRTC } from '../hooks/useWebRTC';
+import { auth } from '../lib/firebase';
 
 export const Consultation: React.FC = () => {
-  const { id: appointmentId } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  
-  const [encounterId, setEncounterId] = useState<string | null>(null);
-  const [connected, setConnected] = useState(false);
-  
-  // WebRTC Refs
+  const { localStream, remoteStream, isConnected, error, startCall } = useWebRTC(id || null);
+
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null);
 
-  // UI State
-  const [micEnabled, setMicEnabled] = useState(true);
-  const [cameraEnabled, setCameraEnabled] = useState(true);
-  
-  // Clinical Notes State
-  const [notes, setNotes] = useState('');
-  const [medicines, setMedicines] = useState('');
-  const [saving, setSaving] = useState(false);
+  // Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<BlobPart[]>([]);
 
-  // 1. Initialize Encounter & Socket
   useEffect(() => {
-    let currentSocket: Socket;
+    if (localVideoRef.current && localStream) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
 
-    const init = async () => {
-      try {
-        // Start encounter via API
-        const { data } = await api.post('/encounters', { appointmentId });
-        setEncounterId(data.id);
+  useEffect(() => {
+    if (remoteVideoRef.current && remoteStream) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
 
-        // Connect to Signaling Server
-        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        currentSocket = io(backendUrl, { withCredentials: true });
+  const handleStartRecording = () => {
+    if (!remoteStream) {
+      alert("No remote stream to record yet.");
+      return;
+    }
+    chunksRef.current = [];
+    const options = { mimeType: 'video/webm; codecs=vp9' };
+    const mediaRecorder = new MediaRecorder(remoteStream, options);
 
-        currentSocket.on('connect', () => {
-          setConnected(true);
-          currentSocket.emit('join-encounter', data.id);
-        });
-
-        // WebRTC Signaling Handlers
-        currentSocket.on('webrtc-offer', async ({ offer }) => {
-          if (!peerConnectionRef.current) return;
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          currentSocket.emit('webrtc-answer', { encounterId: data.id, answer });
-        });
-
-        currentSocket.on('webrtc-answer', async ({ answer }) => {
-          if (!peerConnectionRef.current) return;
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-        });
-
-        currentSocket.on('webrtc-ice-candidate', async ({ candidate }) => {
-          if (!peerConnectionRef.current) return;
-          try {
-            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-          } catch (e) {
-            console.error('Error adding ICE candidate', e);
-          }
-        });
-
-        startLocalStream(data.id, currentSocket);
-      } catch (err) {
-        console.error("Failed to start encounter", err);
-        alert("Could not start consultation. Please try again.");
-        navigate('/');
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunksRef.current.push(event.data);
       }
     };
 
-    init();
-
-    return () => {
-      if (currentSocket) currentSocket.disconnect();
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach(t => t.stop());
-      }
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      setRecordingBlob(blob);
     };
-  }, [appointmentId, navigate]);
 
-  // 2. Initialize WebRTC Media
-  const startLocalStream = async (encId: string, sock: Socket) => {
+    mediaRecorderRef.current = mediaRecorder;
+    mediaRecorder.start();
+    setIsRecording(true);
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const uploadRecording = async () => {
+    if (!recordingBlob || !id) return;
+    setIsUploading(true);
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      localStreamRef.current = stream;
+      const token = await auth.currentUser?.getIdToken();
       
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+      const formData = new FormData();
+      formData.append('recording', recordingBlob, `recording_${id}.webm`);
 
-      const pc = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-      });
-      peerConnectionRef.current = pc;
-
-      stream.getTracks().forEach(track => {
-        pc.addTrack(track, stream);
+      const res = await fetch(`http://localhost:3000/encounters/${id}/recording`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
 
-      pc.ontrack = (event) => {
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = event.streams[0];
-        }
-      };
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          sock.emit('webrtc-ice-candidate', { encounterId: encId, candidate: event.candidate });
-        }
-      };
-
-      // Doctor is the caller, so we create the offer
-      const offer = await pc.createOffer();
-      await pc.setLocalDescription(offer);
-      sock.emit('webrtc-offer', { encounterId: encId, offer });
-
-    } catch (err) {
-      console.error("Failed to access media devices", err);
-      // Fallback to chat or error out gracefully in a real app
-    }
-  };
-
-  const toggleMic = () => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTracks()[0].enabled = !micEnabled;
-      setMicEnabled(!micEnabled);
-    }
-  };
-
-  const toggleCamera = () => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getVideoTracks()[0].enabled = !cameraEnabled;
-      setCameraEnabled(!cameraEnabled);
-    }
-  };
-
-  const endCall = () => {
-    navigate('/');
-  };
-
-  const submitPrescription = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!encounterId) return;
-    
-    setSaving(true);
-    try {
-      await api.post(`/encounters/${encounterId}/prescriptions`, {
-        doctorId: user?.uid, // Using firebase UID for demo; backend expects UUID ideally
-        medicinesJson: { medicines: medicines.split(',') },
-        instructionsText: notes
-      });
-      alert('Consultation finalized and prescription saved!');
-      navigate('/');
+      if (!res.ok) throw new Error("Upload failed");
+      
+      alert("Recording successfully securely uploaded to Cloud Storage!");
+      setRecordingBlob(null);
     } catch (err) {
       console.error(err);
-      alert('Failed to save prescription');
+      alert("Failed to upload recording.");
     } finally {
-      setSaving(false);
+      setIsUploading(false);
     }
   };
 
+  if (error) {
+    return (
+      <div className="flex-1 p-8 flex items-center justify-center">
+        <div className="card text-center p-8 text-red-500">
+          <p className="text-xl font-bold">{error}</p>
+          <p className="mt-2">Please ensure camera and microphone permissions are granted.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-base)', overflow: 'hidden' }}>
-      
-      {/* LEFT PANE: WebRTC Video Workspace */}
-      <div style={{ flex: 2, display: 'flex', flexDirection: 'column', padding: '1rem', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-        
-        <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', padding: '0 1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Activity color={connected ? '#10b981' : '#fca5a5'} size={24} />
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Virtual Clinic Room</h2>
-          </div>
-          <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(59, 130, 246, 0.1)', color: '#60a5fa', borderRadius: '12px', fontSize: '0.875rem' }}>
-            ID: {appointmentId?.substring(0,8)}...
-          </span>
-        </header>
-
-        <div className="glass-panel" style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000' }}>
-          {/* Remote Video (Patient) */}
-          <video 
+    <div className="flex-1 bg-[#0A0A0A] relative flex flex-col h-screen overflow-hidden">
+      {/* Remote Video (Main) */}
+      <div className="absolute inset-0 z-0 bg-black flex items-center justify-center">
+        {remoteStream ? (
+          <video
             ref={remoteVideoRef}
-            autoPlay 
+            autoPlay
             playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            className="w-full h-full object-cover"
           />
-
-          {/* Local Video (Doctor PIP) */}
-          <div style={{ position: 'absolute', bottom: '2rem', right: '2rem', width: '200px', height: '150px', borderRadius: '12px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.2)', background: '#111', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
-            <video 
-              ref={localVideoRef}
-              autoPlay 
-              playsInline 
-              muted 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+        ) : (
+          <div className="text-white/50 flex flex-col items-center gap-6">
+            <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+              <VideoOff size={32} />
+            </div>
+            <div className="text-center">
+              <p className="font-bold text-xl text-white mb-2 font-['Manrope']">Patient is offline</p>
+              <p className="text-sm">Click 'Start Call' when you are ready to ring the patient.</p>
+            </div>
+            {!isConnected && (
+              <button 
+                onClick={startCall}
+                className="btn btn-primary mt-4"
+              >
+                Start Call (Ring Patient)
+              </button>
+            )}
           </div>
+        )}
+      </div>
 
-          {/* Controls Overlay */}
-          <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '1rem', background: 'rgba(0,0,0,0.6)', padding: '0.75rem 1.5rem', borderRadius: '99px', backdropFilter: 'blur(10px)' }}>
-            <button onClick={toggleMic} style={{ width: '48px', height: '48px', borderRadius: '50%', background: micEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              {micEnabled ? <Mic size={20} /> : <MicOff size={20} />}
+      {/* Header Overlay */}
+      <div className="absolute top-0 left-0 right-0 p-6 z-10 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-white font-['Manrope']">Doctor's Command Center</h2>
+          <p className="text-white/70 text-sm">
+            {isConnected ? (
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                Connected E2EE
+              </span>
+            ) : (
+              "Waiting for connection"
+            )}
+          </p>
+        </div>
+        
+        {/* Recording Status / Upload */}
+        <div className="flex items-center gap-4">
+          {isRecording && (
+            <div className="flex items-center gap-2 text-red-500 bg-red-500/10 px-4 py-2 rounded-full border border-red-500/20 font-bold animate-pulse">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              REC
+            </div>
+          )}
+          {recordingBlob && !isRecording && (
+            <button 
+              onClick={uploadRecording}
+              disabled={isUploading}
+              className="btn bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
+            >
+              {isUploading ? <Loader2 className="animate-spin" size={18} /> : <UploadCloud size={18} />}
+              {isUploading ? 'Uploading to Cloud...' : 'Upload Recording'}
             </button>
-            <button onClick={toggleCamera} style={{ width: '48px', height: '48px', borderRadius: '50%', background: cameraEnabled ? 'rgba(255,255,255,0.1)' : '#ef4444', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              {cameraEnabled ? <Video size={20} /> : <VideoOff size={20} />}
-            </button>
-            <button onClick={endCall} style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-              <PhoneOff size={20} />
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* RIGHT PANE: Clinical Notes & Prescriptions */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '1.5rem', background: 'var(--bg-surface)' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <FileText size={20} color="var(--primary)" /> Clinical Notes
-        </h3>
-
-        <form onSubmit={submitPrescription} style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: '1.5rem' }}>
-          
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Consultation Notes</label>
-            <textarea 
-              className="input-field" 
-              style={{ flex: 1, resize: 'none', padding: '1rem', minHeight: '200px' }}
-              placeholder="Record patient symptoms, diagnosis, and plan..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              required
-            />
+      {/* Local Video (PIP) */}
+      <div className="absolute bottom-32 right-8 z-10 w-64 aspect-video bg-black/80 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
+        {localStream ? (
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover transform -scale-x-100"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-white/50">
+            <VideoOff size={24} />
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <label style={{ fontSize: '0.875rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <Pill size={14} /> E-Prescription (Medicines)
-            </label>
-            <input 
-              type="text"
-              className="input-field" 
-              placeholder="e.g. Paracetamol 500mg, Amoxicillin"
-              value={medicines}
-              onChange={(e) => setMedicines(e.target.value)}
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn btn-primary" style={{ padding: '1rem' }} disabled={saving}>
-            {saving ? 'Finalizing...' : <><Save size={18} /> Finalize Encounter</>}
-          </button>
-        </form>
+        )}
       </div>
 
+      {/* Controls Overlay */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+        <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl flex items-center gap-4 shadow-2xl">
+          <button className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+            <Mic size={24} />
+          </button>
+          <button className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+            <Video size={24} />
+          </button>
+          
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          
+          {!isRecording ? (
+             <button 
+               onClick={handleStartRecording}
+               disabled={!remoteStream}
+               title="Record Cloud Video"
+               className={`w-14 h-14 rounded-full ${remoteStream ? 'bg-white/10 hover:bg-red-500/20 text-white' : 'bg-white/5 text-white/30 cursor-not-allowed'} flex items-center justify-center transition-all`}
+             >
+               <Play size={24} />
+             </button>
+          ) : (
+            <button 
+               onClick={handleStopRecording}
+               title="Stop Recording"
+               className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
+             >
+               <Square size={20} fill="currentColor" />
+             </button>
+          )}
+
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+
+          <button 
+            onClick={() => navigate('/dashboard')}
+            className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
+          >
+            <PhoneOff size={24} />
+          </button>
+        </div>
+      </div>
     </div>
   );
-};
+}
