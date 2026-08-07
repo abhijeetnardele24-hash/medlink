@@ -13,9 +13,11 @@ export const useWebRTC = (encounterId: string | null) => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionQuality, setConnectionQuality] = useState<'good' | 'poor' | 'audio-only'>('good');
 
   const socketRef = useRef<Socket | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const qualityScore = useRef(5);
 
   useEffect(() => {
     if (!encounterId) return;
@@ -25,7 +27,7 @@ export const useWebRTC = (encounterId: string | null) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
 
-        socketRef.current = io('http://localhost:3000', { withCredentials: true });
+        socketRef.current = io('http://localhost:5000', { withCredentials: true });
         
         socketRef.current.on('connect', () => {
           socketRef.current?.emit('join-encounter', encounterId);
@@ -105,5 +107,49 @@ export const useWebRTC = (encounterId: string | null) => {
     }
   }, [encounterId]);
 
-  return { localStream, remoteStream, isConnected, error, startCall };
+  // Adaptive Engine: monitor WebRTC stats
+  useEffect(() => {
+    if (!isConnected || !peerConnectionRef.current) return;
+    
+    const interval = setInterval(async () => {
+      if (!peerConnectionRef.current) return;
+      
+      try {
+        const stats = await peerConnectionRef.current.getStats();
+        let hasPoorStat = false;
+
+        stats.forEach(report => {
+          if (report.type === 'inbound-rtp' && report.kind === 'video') {
+            const packetLoss = report.packetsLost / (report.packetsReceived + report.packetsLost || 1);
+            if (packetLoss > 0.1 || report.jitter > 0.05) hasPoorStat = true;
+          }
+          if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+            if (report.currentRoundTripTime > 0.5) hasPoorStat = true; // > 500ms RTT
+          }
+        });
+
+        if (hasPoorStat) {
+          qualityScore.current = Math.max(0, qualityScore.current - 1);
+        } else {
+          qualityScore.current = Math.min(5, qualityScore.current + 1);
+        }
+
+        if (qualityScore.current === 0) {
+          setConnectionQuality('audio-only');
+          // Auto-downgrade by disabling video tracks locally
+          localStream?.getVideoTracks().forEach(t => t.enabled = false);
+        } else if (qualityScore.current <= 2) {
+          setConnectionQuality('poor');
+        } else {
+          setConnectionQuality('good');
+        }
+      } catch (err) {
+        console.error('Failed to get stats', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isConnected, localStream]);
+
+  return { localStream, remoteStream, isConnected, error, startCall, connectionQuality };
 };

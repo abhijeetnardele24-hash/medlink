@@ -10,7 +10,14 @@ interface Doctor {
   speciality: string;
   facilityName: string | null;
   languagesSpoken: string[];
+  consultationFee: number;
   bio: string | null;
+}
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
 }
 
 interface Slot {
@@ -65,17 +72,67 @@ export const DoctorProfile: React.FC = () => {
 
     try {
       const slot = slots.find(s => s.id === selectedSlot);
-      await api.post('/appointments', {
+      const apptRes = await api.post('/appointments', {
         doctorId: id,
         slotId: selectedSlot,
         scheduledAt: slot?.startsAt,
         concernCategory: concern,
         preferredMode: 'video'
       });
-      navigate('/');
+
+      const appointmentId = apptRes.data.id;
+
+      // Create Payment Order
+      const paymentRes = await api.post(`/appointments/${appointmentId}/create-payment`);
+      const { order, fee } = paymentRes.data;
+
+      // Open Razorpay Checkout
+      const options = {
+        key: "rzp_test_demo", // Our backend falls back to this for demo
+        amount: order.amount,
+        currency: order.currency,
+        name: "MedLink Telehealth",
+        description: `Consultation with Dr. ${doctor?.fullName}`,
+        order_id: order.id,
+        handler: async function (response: any) {
+          try {
+            await api.post(`/appointments/${appointmentId}/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            });
+            navigate('/');
+          } catch (verifyErr) {
+            console.error(verifyErr);
+            setError('Payment verification failed.');
+            setBooking(false);
+          }
+        },
+        prefill: {
+          name: "Patient",
+          email: "patient@example.com",
+          contact: "9999999999"
+        },
+        theme: {
+          color: "#2563eb"
+        },
+        modal: {
+          ondismiss: function() {
+            setBooking(false);
+          }
+        }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response: any){
+        setError(`Payment Failed: ${response.error.description}`);
+        setBooking(false);
+      });
+      rzp.open();
+
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || 'Failed to book appointment.');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to book appointment.');
       setBooking(false);
     }
   };
@@ -116,6 +173,11 @@ export const DoctorProfile: React.FC = () => {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={16} /> {doctor.facilityName || 'Independent Practice'}</span>
               </div>
+            </div>
+            
+            <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Consultation Fee</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>₹{doctor.consultationFee}</div>
             </div>
           </div>
 

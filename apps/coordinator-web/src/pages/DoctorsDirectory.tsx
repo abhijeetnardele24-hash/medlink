@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Search, UserX, UserCheck, MoreVertical } from 'lucide-react';
-
-interface Doctor {
-  id: string;
-  fullName: string;
-  speciality: string;
-  facilityName: string | null;
-  verificationStatus: string;
-}
+import { Doctor } from '../types';
 
 export const DoctorsDirectory: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -21,7 +14,9 @@ export const DoctorsDirectory: React.FC = () => {
         // We'll fetch from the public doctors route, which only returns verified ones
         // In a real app, an admin route like /admin/doctors would return all of them including suspended.
         const res = await api.get('/doctors');
-        setDoctors(res.data.data.map((d: any) => ({ ...d, verificationStatus: 'verified' })));
+        if (res.data && res.data.data) {
+          setDoctors(res.data.data.map((d: Doctor) => ({ ...d, verificationStatus: 'verified' })));
+        }
       } catch (err) {
         console.error(err);
       } finally {

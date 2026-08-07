@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { encounters, prescriptions, appointments } from "../db/schema";
 import { authenticate } from "../middleware/auth";
@@ -13,6 +13,30 @@ import { attachments } from "../db/schema";
 const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
+
+// ─── GET /encounters ────────────────────────────────────────────────────────
+router.get(
+  "/",
+  authenticate,
+  requireRole("doctor"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const doctorId = (_req as any).user.id;
+    const myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, doctorId));
+    
+    if (myAppts.length === 0) {
+      res.json({ data: [] });
+      return;
+    }
+
+    const apptIds = myAppts.map(a => a.id);
+    const rows = await getDb()
+      .select()
+      .from(encounters)
+      .where(inArray(encounters.appointmentId, apptIds));
+
+    res.json({ data: rows });
+  }
+);
 
 // ─── POST /encounters ───────────────────────────────────────────────────────
 // Start a consultation session from an appointment
@@ -124,16 +148,15 @@ router.post(
       metadata: { contentType: file.mimetype },
     });
 
-    // We make it public for simplicity in this demo so the patient can view it
-    await fileUpload.makePublic();
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    // Private by default, we just store the gs:// or private bucket path in storageKey
+    const storagePath = `gs://${bucket.name}/${fileName}`;
 
     const [attachment] = await getDb()
       .insert(attachments)
       .values({
-        ownerId: (_req as any).user.id, // Assuming user is injected by authenticate middleware
+        ownerId: (_req as any).user.id,
         encounterId: id,
-        storageKey: publicUrl, // Storing the public URL for easy access in frontend
+        storageKey: storagePath,
         contentType: file.mimetype,
         byteSize: file.size,
         checksum: "uploaded",
@@ -142,6 +165,46 @@ router.post(
       .returning();
 
     res.status(201).json(attachment);
+  }
+);
+
+// ─── GET /encounters/:id/recording-url ──────────────────────────────────────
+router.get(
+  "/:id/recording-url",
+  authenticate,
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    
+    // Find the attachment
+    const attachmentRows = await getDb()
+      .select()
+      .from(attachments)
+      .where(eq(attachments.encounterId, id))
+      .limit(1);
+
+    if (attachmentRows.length === 0) {
+      throw new NotFoundError("Recording");
+    }
+
+    const storageKey = attachmentRows[0].storageKey;
+    const bucket = getFirebaseAdmin().storage().bucket();
+    
+    // Extract file name from gs://bucket/file
+    const fileNameMatch = storageKey.match(/gs:\/\/[^\/]+\/(.+)/);
+    if (!fileNameMatch) {
+      res.status(500).json({ error: "Invalid storage key" });
+      return;
+    }
+
+    const file = bucket.file(fileNameMatch[1]);
+    
+    const [url] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.json({ url });
   }
 );
 

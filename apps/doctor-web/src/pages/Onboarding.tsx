@@ -22,7 +22,8 @@ export const Onboarding: React.FC = () => {
     speciality: '',
     education: '',
     experience: '',
-    registration: ''
+    registration: '',
+    consultationFee: 500,
   });
 
   const [loading, setLoading] = useState(false);
@@ -41,10 +42,10 @@ export const Onboarding: React.FC = () => {
         educationBackground: formData.education,
         experienceYears: parseInt(formData.experience) || 0,
         registrationNumber: formData.registration,
-        // Send default required fields for profile completion
         fullName: profile?.fullName || user?.displayName || '',
         languagesSpoken: ['English'],
-        supportedModes: ['video', 'audio']
+        supportedModes: ['video', 'audio'],
+        consultationFee: Number(formData.consultationFee) || 500,
       });
 
       // Force a reload to get the new status
@@ -148,6 +149,15 @@ export const Onboarding: React.FC = () => {
                   <input type="text" name="registration" value={formData.registration} onChange={handleChange} required className="input-field" style={{ paddingLeft: '2.75rem' }} placeholder="MCI-123456" />
                 </div>
               </div>
+            </div>
+
+            <div style={{ marginBottom: '3rem' }}>
+              <label className="input-label">Consultation Fee (₹)</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontWeight: 'bold' }}>₹</span>
+                <input type="number" name="consultationFee" value={formData.consultationFee} onChange={handleChange} required min="0" className="input-field" style={{ paddingLeft: '2.5rem' }} placeholder="500" />
+              </div>
+              <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>This is the flat fee patients will pay when booking an appointment.</span>
             </div>
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

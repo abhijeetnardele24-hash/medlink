@@ -3,12 +3,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { Calendar, RefreshCw, Clock, Video, User, CheckCircle, AlertCircle, TrendingUp, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Appointment } from '../types';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [appointments, setAppointments] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');

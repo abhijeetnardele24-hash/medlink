@@ -1,20 +1,23 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap');
 
 :root {
-  /* Forma.ai Color Palette */
+  /* Ultra-Polished Clean SaaS Palette */
   --bg-base: #ffffff;
-  --bg-surface: #f9f9fb;
+  --bg-surface: #f9fafb;
   --bg-surface-elevated: #ffffff;
-  --bg-lavender: #f3effe;
-  --bg-banner: #1c1132;
+  --bg-banner: #111827;
+  --bg-muted: #f3f4f6;
   
-  --text-main: #000000;
+  --text-main: #111827;
   --text-muted: #4b5563; 
-  --border: #e5e7eb;
-  --border-lavender: #e0d7fc;
+  --text-inverse: #ffffff;
   
-  --accent: #423FDE;
-  --accent-hover: #3634b8;
+  --border: #e5e7eb;
+  --border-muted: #f3f4f6;
+  
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
   
   --danger: #ef4444;
   --success: #10b981;
@@ -30,14 +33,15 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
-  line-height: 1.5;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Typography Overrides */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Manrope', sans-serif;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-main);
 }
@@ -49,31 +53,33 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   gap: 0.5rem;
   padding: 12px 24px;
-  border-radius: 320px;
-  font-family: 'Manrope', sans-serif;
-  font-weight: 700;
-  font-size: 1rem;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
   border: none;
   text-decoration: none;
 }
 
 .btn-primary {
-  background-color: var(--accent);
-  color: white;
+  background-color: var(--text-main);
+  color: var(--text-inverse);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .btn-primary:hover {
-  background-color: var(--accent-hover);
+  background-color: #030712;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(66, 63, 222, 0.25);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary {
   background-color: white;
   color: var(--text-main);
   border: 1px solid var(--border);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary:hover {
@@ -81,79 +87,18 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #d1d5db;
 }
 
-/* Specific UI elements */
+/* Advanced Clean UI elements */
 .glass-panel {
-  background: var(--bg-surface-elevated);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: 20px; 
+  border-radius: 16px; 
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-}
-
-.enterprise-card {
-  background: var(--bg-lavender);
-  border: 1px solid var(--border-lavender);
-  border-radius: 12px;
-  padding: 2.5rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.enterprise-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(66, 63, 222, 0.1);
-}
-
-.circular-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 20px;
-  border: 1px solid var(--border-lavender);
-  background: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-main);
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.circular-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.dotted-bg {
-  background-image: radial-gradient(var(--border-lavender) 1.5px, transparent 1.5px);
-  background-size: 24px 24px;
-}
-
-.input-field {
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  color: var(--text-main);
-  font-family: 'Inter', sans-serif;
-  transition: all 0.2s ease;
-}
-
-.input-field:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(66, 63, 222, 0.1);
-}
-
-.input-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-main);
-  margin-bottom: 0.5rem;
 }
 
 .hero-title {
   font-family: 'Manrope', sans-serif;
-  font-size: clamp(3rem, 6vw, 5.5rem);
+  font-size: clamp(3.5rem, 7vw, 6.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.05;
@@ -164,31 +109,68 @@ h1, h2, h3, h4, h5, h6 {
 .hero-subtitle {
   font-size: 1.25rem;
   color: var(--text-muted);
-  max-width: 600px;
-  margin-bottom: 2rem;
+  max-width: 650px;
+  margin-bottom: 2.5rem;
   font-weight: 400;
+  line-height: 1.6;
 }
 
-/* Animation utilities */
-.fade-in {
-  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Workflow Step Styles */
+.workflow-step {
+  display: flex;
+  gap: 2.5rem;
+  position: relative;
+  padding-bottom: 4rem;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.workflow-step::before {
+  content: '';
+  position: absolute;
+  left: 28px;
+  top: 64px;
+  bottom: -16px;
+  width: 1px;
+  background: var(--border);
+  z-index: 0;
 }
 
-/* Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-left-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.workflow-step:last-child::before {
+  display: none;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.workflow-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.workflow-content {
+  flex: 1;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+
+.workflow-content:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  transform: translateX(4px);
+}
+
+.dotted-bg {
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
 }

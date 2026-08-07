@@ -25,7 +25,7 @@ export const useWebRTC = (encounterId: string | null) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
 
-        socketRef.current = io('http://localhost:3000', { withCredentials: true });
+        socketRef.current = io('http://localhost:5000', { withCredentials: true });
         
         socketRef.current.on('connect', () => {
           socketRef.current?.emit('join-encounter', encounterId);

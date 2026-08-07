@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { Users, Search, User, Calendar, Phone, Mail, RefreshCw } from 'lucide-react';
+import { Users, Search, User, Calendar, Mail, RefreshCw } from 'lucide-react';
+import { Patient, Appointment } from '../types';
 
 export const PatientsDirectory: React.FC = () => {
-  const [patients, setPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
@@ -15,9 +16,9 @@ export const PatientsDirectory: React.FC = () => {
     try {
       // Derive patient list from all appointments
       const res = await api.get('/admin/appointments');
-      const appts = res.data || [];
-      const unique = new Map();
-      appts.forEach((a: any) => {
+      const appts: Appointment[] = res.data || [];
+      const unique = new Map<string, Patient>();
+      appts.forEach((a) => {
         if (a.patient && !unique.has(a.patient.id)) {
           unique.set(a.patient.id, { ...a.patient, lastSeen: a.scheduledAt, concern: a.concernCategory });
         }

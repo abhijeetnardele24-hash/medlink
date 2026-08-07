@@ -7,7 +7,7 @@ import { auth } from '../lib/firebase';
 export const Consultation: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { localStream, remoteStream, isConnected, error, startCall } = useWebRTC(id || null);
+  const { localStream, remoteStream, isConnected, error, startCall, connectionQuality } = useWebRTC(id || null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -73,7 +73,7 @@ export const Consultation: React.FC = () => {
       const formData = new FormData();
       formData.append('recording', recordingBlob, `recording_${id}.webm`);
 
-      const res = await fetch(`http://localhost:3000/encounters/${id}/recording`, {
+      const res = await fetch(`http://localhost:5000/encounters/${id}/recording`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -140,16 +140,17 @@ export const Consultation: React.FC = () => {
       <div className="absolute top-0 left-0 right-0 p-6 z-10 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-white font-['Manrope']">Doctor's Command Center</h2>
-          <p className="text-white/70 text-sm">
+          <p className="text-white/70 text-sm flex items-center gap-2 mt-1">
             {isConnected ? (
-              <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                Connected E2EE
-              </span>
+              <>
+                <span className={`w-2 h-2 rounded-full ${connectionQuality === 'good' ? 'bg-green-500' : connectionQuality === 'poor' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
+                Connected E2EE {connectionQuality !== 'good' && <span className="font-bold">({connectionQuality.toUpperCase()})</span>}
+              </>
             ) : (
               "Waiting for connection"
             )}
           </p>
+          {/* TODO: Add state machine fallback for offline / chat modes when connection is completely lost */}
         </div>
         
         {/* Recording Status / Upload */}

@@ -2,32 +2,32 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { User, ArrowLeft, Calendar, FileText, Clock, Video, AlertCircle } from 'lucide-react';
+import { Patient, Appointment, Encounter } from '../types';
 
 export const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [patient, setPatient] = useState<any>(null);
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [encounters, setEncounters] = useState<any[]>([]);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [encounters, setEncounters] = useState<Encounter[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const apptRes = await api.get('/appointments');
-        const allAppts = apptRes.data.data || [];
-        const patientAppts = allAppts.filter((a: any) => a.patient?.id === id);
+        const allAppts: Appointment[] = apptRes.data.data || [];
+        const patientAppts = allAppts.filter((a) => a.patient?.id === id);
         setAppointments(patientAppts);
 
         if (patientAppts.length > 0) {
           setPatient(patientAppts[0].patient);
         }
 
-        // Try to fetch encounters too
         try {
           const encRes = await api.get('/encounters');
-          const patientEncs = (encRes.data.data || []).filter((e: any) => 
-            patientAppts.some((a: any) => a.id === e.appointmentId)
+          const patientEncs: Encounter[] = (encRes.data.data || []).filter((e: Encounter) => 
+            patientAppts.some((a) => a.id === e.appointmentId)
           );
           setEncounters(patientEncs);
         } catch { /* encounters might not exist */ }
@@ -105,7 +105,7 @@ export const PatientDetail: React.FC = () => {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {appointments.map((appt: any) => (
+            {appointments.map((appt: Appointment) => (
               <div key={appt.id} style={{ padding: '1rem 1.25rem', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
