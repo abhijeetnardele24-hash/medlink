@@ -60,7 +60,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
                 <Clock size={14} /> {dateString}, {timeString}
               </span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {getModeIcon()} <span style={{ textTransform: 'capitalize' }}>{appointment.preferredMode.replace('_', ' ')}</span>
+                {getModeIcon()} <span style={{ textTransform: 'capitalize' }}>{appointment.preferredMode?.replace('_', ' ') ?? 'N/A'}</span>
               </span>
             </div>
           </div>

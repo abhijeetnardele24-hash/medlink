@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { Search, UserX, UserCheck, MoreVertical } from 'lucide-react';
+import { Search, UserX } from 'lucide-react';
 import type { Doctor } from '../types';
 
 export const DoctorsDirectory: React.FC = () => {
@@ -28,7 +28,7 @@ export const DoctorsDirectory: React.FC = () => {
 
   const filteredDoctors = doctors.filter(d => 
     d.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    d.speciality.toLowerCase().includes(search.toLowerCase())
+    (d.speciality ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   return (

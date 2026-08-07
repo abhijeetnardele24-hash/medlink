@@ -22,7 +22,7 @@ export const Signup: React.FC = () => {
 
     try {
       // 1. Create Firebase User
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth!, email, password);
       const idToken = await userCredential.user.getIdToken();
       
       // 2. Register Doctor (Minimal fields)

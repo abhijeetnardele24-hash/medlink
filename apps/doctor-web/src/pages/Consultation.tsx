@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Video, Mic, MicOff, VideoOff, PhoneOff, Maximize, Play, Square, UploadCloud, Loader2 } from 'lucide-react';
+import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2 } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
 
@@ -68,7 +68,7 @@ export const Consultation: React.FC = () => {
     setIsUploading(true);
 
     try {
-      const token = await auth.currentUser?.getIdToken();
+      const token = await auth?.currentUser?.getIdToken();
       
       const formData = new FormData();
       formData.append('recording', recordingBlob, `recording_${id}.webm`);

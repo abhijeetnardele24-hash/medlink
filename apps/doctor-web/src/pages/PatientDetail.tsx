@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { User, ArrowLeft, Calendar, FileText, Clock, Video, AlertCircle } from 'lucide-react';
+import { User, ArrowLeft, Calendar, Clock, Video, AlertCircle } from 'lucide-react';
 import type { Patient, Appointment, Encounter } from '../types';
 
 export const PatientDetail: React.FC = () => {
@@ -21,7 +21,7 @@ export const PatientDetail: React.FC = () => {
         setAppointments(patientAppts);
 
         if (patientAppts.length > 0) {
-          setPatient(patientAppts[0].patient);
+          setPatient(patientAppts[0].patient ?? null);
         }
 
         try {

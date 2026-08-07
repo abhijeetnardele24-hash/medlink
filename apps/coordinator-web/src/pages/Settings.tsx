@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings as SettingsIcon, Shield, Server, Bell, Database, Check, AlertTriangle } from 'lucide-react';
+import { Settings as SettingsIcon, Shield, Server, Check, AlertTriangle } from 'lucide-react';
 
 export const Settings = () => {
   const [maintenanceMode, setMaintenanceMode] = useState(false);

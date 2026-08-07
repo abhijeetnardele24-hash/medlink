@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
+  profile: { verificationStatus: string; fullName?: string } | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<{ verificationStatus: string } | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -22,8 +24,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        try {
+          const idToken = await currentUser.getIdToken();
+          const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${idToken}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setProfile(data.doctor ?? null);
+          }
+        } catch {
+          setProfile(null);
+        }
+      } else {
+        setProfile(null);
+      }
       setLoading(false);
     });
 
@@ -41,7 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, getToken }}>
+    <AuthContext.Provider value={{ user, loading, logout, getToken, profile }}>
       {children}
     </AuthContext.Provider>
   );

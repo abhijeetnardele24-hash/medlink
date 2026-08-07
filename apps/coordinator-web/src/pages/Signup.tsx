@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { api } from '../lib/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Mail, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -20,7 +19,7 @@ export const Signup: React.FC = () => {
 
     try {
       // 1. Create Firebase User
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await createUserWithEmailAndPassword(auth, email, password);
       
       // 2. Register Coordinator in backend (requires generic auth endpoint or just custom claims, but for demo we will just rely on firebase)
       // Since coordinators don't have a specific table yet, Firebase Auth is sufficient for this demo.

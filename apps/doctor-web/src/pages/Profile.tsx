@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Award, BookOpen, Stethoscope, Briefcase, Phone, Mail, MapPin } from 'lucide-react';
+import { User, BookOpen, Stethoscope, Briefcase, Phone, MapPin } from 'lucide-react';
 import { api } from '../lib/api';
 
 interface DoctorProfile {

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
-import { ShieldCheck, LogOut, Check, X, RefreshCw, FileText } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { ShieldCheck, LogOut, Check, X, RefreshCw } from 'lucide-react';
 
 interface DoctorVerification {
   id: string;
@@ -23,7 +22,6 @@ interface DoctorVerification {
 
 export const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   
   const [verifications, setVerifications] = useState<DoctorVerification[]>([]);
   const [loading, setLoading] = useState(true);

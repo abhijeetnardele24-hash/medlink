@@ -1,0 +1,119 @@
+name: CI — Build & Type-Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Job 1: Doctor Web ──────────────────────────────────────────────────────
+  doctor-web:
+    name: "🩺 doctor-web — TypeScript + Vite Build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/doctor-web
+
+    steps:
+      - name: "📥 Checkout source"
+        uses: actions/checkout@v4
+
+      - name: "⚙️  Set up Node.js 22"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/doctor-web/package-lock.json
+
+      - name: "📦 Install dependencies (ci)"
+        run: npm ci
+
+      - name: "🔎 TypeScript type-check"
+        run: npx tsc -b --noEmit
+
+      - name: "🏗️  Production build"
+        run: npm run build
+
+      - name: "✅ doctor-web build passed"
+        run: echo "doctor-web compiled and bundled successfully."
+
+  # ─── Job 2: Coordinator Web ─────────────────────────────────────────────────
+  coordinator-web:
+    name: "🛡️ coordinator-web — TypeScript + Vite Build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/coordinator-web
+
+    steps:
+      - name: "📥 Checkout source"
+        uses: actions/checkout@v4
+
+      - name: "⚙️  Set up Node.js 22"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/coordinator-web/package-lock.json
+
+      - name: "📦 Install dependencies (ci)"
+        run: npm ci
+
+      - name: "🔎 TypeScript type-check"
+        run: npx tsc -b --noEmit
+
+      - name: "🏗️  Production build"
+        run: npm run build
+
+      - name: "✅ coordinator-web build passed"
+        run: echo "coordinator-web compiled and bundled successfully."
+
+  # ─── Job 3: API (Node / Express / Drizzle) ──────────────────────────────────
+  api:
+    name: "🔌 services/api — TypeScript + Build"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: services/api
+
+    steps:
+      - name: "📥 Checkout source"
+        uses: actions/checkout@v4
+
+      - name: "⚙️  Set up Node.js 22"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: services/api/package-lock.json
+
+      - name: "📦 Install dependencies (ci)"
+        run: npm ci
+
+      - name: "🔎 TypeScript type-check"
+        run: npm run typecheck
+
+      - name: "🏗️  Production build"
+        run: npm run build
+
+      - name: "✅ API build passed"
+        run: echo "services/api compiled successfully."
+
+  # ─── Final gate: all three must be green ────────────────────────────────────
+  ci-gate:
+    name: "🚦 CI Gate — All Systems Green"
+    runs-on: ubuntu-latest
+    needs: [doctor-web, coordinator-web, api]
+    steps:
+      - name: "🎉 All builds passed"
+        run: |
+          echo "========================================"
+          echo "  MedLink CI — ALL JOBS PASSED ✅"
+          echo "  doctor-web      → ✅ PASS"
+          echo "  coordinator-web → ✅ PASS"
+          echo "  services/api    → ✅ PASS"
+          echo "========================================"
