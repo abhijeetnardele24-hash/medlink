@@ -1,0 +1,27 @@
+# <type>(<scope>): <short imperative summary — max 72 chars>
+#
+# Types: feat | fix | refactor | perf | security | test | docs | ci | build | chore | revert
+# Scopes: api | doctor-web | coordinator-web | auth | webrtc | payments | db | storage | types | ci | infra
+#
+# ─── Body (optional — explain WHY, not WHAT) ──────────────────────────────────
+#
+# Why:
+# <problem or motivation>
+#
+# What changed:
+# - <specific change>
+# - <specific change>
+#
+# Validation:
+# - <build output, manual test, or review performed>
+#
+# Breaking changes: <none | describe>
+# Closes #<issue-number>
+#
+# ─── Examples ─────────────────────────────────────────────────────────────────
+# feat(api): add ownership check on GET /encounters/:id/recording-url
+# fix(doctor-web): correct API base URL default from port 5000 to 3000
+# security(api): throw ForbiddenError on unauthorized recording access
+# refactor(types): replace all `any` typings with strict domain interfaces
+# ci(workflows): add monorepo build gate for doctor-web, coordinator-web, api
+# chore(coordinator-web): remove unused lucide-react icon imports
