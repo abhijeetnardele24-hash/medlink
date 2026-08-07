@@ -12,6 +12,8 @@ export interface Patient {
   // Included from joins sometimes
   email?: string;
   fullName?: string;
+  lastSeen?: string;
+  concern?: string;
 }
 
 export interface Doctor {

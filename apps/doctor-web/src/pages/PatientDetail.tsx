@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { User, ArrowLeft, Calendar, FileText, Clock, Video, AlertCircle } from 'lucide-react';
-import { Patient, Appointment, Encounter } from '../types';
+import type { Patient, Appointment, Encounter } from '../types';
 
 export const PatientDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();

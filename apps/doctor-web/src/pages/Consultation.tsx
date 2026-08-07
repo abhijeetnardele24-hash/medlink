@@ -73,7 +73,8 @@ export const Consultation: React.FC = () => {
       const formData = new FormData();
       formData.append('recording', recordingBlob, `recording_${id}.webm`);
 
-      const res = await fetch(`http://localhost:5000/encounters/${id}/recording`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${API_URL}/encounters/${id}/recording`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

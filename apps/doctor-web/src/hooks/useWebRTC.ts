@@ -27,7 +27,7 @@ export const useWebRTC = (encounterId: string | null) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
 
-        socketRef.current = io('http://localhost:5000', { withCredentials: true });
+        socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', { withCredentials: true });
         
         socketRef.current.on('connect', () => {
           socketRef.current?.emit('join-encounter', encounterId);
@@ -142,6 +142,8 @@ export const useWebRTC = (encounterId: string | null) => {
           setConnectionQuality('poor');
         } else {
           setConnectionQuality('good');
+          // Auto-recover video tracks if quality is back to good
+          localStream?.getVideoTracks().forEach(t => t.enabled = true);
         }
       } catch (err) {
         console.error('Failed to get stats', err);

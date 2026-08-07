@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { Calendar, RefreshCw, Clock, Video, User, CheckCircle, AlertCircle, TrendingUp, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Appointment } from '../types';
+import type { Appointment } from '../types';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();

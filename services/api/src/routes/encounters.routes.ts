@@ -174,6 +174,27 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
+    const userId = (_req as any).user.id;
+
+    // Verify ownership
+    const encounterRows = await getDb()
+      .select({ 
+        doctorId: appointments.doctorId, 
+        patientId: appointments.patientId 
+      })
+      .from(encounters)
+      .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+      .where(eq(encounters.id, id))
+      .limit(1);
+
+    if (encounterRows.length === 0) {
+      throw new NotFoundError("Encounter");
+    }
+
+    const { doctorId, patientId } = encounterRows[0];
+    if (userId !== doctorId && userId !== patientId) {
+      throw new ForbiddenError("Not authorized to view this recording");
+    }
     
     // Find the attachment
     const attachmentRows = await getDb()

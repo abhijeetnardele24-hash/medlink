@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Search, UserX, UserCheck, MoreVertical } from 'lucide-react';
-import { Doctor } from '../types';
+import type { Doctor } from '../types';
 
 export const DoctorsDirectory: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);

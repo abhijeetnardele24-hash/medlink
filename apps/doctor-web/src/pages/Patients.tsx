@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Users, Search, User, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Patient, Appointment } from '../types';
+import type { Patient, Appointment } from '../types';
 
 export const Patients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);

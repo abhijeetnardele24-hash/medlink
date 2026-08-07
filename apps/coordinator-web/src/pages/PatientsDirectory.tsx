@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { Users, Search, User, Calendar, Mail, RefreshCw } from 'lucide-react';
-import { Patient, Appointment } from '../types';
+import type { Patient, Appointment } from '../types';
 
 export const PatientsDirectory: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);

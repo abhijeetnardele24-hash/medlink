@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { Calendar, User, Search, RefreshCw, Clock } from 'lucide-react';
-import { Appointment } from '../types';
+import { Calendar, Search, RefreshCw, Clock } from 'lucide-react';
+import type { Appointment } from '../types';
 
 export const AppointmentsOverview: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
