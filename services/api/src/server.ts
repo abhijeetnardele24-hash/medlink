@@ -27,6 +27,9 @@ import doctorsRouter from "./routes/doctors.routes";
 import appointmentsRouter from "./routes/appointments.routes";
 import adminRouter from "./routes/admin.routes";
 import encountersRouter from "./routes/encounters.routes";
+import recommendationsRouter from "./routes/recommendations.routes";
+import prescriptionsRouter from "./routes/prescriptions.routes";
+import webhooksRouter from "./routes/webhooks.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -101,7 +104,10 @@ export const createServer = (): Express => {
   app.use("/doctors", doctorsRouter);
   app.use("/appointments", authenticate, appointmentsRouter);
   app.use("/encounters", authenticate, encountersRouter);
+  app.use("/prescriptions", prescriptionsRouter); // Has own auth checks
+  app.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
   app.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
+  app.use("/webhooks", webhooksRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

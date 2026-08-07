@@ -99,7 +99,7 @@ router.post(
 
     // Verify the target doctor exists and is verified
     const doctorRows = await getDb()
-      .select({ id: doctors.id, verificationStatus: doctors.verificationStatus })
+      .select({ id: doctors.id, verificationStatus: doctors.verificationStatus, consultationFee: doctors.consultationFee })
       .from(doctors)
       .where(eq(doctors.id, body.doctorId))
       .limit(1);
@@ -121,6 +121,13 @@ router.post(
         status: "requested",
       })
       .returning();
+
+    // Snapshot the fee into a payment record
+    await getDb().insert(paymentRecords).values({
+      appointmentId: appointment.id,
+      amount: doctorRows[0].consultationFee,
+      state: "pending", // Payment is now required
+    });
 
     // Write audit event — no clinical content
     const userId = await getUserIdForFirebaseUid(uid);
@@ -363,15 +370,15 @@ router.post(
     if (apptRows.length === 0) throw new NotFoundError("Appointment");
     if (apptRows[0].patientId !== patient.id) throw new ForbiddenError();
 
-    // Fetch the doctor's consultation fee
-    const doctorRows = await getDb()
-      .select({ consultationFee: doctors.consultationFee })
-      .from(doctors)
-      .where(eq(doctors.id, apptRows[0].doctorId))
+    // Fetch the snapshotted fee from payment records
+    const paymentRows = await getDb()
+      .select({ amount: paymentRecords.amount })
+      .from(paymentRecords)
+      .where(eq(paymentRecords.appointmentId, id))
       .limit(1);
 
-    if (doctorRows.length === 0) throw new NotFoundError("Doctor");
-    const fee = doctorRows[0].consultationFee;
+    if (paymentRows.length === 0) throw new NotFoundError("Payment Record");
+    const fee = paymentRows[0].amount;
 
     // Initialize Razorpay (using test keys if env vars missing for demo)
     const razorpay = new Razorpay({
@@ -386,25 +393,11 @@ router.post(
         receipt: `receipt_${id}`,
       });
 
-      // Upsert payment record
-      const existingPayment = await getDb()
-        .select()
-        .from(paymentRecords)
-        .where(eq(paymentRecords.appointmentId, id))
-        .limit(1);
-
-      if (existingPayment.length === 0) {
-        await getDb().insert(paymentRecords).values({
-          appointmentId: id,
-          state: "pending",
-          razorpayOrderId: order.id,
-        });
-      } else {
-        await getDb()
-          .update(paymentRecords)
-          .set({ razorpayOrderId: order.id, state: "pending", updatedAt: new Date() })
-          .where(eq(paymentRecords.appointmentId, id));
-      }
+      // Update payment record with razorpay order
+      await getDb()
+        .update(paymentRecords)
+        .set({ razorpayOrderId: order.id, updatedAt: new Date() })
+        .where(eq(paymentRecords.appointmentId, id));
 
       res.status(200).json({ order, fee });
     } catch (err: any) {

@@ -103,6 +103,11 @@ router.post(
     const id = _req.params.id as string;
     const { doctorId, medicinesJson, instructionsText } = _req.body;
 
+    if (!Array.isArray(medicinesJson)) {
+      res.status(400).json({ error: "medicinesJson must be an array of medicine objects" });
+      return;
+    }
+
     const [prescription] = await getDb()
       .insert(prescriptions)
       .values({
@@ -115,11 +120,20 @@ router.post(
       })
       .returning();
 
-    // Optionally mark encounter as ended
-    await getDb()
+    // Mark encounter as ended
+    const [updatedEncounter] = await getDb()
       .update(encounters)
       .set({ status: "ended", endedAt: new Date(), updatedAt: new Date() })
-      .where(eq(encounters.id, id));
+      .where(eq(encounters.id, id))
+      .returning();
+
+    if (updatedEncounter) {
+      // Mark appointment as completed
+      await getDb()
+        .update(appointments)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(eq(appointments.id, updatedEncounter.appointmentId));
+    }
 
     res.status(201).json(prescription);
   }

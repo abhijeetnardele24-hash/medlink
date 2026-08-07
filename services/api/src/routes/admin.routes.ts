@@ -50,7 +50,7 @@ router.patch(
   authenticate,
   requireRole("coordinator"),
   async (_req: Request, res: Response): Promise<void> => {
-    const { id } = _req.params;
+    const id = _req.params.id as string;
     const { status, reasonCode } = _req.body as { status: string; reasonCode?: string };
 
     const verifRows = await getDb()
@@ -165,7 +165,7 @@ router.patch(
   authenticate,
   requireRole("coordinator"),
   async (_req: Request, res: Response): Promise<void> => {
-    const { id } = _req.params;
+    const id = _req.params.id as string;
     const { outcome, coordinatorNote } = _req.body as { outcome: string; coordinatorNote?: string };
 
     const taskRows = await getDb()

@@ -356,6 +356,7 @@ export const paymentRecords = pgTable(
     appointmentId: uuid("appointment_id")
       .notNull()
       .references(() => appointments.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull().default(0), // Snapshot of the fee at booking time (in INR)
     state: paymentStateEnum("state").notNull().default("free_demo"),
     demoReference: text("demo_reference"), // synthetic reference only
     razorpayOrderId: text("razorpay_order_id"),
@@ -631,5 +632,46 @@ export const recommendationEvents = pgTable(
   (t) => [
     index("recommendation_events_patient_id_idx").on(t.patientId),
     index("recommendation_events_created_at_idx").on(t.createdAt),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────
+// PHARMACY ORDERS
+// ─────────────────────────────────────────────────────────────
+
+export const pharmacyOrderStatusEnum = pgEnum("pharmacy_order_status", [
+  "pending_payment",
+  "paid",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
+
+export const pharmacyOrders = pgTable(
+  "pharmacy_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    prescriptionId: uuid("prescription_id")
+      .notNull()
+      .references(() => prescriptions.id),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id),
+    totalAmount: integer("total_amount").notNull(), // Amount in INR
+    status: pharmacyOrderStatusEnum("status").notNull().default("pending_payment"),
+    deliveryAddress: text("delivery_address").notNull(),
+    razorpayOrderId: text("razorpay_order_id"),
+    razorpayPaymentId: text("razorpay_payment_id"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("pharmacy_orders_patient_id_idx").on(t.patientId),
+    index("pharmacy_orders_prescription_id_idx").on(t.prescriptionId),
   ]
 );
