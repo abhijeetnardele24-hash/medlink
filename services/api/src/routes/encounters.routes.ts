@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -35,7 +35,6 @@ router.get(
     }
 
     const apptIds = myAppts.map(a => a.id);
-    const { users: dbUsers, doctors } = require("../db/schema");
 
     const rows = await getDb()
       .select({

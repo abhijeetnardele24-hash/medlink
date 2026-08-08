@@ -30,9 +30,7 @@ committed before moving to the next. Do not skip ahead.
 ## 1. P0 — Security & core-loop blockers (do these first, in this order)
 
 ### 1.1 Socket.IO room authorization — [DONE]
-**Current state (verified):** `services/api/src/index.ts` — `join-encounter` accepts any
-`encounterId` from any connected socket with zero auth check. Anyone who knows or guesses an
-encounter ID can join that video call's signalling room.
+**Current state (verified):** `services/api/src/index.ts` uses token-verified `io.use()` middleware to authenticate sockets on connection. DB-backed `join-encounter` authorization checks if the user belongs to the appointment, and a `joinedEncounters` Set tracks which rooms the socket is authorized to relay `webrtc-offer`, `webrtc-answer`, and `webrtc-ice-candidate` events in.
 **Fix:**
 - On socket connection, require a Firebase ID token (sent via `auth` payload on the
   `io()` client call, not query string).

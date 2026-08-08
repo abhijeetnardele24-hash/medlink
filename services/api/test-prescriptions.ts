@@ -104,6 +104,7 @@ async function test() {
       if (!res.ok) throw new Error(await res.text());
       const html = await res.text();
       console.log("✅ Received HTML Receipt! (Length: " + html.length + " bytes)");
+      console.log(html);
 
       console.log("\n🎉 Phase 3 flow complete!");
     } catch (e) {
