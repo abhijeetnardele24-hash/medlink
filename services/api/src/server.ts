@@ -30,6 +30,7 @@ import encountersRouter from "./routes/encounters.routes";
 import recommendationsRouter from "./routes/recommendations.routes";
 import prescriptionsRouter from "./routes/prescriptions.routes";
 import webhooksRouter from "./routes/webhooks.routes";
+import webrtcRouter from "./routes/webrtc.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -108,6 +109,7 @@ export const createServer = (): Express => {
   app.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
   app.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
   app.use("/webhooks", webhooksRouter);
+  app.use("/webrtc", webrtcRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

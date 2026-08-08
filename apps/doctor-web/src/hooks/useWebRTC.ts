@@ -1,13 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { auth } from '../lib/firebase';
-
-const ICE_SERVERS = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ],
-};
+import { api } from '../lib/api';
 
 export const useWebRTC = (encounterId: string | null) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -42,7 +36,14 @@ export const useWebRTC = (encounterId: string | null) => {
           socketRef.current?.emit('join-encounter', encounterId);
         });
 
-        const pc = new RTCPeerConnection(ICE_SERVERS);
+        // Fetch TURN credentials
+        const turnRes = await api.get('/webrtc/credentials');
+        const iceConfig = turnRes.data; // e.g. { iceServers: [...] }
+
+        // TODO: For testing relay, you can uncomment this to force TURN relay
+        // iceConfig.iceTransportPolicy = 'relay';
+
+        const pc = new RTCPeerConnection(iceConfig);
         peerConnectionRef.current = pc;
 
         stream.getTracks().forEach(track => {

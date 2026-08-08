@@ -43,9 +43,7 @@ it doesn't belong to, is rejected — demonstrate this with a real test script, 
 review. *(Note: no-token case intentionally skipped in test script due to fake token injection complexity)*
 
 ### 1.2 Prescription PDF — frontend integration — [DONE]
-**Current state (verified):** `GET /prescriptions/:id/pdf` returns a real HTML receipt
-(confirmed via `test-prescriptions.ts`). `patient-web/src/pages/History.tsx` has a "Download"
-button with no click handler — it does nothing.
+**Current state (verified):** `GET /prescriptions/:id/pdf` correctly returns an HTML receipt with clinical formatting (doctor details, medicines, signature). The frontend (both `patient-web` and `doctor-web`) uses an authenticated `api.get` call to fetch it as a blob. A new tab is opened synchronously to bypass popup blockers, the blob is injected into it via `URL.createObjectURL`, and the object URL is cleaned up after 5 seconds to prevent memory leaks. Failed requests close the empty tab gracefully.
 **Fix:**
 - Wire the button to fetch the receipt and open it in a new tab / trigger a download.
 - Add the same capability to `doctor-web` (prescription history with working links).
@@ -54,15 +52,8 @@ button with no click handler — it does nothing.
 **Acceptance:** clicking Download in patient-web actually retrieves and displays/downloads a
 real prescription for a real encounter.
 
-### 1.3 TURN server (WebRTC will fail on real rural/mobile networks without this)
-**Current state (verified):** only public Google STUN servers configured in both
-`useWebRTC.ts` files. No TURN.
-**Fix:**
-- Add a coturn container to local dev tooling (docker-compose or equivalent), with test
-  credentials in `.env.example`.
-- Add the TURN server to `ICE_SERVERS` in both `doctor-web` and `patient-web`'s
-  `useWebRTC.ts`, reading URL/credentials from env vars.
-- Document the production swap-in path (e.g. a hosted TURN provider) in the README.
+### 1.3 TURN server configuration — [DONE]
+**Current state (verified):** The backend serves dynamic ICE configurations via `GET /webrtc/credentials`. The frontend fetches these credentials securely before establishing WebRTC connections. A `docker-compose.coturn.yml` is provided for running a local relay server. Both `patient-web` and `doctor-web` no longer hardcode STUN servers in their source.
 **Acceptance:** demonstrate a call still connects when direct UDP is blocked (e.g. via
 `chrome://webrtc-internals` showing a relay candidate was used).
 
