@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Zap, RefreshCw, Activity, Hexagon } from 'lucide-react';
+import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Zap, RefreshCw, Activity } from 'lucide-react';
 import './index.css';
 
 const MedLinkLogo = () => (
@@ -25,7 +25,7 @@ function App() {
 
   const itemVars = {
     hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } }
   };
 
   const scrollToSection = (id: string) => {
@@ -42,7 +42,7 @@ function App() {
       <motion.div 
         initial={{ y: -50 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
         style={{ 
           background: 'var(--bg-banner)', 
           color: 'var(--text-inverse)', 
@@ -214,7 +214,7 @@ function App() {
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.5, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const }}
                 className="workflow-step"
               >
                 <div className="workflow-icon" style={s.highlight ? { background: 'var(--text-main)', color: 'white', borderColor: 'var(--text-main)' } : {}}>
@@ -249,7 +249,7 @@ function App() {
       <section id="architecture" style={{ padding: '8rem 4rem', background: 'var(--bg-base)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '6rem', alignItems: 'center', position: 'relative', zIndex: 2 }}>
           
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}>
             <h2 style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '2rem', lineHeight: 1.1 }}>Built for massive throughput.</h2>
             <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
               MedLink operates on a microservices-inspired architecture. A centralized Node.js API gateway handles requests from three distinct React applications, ensuring complete data isolation and strict role-based access control.
@@ -276,7 +276,7 @@ function App() {
 
           {/* Clean Graphic 1 */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
             className="dotted-bg" style={{ padding: '4rem', position: 'relative', minHeight: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1px solid var(--border)', borderRadius: '24px' }}
           >
             {/* Top Row: Frontend Portals */}

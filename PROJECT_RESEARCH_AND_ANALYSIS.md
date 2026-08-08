@@ -60,8 +60,9 @@ MedLink will be a **connected two-application system**, not two disconnected pro
 | User group | Primary application | Platform decision | Why this is appropriate |
 |---|---|---|---|
 | Patients and village/community users | MedLink Patient App | Flutter Android mobile application | A smartphone is more affordable, familiar and portable than a laptop. It can work over mobile data, retain data locally with SQLite and be used at home, at a local health centre or with a community health worker. Android is the first target because it is the practical priority for the project audience. |
-| Doctors | MedLink Doctor Dashboard | Responsive React/TypeScript web application for laptop/desktop | A larger screen is more suitable for reviewing patient history, attached images, consultation notes, prescriptions, appointment lists and several active consultation statuses. It also fits a doctor’s normal work setting at a clinic or hospital. |
-| Admin (future scope) | Admin pages within the web dashboard | Web application | User verification, audit review and system management are administrative tasks better handled on a desktop screen. |
+| Doctor | MedLink Doctor Dashboard | Responsive React/TypeScript web application for laptop/desktop | A larger screen is more suitable for reviewing patient history, attached images, consultation notes, prescriptions, appointment lists and several active consultation statuses. It also fits a doctor’s normal work setting at a clinic or hospital. |
+| Admin / Coordinator | Admin pages within the web dashboard | Web application | User verification, audit review and system management are administrative tasks better handled on a desktop screen. |
+| Pharmacy / Patients | MedLink Pharmacy Portal | Web application | A separate React web application (`apps/pharmacy-web`) dedicated to browsing medicines, cart, checkout, and managing prescription-required orders. |
 
 Doctors are not prevented from using a phone; the web dashboard should be responsive enough for emergency/basic viewing. However, the project will optimise the main doctor experience for a laptop or desktop. Likewise, patients are not expected to need a laptop for normal use.
 
@@ -71,12 +72,19 @@ The two applications communicate with the **same Node.js backend, PostgreSQL dat
 ┌─────────────────────────────────┐          ┌─────────────────────────────────┐
 │ Patient: Flutter Android app    │          │ Doctor: React web dashboard     │
 │ - Appointment request           │          │ - Appointment queue             │
-│ - Offline records/messages      │          │ - Patient history                │
-│ - Video/audio/chat consultation │          │ - Notes and prescription         │
-│ - Sync-status visibility        │          │ - Consultation/network status    │
+│ - Offline records/messages      │          │ - Patient history               │
+│ - Video/audio/chat consultation │          │ - Notes and prescription        │
+│ - Sync-status visibility        │          │ - Consultation/network status   │
 └───────────────┬─────────────────┘          └─────────────────┬───────────────┘
-                │ REST API + WebSocket + WebRTC                 │
-                └───────────────────┬───────────────────────────┘
+                │                                              │
+┌───────────────▼─────────────────┐                            │
+│ Pharmacy: React web portal      │                            │
+│ - Medicine marketplace          │                            │
+│ - Cart and checkout (Razorpay)  │                            │
+│ - Prescription attachment       │                            │
+└───────────────┬─────────────────┘                            │
+                │ REST API + WebSocket + WebRTC                │
+                └───────────────────┬──────────────────────────┘
                                     │
                   ┌─────────────────▼─────────────────┐
                   │ MedLink shared backend             │
@@ -148,8 +156,11 @@ For a real Indian deployment, MedLink should verify against the appropriate offi
 The project should implement this safely as an **explainable recommendation engine**, not as a diagnosis bot. The patient selects structured information such as general concern category, preferred language, preferred time, consultation mode preference and optional location/clinic preference. The system maps a concern category to a speciality and ranks only verified doctors who have compatible availability.
 
 ```text
-Selected concern: “skin concern”
+Patient submits concern: "skin concern"
 Preferences: Hindi, evening, audio/chat acceptable
+        │
+        ▼
+POST /recommendations
         │
         ▼
 Suggested speciality: Dermatology
@@ -159,8 +170,9 @@ Rank verified doctors by: speciality match + availability + language
                            + consultation-mode support + low-bandwidth suitability
         │
         ▼
-Show explanation: “Suggested because you selected a skin concern,
-Hindi and an evening appointment. This is not a medical diagnosis.”
+Return ranked list with explanation: "Suggested because you selected a skin concern,
+Hindi and an evening appointment. This is not a medical diagnosis."
+Event logged in `recommendationEvents` table.
 ```
 
 Initial implementation: use a transparent rules-and-score table in the backend. This is free, testable and easy to explain in a viva. A later version may use an AI/LLM only to convert free-text descriptions into a suggested non-diagnostic category, subject to consent, privacy review, validation and human oversight. WHO’s AI-for-health guidance requires human autonomy, safety, transparency, explainability and accountability; the patient chooses the final doctor and the doctor makes all medical decisions ([WHO guidance](https://www.who.int/publications/i/item/9789240029200)).

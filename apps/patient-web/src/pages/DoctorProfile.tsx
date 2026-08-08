@@ -84,7 +84,7 @@ export const DoctorProfile: React.FC = () => {
 
       // Create Payment Order
       const paymentRes = await api.post(`/appointments/${appointmentId}/create-payment`);
-      const { order, fee } = paymentRes.data;
+      const order = paymentRes.data.order;
 
       // Open Razorpay Checkout
       const options = {

@@ -42,7 +42,7 @@ export const createServer = (): Express => {
   // ── CORS — restrict to known origins in production ──────────────────────────
   const allowedOrigins = process.env.CORS_ORIGINS
     ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
-    : ["http://localhost:5173", "http://localhost:3001"]; // dev defaults
+    : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:3001"]; // dev defaults
 
   app.use(
     cors({

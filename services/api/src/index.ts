@@ -29,7 +29,7 @@ const httpServer = createHttpServer(app);
 // Socket.io WebRTC Signalling Server
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : ["http://localhost:5173", "http://localhost:3001"],
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:3001"],
     credentials: true,
   }
 });
