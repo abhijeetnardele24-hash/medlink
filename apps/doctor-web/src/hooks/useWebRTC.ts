@@ -28,7 +28,11 @@ export const useWebRTC = (encounterId: string | null) => {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setLocalStream(stream);
 
-        const token = await auth.currentUser?.getIdToken();
+        if (!auth || !auth.currentUser) {
+          setError("User not authenticated");
+          return;
+        }
+        const token = await auth.currentUser.getIdToken();
         socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', { 
           auth: { token },
           withCredentials: true 

@@ -40,6 +40,9 @@ const io = new Server(httpServer, {
 
 io.use(async (socket, next) => {
   if (process.env.TEST_BYPASS_AUTH === "true") {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CRITICAL SECURITY ERROR: TEST_BYPASS_AUTH is active in production environment");
+    }
     socket.data.userId = socket.handshake.headers["x-user-id"] || "test-id";
     socket.data.joinedEncounters = new Set<string>();
     return next();
