@@ -10,12 +10,14 @@ services:
       - TURN_PORT_TLS=5349
       - TURN_SERVER_NAME=coturn
       - TURN_REALM=localhost
+      - TURN_STATIC_AUTH_SECRET=testpassword123
     command:
       - --log-file=stdout
       - --listening-port=3478
       - --min-port=49152
       - --max-port=65535
-      - --user=medlink:testpassword123
+      - --use-auth-secret
+      - --static-auth-secret=testpassword123
       - --realm=localhost
       - --no-tls
       - --no-dtls
