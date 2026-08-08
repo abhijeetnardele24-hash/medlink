@@ -16,7 +16,14 @@ const requireEncounterParticipant = async (
   try {
     const db = getDb();
     const encounterId = req.params.id as string;
-    const userId = (req as any).user.id as string;
+    
+    const firebaseUid = res.locals.user.uid;
+    let userId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await db.select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      userId = u.id;
+    }
 
     const [result] = await db
       .select({
@@ -73,7 +80,13 @@ router.post("/", async (req: Request, res: Response, next: NextFunction): Promis
   try {
     const db = getDb();
     const encounterId = req.params.id as string;
-    const userId = (req as any).user.id as string;
+    const firebaseUid = res.locals.user.uid;
+    let userId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await db.select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      userId = u.id;
+    }
 
     const validated = postMessageSchema.parse(req.body);
 

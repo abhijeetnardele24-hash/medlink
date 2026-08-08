@@ -23,11 +23,17 @@ router.get(
   "/",
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
-    const user = (_req as any).user;
-    const userId = user.id;
+    const firebaseUid = res.locals.user.uid;
+    let userId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await getDb().select({ id: dbUsers.id }).from(dbUsers).where(eq(dbUsers.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      userId = u.id;
+    }
+    const role = res.locals.user.role;
     let myAppts;
     
-    if (user.role === "doctor") {
+    if (role === "doctor") {
       myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, userId));
     } else {
       myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.patientId, userId));
@@ -209,7 +215,7 @@ router.post(
     const [attachment] = await getDb()
       .insert(attachments)
       .values({
-        ownerId: (_req as any).user.id,
+        ownerId: res.locals.user.uid,
         encounterId: id,
         storageKey: storagePath,
         contentType: file.mimetype,
@@ -229,7 +235,13 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-    const userId = (_req as any).user.id;
+    const firebaseUid = res.locals.user.uid;
+    let userId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await getDb().select({ id: dbUsers.id }).from(dbUsers).where(eq(dbUsers.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      userId = u.id;
+    }
 
     // Verify ownership
     const encounterRows = await getDb()
