@@ -8,6 +8,13 @@
       "when": 1786212444098,
       "tag": "0000_pale_frog_thor",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786218010620,
+      "tag": "0001_overrated_major_mapleleaf",
+      "breakpoints": true
     }
   ]
 }

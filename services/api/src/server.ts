@@ -34,6 +34,7 @@ import webrtcRouter from "./routes/webrtc.routes";
 import consentsRouter from "./routes/consents.routes";
 import medicinesRouter from "./routes/medicines.routes";
 import pharmacyRouter from "./routes/pharmacy.routes";
+import { notificationsRouter } from "./routes/notifications.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -116,6 +117,7 @@ export const createServer = (): Express => {
   app.use("/consents", authenticate, consentsRouter);
   app.use("/medicines", medicinesRouter);
   app.use("/pharmacy/orders", pharmacyRouter);
+  app.use("/notifications", notificationsRouter);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

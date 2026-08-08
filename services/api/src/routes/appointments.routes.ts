@@ -38,6 +38,7 @@ import {
 } from "../schemas/appointment.schema";
 import { logger } from "../logger";
 import { NotFoundError, ForbiddenError, ConflictError, UnprocessableError } from "../errors";
+import { emitNotification } from "../socket/emitter";
 
 const router = Router();
 
@@ -99,7 +100,12 @@ router.post(
 
     // Verify the target doctor exists and is verified
     const doctorRows = await getDb()
-      .select({ id: doctors.id, verificationStatus: doctors.verificationStatus, consultationFee: doctors.consultationFee })
+      .select({ 
+        id: doctors.id, 
+        userId: doctors.userId,
+        verificationStatus: doctors.verificationStatus, 
+        consultationFee: doctors.consultationFee 
+      })
       .from(doctors)
       .where(eq(doctors.id, body.doctorId))
       .limit(1);
@@ -140,6 +146,17 @@ router.post(
         resourceId: appointment?.id,
         outcome: "success",
       });
+    }
+
+    // Notify the doctor
+    if (doctorRows[0]?.userId) {
+      await emitNotification(
+        doctorRows[0].userId,
+        "appointment_requested",
+        "New Appointment Request",
+        `You have a new appointment request for ${body.scheduledAt}`,
+        { appointmentId: appointment.id }
+      );
     }
 
     logger.info({ appointmentId: appointment?.id, patientId: patient.id }, "Appointment requested");

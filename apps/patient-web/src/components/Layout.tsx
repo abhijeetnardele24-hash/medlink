@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { NotificationCenter } from './NotificationCenter';
 
 export const Layout: React.FC = () => {
   const { logout, user } = useAuth();
@@ -48,8 +49,13 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
-        <Outlet />
+      <main style={{ flex: 1, overflowY: 'auto', position: 'relative', display: 'flex', flexDirection: 'column' }}>
+        <header style={{ height: '64px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 2rem', background: 'var(--bg-surface)' }}>
+          <NotificationCenter />
+        </header>
+        <div style={{ flex: 1, padding: '0' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

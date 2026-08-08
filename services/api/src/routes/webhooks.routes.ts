@@ -1,9 +1,10 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { paymentRecords, appointments, pharmacyOrders } from "../db/schema";
+import { paymentRecords, appointments, pharmacyOrders, patients } from "../db/schema";
 import crypto from "crypto";
 import { logger } from "../logger";
+import { emitNotification } from "../socket/emitter";
 
 const router = Router();
 
@@ -72,6 +73,24 @@ router.post(
               .set({ status: "confirmed", updatedAt: new Date() })
               .where(eq(appointments.id, appointmentId));
 
+            // Notify patient
+            const userRows = await getDb()
+              .select({ userId: patients.userId })
+              .from(appointments)
+              .innerJoin(patients, eq(patients.id, appointments.patientId))
+              .where(eq(appointments.id, appointmentId))
+              .limit(1);
+
+            if (userRows[0]?.userId) {
+              await emitNotification(
+                userRows[0].userId,
+                "payment_success",
+                "Appointment Confirmed",
+                "Your payment was successful and your appointment is confirmed.",
+                { appointmentId }
+              );
+            }
+
             logger.info({ appointmentId, razorpayPaymentId }, "Appointment payment captured via webhook");
           } else {
             logger.info({ appointmentId, razorpayPaymentId }, "Idempotent appointment webhook skip");
@@ -97,6 +116,24 @@ router.post(
                 updatedAt: new Date(),
               })
               .where(eq(pharmacyOrders.id, id));
+
+            // Notify patient
+            const userRows = await getDb()
+              .select({ userId: patients.userId })
+              .from(pharmacyOrders)
+              .innerJoin(patients, eq(patients.id, pharmacyOrders.patientId))
+              .where(eq(pharmacyOrders.id, id))
+              .limit(1);
+
+            if (userRows[0]?.userId) {
+              await emitNotification(
+                userRows[0].userId,
+                "payment_success",
+                "Pharmacy Order Paid",
+                "Your payment was successful and your pharmacy order is now processing.",
+                { orderId: id }
+              );
+            }
 
             logger.info({ orderId: id, razorpayPaymentId }, "Pharmacy order payment captured via webhook");
           } else {

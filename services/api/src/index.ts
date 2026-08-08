@@ -23,6 +23,10 @@ import { getFirebaseAdmin } from "./firebase";
 import { getDb } from "./db";
 import { users, encounters, appointments } from "./db/schema";
 import { eq } from "drizzle-orm";
+import { startReminderCron } from "./cron/reminders";
+
+// Start reminder cron
+startReminderCron();
 
 // Routes are mounted inside server.ts (createServer)
 
@@ -31,7 +35,7 @@ const app = createServer();
 const httpServer = createHttpServer(app);
 
 // Socket.io WebRTC Signalling Server
-const io = new Server(httpServer, {
+export const io = new Server(httpServer, {
   cors: {
     origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:3001"],
     credentials: true,
@@ -68,6 +72,9 @@ io.use(async (socket, next) => {
 
 io.on("connection", (socket) => {
   console.log(`[Socket.io] Connected: ${socket.id}, User: ${socket.data.userId}`);
+  
+  // Join user's personal room for notifications
+  socket.join(`user_${socket.data.userId}`);
   
   socket.on("join-encounter", async (encounterId: string) => {
     try {

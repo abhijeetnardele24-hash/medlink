@@ -97,10 +97,12 @@ connection, not just the doctor's.
 2. Implemented medicine catalog UI with searching and Rx flags.
 3. Implemented cart and checkout logic checking prescription requirements locally and passing IDs to the backend.
 
-### 2.4 Real-time notifications
-**Build:** Socket.IO `notification` events for appointment created/confirmed, payment
-success/failure, reminders. In-app notification center (bell icon + list) in all three
-portal apps. Push (FCM/web-push) and email/SMS fallback are lower priority than in-app.
+### 2.4 Real-time notifications [DONE]
+- `notifications` table added to `schema.ts`.
+- `emitNotification` helper implemented using `socket.io` and database inserts.
+- Integrated `emitNotification` into appointment creation and webhook payment confirmation.
+- Reminder cron task set up in `src/cron/reminders.ts`.
+- `NotificationCenter` UI component implemented in `patient-web` and `doctor-web` headers.
 
 ---
 

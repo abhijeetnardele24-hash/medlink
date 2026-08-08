@@ -18,6 +18,7 @@ import {
   boolean,
   integer,
   jsonb,
+  varchar,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -703,4 +704,15 @@ export const prescriptionReconciliationAudit = pgTable("prescription_reconciliat
   matched: boolean("matched").notNull(),
   reason: text("reason").notNull(), // Details on why it matched or rejected
   occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const notifications = pgTable("notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 50 }).notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  metadataJson: jsonb("metadata_json"),
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

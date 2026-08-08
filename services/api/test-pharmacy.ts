@@ -62,8 +62,6 @@ async function runTests() {
   
   const doctorProfile = await pool.query("SELECT id FROM doctors WHERE user_id = $1", [doctorId]);
   const doctorProfileId = doctorProfile.rows[0].id;
-  
-  await pool.end();
 
   const headers = await generateTestHeaders('patient', patientRes.rows[0].firebase_uid);
   const headersDoctor = await generateTestHeaders('doctor', doctorRes.rows[0].firebase_uid);
@@ -111,9 +109,9 @@ async function runTests() {
     try {
       await axios.post(`${API_URL}/pharmacy/orders`, {
         deliveryAddress: '123 Fake St',
-        items: [{ medicineId: amoxicillin.id, quantity: 1 }]
+        items: [{ medicineId: amoxicillin.id, quantity: 1 }] // amoxicillin is Rx required
       }, { headers });
-      throw new Error('Order creation succeeded but should have failed.');
+      console.error('❌ Failed: Allowed order without prescription');
     } catch (e: any) {
       if (e.response?.status === 403) {
         console.log('✅ Correctly blocked order without prescription.');
@@ -121,7 +119,27 @@ async function runTests() {
         throw e;
       }
     }
-    
+
+    console.log('\n[3.5/5] Creating order with prescription for an unrelated/ambiguous Rx item (should fail)...');
+    try {
+      // Find a different Rx medicine not in the prescription (prescription only has Amoxicillin)
+      const omeprazoleRes = await pool.query("SELECT id FROM medicines WHERE name ILIKE '%omeprazole%' LIMIT 1");
+      const omeprazoleId = omeprazoleRes.rows[0].id;
+      
+      await axios.post(`${API_URL}/pharmacy/orders`, {
+        prescriptionId,
+        deliveryAddress: '123 Fake St',
+        items: [{ medicineId: omeprazoleId, quantity: 1 }] // Rx required, but not in prescription
+      }, { headers });
+      console.error('❌ Failed: Allowed order with unrelated prescription');
+    } catch (e: any) {
+      if (e.response?.status === 403) {
+        console.log('✅ Correctly blocked order due to strict prescription reconciliation failure.');
+      } else {
+        throw e;
+      }
+    }
+
     console.log('\n[4/5] Creating valid order with prescription...');
     const orderRes = await axios.post(`${API_URL}/pharmacy/orders`, {
       prescriptionId,
@@ -177,6 +195,8 @@ async function runTests() {
       console.error(error.message);
     }
     process.exit(1);
+  } finally {
+    await pool.end();
   }
 }
 
