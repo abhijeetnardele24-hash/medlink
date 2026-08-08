@@ -108,14 +108,12 @@ connection, not just the doctor's.
 
 ## 3. P2 — Hardening
 
-- **CSP / security headers**: no `helmet` or equivalent currently configured in
-  `services/api/src/index.ts` — add it, configure a real CSP.
-- **Rate limiting**: none on upload or sync-heavy endpoints — add per-route limits.
-- **Request size limits**: none on file/recording uploads.
+- **CSP / security headers [DONE]**: configured `helmet` in `services/api/src/server.ts`, with strict CSP including Razorpay/Firebase whitelists.
+- **Rate limiting [DONE]**: global limit (100 req/min) and strict auth limit (20 req/15min) via `express-rate-limit`.
+- **Request size limits [DONE]**: file/json upload limit set to 10MB (`express.json({ limit: "10mb" })`).
+- **ICE restart / reconnection handling [DONE]**: implemented auto-reconnect (`pc.restartIce()`) on drop in `useWebRTC.ts`, with pause protection on the adaptive quality engine.
 - **API versioning**: none currently — decide a scheme (`/v1/...`) before the API surface
   grows further.
-- **ICE restart / reconnection handling**: WebRTC hook doesn't currently attempt an ICE
-  restart on a dropped connection, it just marks `disconnected`.
 
 ---
 

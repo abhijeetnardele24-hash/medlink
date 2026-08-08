@@ -42,7 +42,27 @@ export const createServer = (): Express => {
   const app = express();
 
   // ── Security headers ────────────────────────────────────────────────────────
-  app.use(helmet());
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "https://checkout.razorpay.com", "https://apis.google.com"],
+        connectSrc: [
+          "'self'", 
+          "https://api.razorpay.com", 
+          "https://checkout.razorpay.com", 
+          "https://identitytoolkit.googleapis.com", 
+          "https://securetoken.googleapis.com", 
+          "wss://*", 
+          "ws://*"
+        ],
+        frameSrc: ["'self'", "https://checkout.razorpay.com", "https://medlink-3de43.firebaseapp.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        imgSrc: ["'self'", "data:", "https://checkout.razorpay.com"],
+      }
+    }
+  }));
 
   // ── CORS — restrict to known origins in production ──────────────────────────
   const allowedOrigins = process.env.CORS_ORIGINS
@@ -84,7 +104,7 @@ export const createServer = (): Express => {
   });
 
   // ── Body parsing ────────────────────────────────────────────────────────────
-  app.use(express.json({ limit: "1mb" }));
+  app.use(express.json({ limit: "10mb" }));
 
   // ── Request logging (logs path + status; no PHI) ───────────────────────────
   app.use((req: Request, res: Response, next: NextFunction) => {

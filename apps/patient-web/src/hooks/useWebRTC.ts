@@ -15,6 +15,7 @@ export const useWebRTC = (encounterId: string | null) => {
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const qualityScore = useRef(5);
+  const isRestartingIce = useRef(false);
 
   useEffect(() => {
     if (!encounterId) return;
@@ -76,8 +77,23 @@ export const useWebRTC = (encounterId: string | null) => {
         pc.onconnectionstatechange = () => {
           if (pc.connectionState === 'connected') {
             setIsConnected(true);
+            isRestartingIce.current = false;
           } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
             setIsConnected(false);
+            
+            if (!isRestartingIce.current) {
+              isRestartingIce.current = true;
+              console.log("Triggering ICE restart due to connection failure...");
+              pc.restartIce();
+              pc.createOffer().then(offer => {
+                return pc.setLocalDescription(offer);
+              }).then(() => {
+                socketRef.current?.emit('webrtc-offer', { encounterId, offer: pc.localDescription });
+              }).catch(err => {
+                console.error("Failed to restart ICE:", err);
+                isRestartingIce.current = false;
+              });
+            }
           }
         };
 
@@ -121,7 +137,7 @@ export const useWebRTC = (encounterId: string | null) => {
     if (!isConnected || !peerConnectionRef.current) return;
     
     const interval = setInterval(async () => {
-      if (!peerConnectionRef.current) return;
+      if (!peerConnectionRef.current || isRestartingIce.current) return;
       
       try {
         const stats = await peerConnectionRef.current.getStats();
