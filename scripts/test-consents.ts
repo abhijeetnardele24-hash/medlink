@@ -1,20 +1,22 @@
-import 'dotenv/config';
+import path from "path";
+import dotenv from "dotenv";
+dotenv.config({ path: path.join(__dirname, "../services/api/.env"), override: true });
+
 import fetch from 'node-fetch';
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from './src/db/schema';
+import { getDb } from "../services/api/src/db";
+import * as schema from '../services/api/src/db/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 // Bypass TS errors for fetch
 const fetchApi = fetch as any;
 
-const API_URL = 'http://localhost:3000';
+const PORT = '3005';
+const API_URL = `http://localhost:${PORT}`;
 
 async function runTests() {
   console.log("Setting up dummy data...");
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-  const db = drizzle(pool, { schema });
+  const db = getDb();
   
   // 1. Create a dummy patient
   const patientUserId = uuidv4();
@@ -22,7 +24,7 @@ async function runTests() {
     id: patientUserId,
     firebaseUid: patientUserId,
     role: 'patient',
-    email: 'testpatient_consent@example.com',
+    email: `testpatient_${patientUserId}@example.com`,
     displayName: 'Test Patient Consent',
   });
   const [patientRecord] = await db.insert(schema.patients).values({
@@ -40,11 +42,12 @@ async function runTests() {
     id: doctorUserId,
     firebaseUid: doctorUserId,
     role: 'doctor',
-    email: 'testdoctor_consent@example.com',
+    email: `testdoctor_${doctorUserId}@example.com`,
     displayName: 'Test Doctor Consent',
   });
   const [doctorRecord] = await db.insert(schema.doctors).values({
     userId: doctorUserId,
+    fullName: 'Dr. Test Consent',
     speciality: 'General',
     qualifications: 'MBBS',
     registrationNumber: 'REG1234',
@@ -61,10 +64,11 @@ async function runTests() {
     id: otherDoctorUserId,
     firebaseUid: otherDoctorUserId,
     role: 'doctor',
-    email: 'otherdoctor_consent@example.com',
+    email: `otherdoctor_${otherDoctorUserId}@example.com`,
   });
   const [otherDoctorRecord] = await db.insert(schema.doctors).values({
     userId: otherDoctorUserId,
+    fullName: 'Dr. Other Consent',
     speciality: 'General',
     qualifications: 'MBBS',
     registrationNumber: 'REG1235',
@@ -79,13 +83,11 @@ async function runTests() {
     patientId: patientRecord.id,
     doctorId: otherDoctorRecord.id,
     scheduledAt: new Date(),
-    status: 'completed',
     concernCategory: 'general',
   }).returning();
 
   const [encounter] = await db.insert(schema.encounters).values({
     appointmentId: appointment.id,
-    status: 'completed',
   }).returning();
 
   const [prescription] = await db.insert(schema.prescriptions).values({
@@ -94,7 +96,36 @@ async function runTests() {
     medicinesJson: JSON.stringify([{ name: 'Test Med' }]),
   }).returning();
 
+  // 4. Create a SECOND dummy patient to test cross-patient isolation
+  const otherPatientUserId = uuidv4();
+  await db.insert(schema.users).values({
+    id: otherPatientUserId,
+    firebaseUid: otherPatientUserId,
+    role: 'patient',
+    email: `otherpatient_${otherPatientUserId}@example.com`,
+    displayName: 'Other Patient Consent',
+  });
+  await db.insert(schema.patients).values({
+    userId: otherPatientUserId,
+    dob: new Date(),
+    gender: 'other',
+    contactNumber: '0000000000',
+    emergencyContact: '0000000000',
+    address: 'Other Address'
+  });
+
   console.log(`Dummy data created. Patient: ${patientUserId}, Doctor: ${doctorUserId}, Prescription: ${prescription.id}`);
+
+  // Test Case 0: Another patient fetches the prescription, should fail
+  console.log("\n--- TEST CASE 0: Another patient fetches prescription (cross-patient leak check) ---");
+  const getRxOtherPatientRes = await fetchApi(`${API_URL}/prescriptions/${prescription.id}/pdf`, {
+    headers: {
+      'x-user-id': otherPatientUserId,
+      'x-role': 'patient'
+    }
+  });
+  console.log(`GET /prescriptions/:id/pdf status (expected 403): ${getRxOtherPatientRes.status}`);
+  if (getRxOtherPatientRes.status !== 403) throw new Error(`Expected 403 when fetching another patient's prescription, got ${getRxOtherPatientRes.status}`);
 
   // Test Case 1: Patient grants consent to the doctor
   console.log("\n--- TEST CASE 1: Patient grants consent ---");

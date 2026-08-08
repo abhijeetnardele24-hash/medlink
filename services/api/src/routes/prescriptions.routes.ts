@@ -28,6 +28,7 @@ router.get(
         facility: doctors.facilityName,
         patientName: users.displayName,
         patientId: patients.id,
+        patientUserId: patients.userId,
         doctorUserId: doctors.userId,
       })
       .from(prescriptions)
@@ -53,6 +54,10 @@ router.get(
       const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
       if (!u) throw new ForbiddenError("User not found in db");
       authUserId = u.id;
+    }
+
+    if (role === "patient" && rx.patientUserId !== authUserId) {
+      throw new ForbiddenError("You do not have permission to view this prescription");
     }
 
     if (role === "doctor" && rx.doctorUserId !== authUserId) {

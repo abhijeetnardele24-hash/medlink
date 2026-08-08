@@ -74,12 +74,11 @@ connection, not just the doctor's.
 **Current state (verified):** `messages` table schema exists and is fully implemented. `GET /encounters/:id/messages` and `POST /encounters/:id/messages` routes securely gate access using the `requireEncounterParticipant` middleware, ensuring only the assigned doctor or patient can access the conversation. Socket.IO events (`message`, `typing`, `read-receipt`) are correctly scoped to the encounter room, with `ChatBox` components integrated in both `patient-web` and `doctor-web` implementing the persist-then-relay pattern.
 **Build:** (Implemented)
 
-### 2.2 Consent management
-**Current state (verified):** `consent_grants` table exists; **no route uses it.**
-**Build:**
-- `POST /consents` (patient grants a scope to a doctor), `GET /consents`, `POST
-/consents/:id/revoke`
-- Enforce consent checks before returning sensitive records cross-doctor (if a patient sees
+### 2.2 Consent Management [DONE]
+**Current state**: Backend routes `/consents` implemented, and a `requirePatientConsent` check added to prescriptions to restrict cross-doctor lookups. Frontend `Consents.tsx` page built in `patient-web` for granting and revoking access.
+**Next steps**:
+- (Completed) Route `POST /consents` (patient grants scope) and `POST /consents/:id/revoke`.
+- (Completed) Basic grant/revoke UI in `patient-web`. Enforce consent checks before returning sensitive records cross-doctor (if a patient sees
   more than one doctor)
 - Simple grant/revoke UI in patient-web
 

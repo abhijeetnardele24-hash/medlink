@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import { eq, and, or } from "drizzle-orm";
 import { getDb } from "../db";
-import { consentGrants, users } from "../db/schema";
+import { consentGrants, users, patients } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { ForbiddenError, NotFoundError } from "../errors";
 import { z } from "zod";
@@ -34,7 +34,9 @@ router.get("/", authenticate, async (req: Request, res: Response, next: NextFunc
 
     let consents;
     if (internalRole === "patient") {
-      consents = await db.select().from(consentGrants).where(eq(consentGrants.patientId, userId));
+      const [patientRec] = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, userId)).limit(1);
+      if (!patientRec) throw new NotFoundError("Patient record");
+      consents = await db.select().from(consentGrants).where(eq(consentGrants.patientId, patientRec.id));
     } else {
       // Doctor or coordinator
       consents = await db.select().from(consentGrants).where(eq(consentGrants.granteeId, userId));
@@ -67,10 +69,13 @@ router.post("/", authenticate, async (req: Request, res: Response, next: NextFun
 
     const validated = grantConsentSchema.parse(req.body);
 
+    const [patientRec] = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, userId)).limit(1);
+    if (!patientRec) throw new NotFoundError("Patient record");
+
     const [newGrant] = await db
       .insert(consentGrants)
       .values({
-        patientId: userId,
+        patientId: patientRec.id,
         granteeId: validated.granteeId,
         purpose: validated.purpose,
         scope: validated.scope,
@@ -106,14 +111,21 @@ router.post("/:id/revoke", authenticate, async (req: Request, res: Response, nex
       throw new ForbiddenError("Only patients can revoke consent");
     }
 
-    const [grant] = await db
+    const [patientRec] = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, userId)).limit(1);
+    if (!patientRec) throw new NotFoundError("Patient record");
+
+    const [grantToRevoke] = await db
       .select()
       .from(consentGrants)
-      .where(and(eq(consentGrants.id, grantId), eq(consentGrants.patientId, userId)))
+      .where(eq(consentGrants.id, grantId))
       .limit(1);
 
-    if (!grant) {
-      throw new NotFoundError("Consent grant not found or not owned by user");
+    if (!grantToRevoke) {
+      throw new NotFoundError("Consent grant");
+    }
+
+    if (grantToRevoke.patientId !== patientRec.id) {
+      throw new ForbiddenError("Consent grant not found or not owned by user");
     }
 
     const [updatedGrant] = await db
