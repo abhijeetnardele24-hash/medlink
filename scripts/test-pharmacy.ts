@@ -4,22 +4,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import fs from 'fs';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, '.env');
-if (fs.existsSync(envPath)) {
-  const envContent = fs.readFileSync(envPath, 'utf-8');
-  envContent.split('\n').forEach((line) => {
-    const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
-    if (match) {
-      let val = match[2] || '';
-      val = val.replace(/^['"]|['"]$/g, '');
-      process.env[match[1]] = val;
-    }
-  });
-}
+dotenv.config({ path: path.resolve(__dirname, '../services/api/.env') });
 
 const API_URL = process.env.API_URL || 'http://localhost:3005';
 
@@ -38,35 +25,17 @@ async function runTests() {
   // Let me just require 'pg' directly.
   const pg = (await import('pg')).default;
   const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-  const doctorRes = await pool.query("SELECT id, firebase_uid FROM users WHERE role = 'doctor' LIMIT 1");
-  const patientRes = await pool.query("SELECT id, firebase_uid FROM users WHERE role = 'patient' LIMIT 1");
+  const doctorRes = await pool.query("SELECT id FROM users WHERE role = 'doctor' LIMIT 1");
+  const patientRes = await pool.query("SELECT id FROM users WHERE role = 'patient' LIMIT 1");
+  await pool.end();
 
   const doctorId = doctorRes.rows[0]?.id;
   const patientId = patientRes.rows[0]?.id;
 
   if (!doctorId || !patientId) throw new Error("No patient or doctor found in DB.");
 
-  // Ensure patient profile exists
-  const pProfile = await pool.query("SELECT id FROM patients WHERE user_id = $1", [patientId]);
-  if (pProfile.rowCount === 0) {
-    await pool.query("INSERT INTO patients (id, user_id, date_of_birth, gender) VALUES (gen_random_uuid(), $1, '1990-01-01', 'other')", [patientId]);
-  }
-
-  // Ensure doctor profile exists
-  const dProfile = await pool.query("SELECT id FROM doctors WHERE user_id = $1", [doctorId]);
-  if (dProfile.rowCount === 0) {
-    await pool.query("INSERT INTO doctors (id, user_id, full_name, speciality, verification_status) VALUES (gen_random_uuid(), $1, 'Test Dr', 'General', 'verified')", [doctorId]);
-  } else {
-    await pool.query("UPDATE doctors SET verification_status = 'verified' WHERE user_id = $1", [doctorId]);
-  }
-  
-  const doctorProfile = await pool.query("SELECT id FROM doctors WHERE user_id = $1", [doctorId]);
-  const doctorProfileId = doctorProfile.rows[0].id;
-  
-  await pool.end();
-
-  const headers = await generateTestHeaders('patient', patientRes.rows[0].firebase_uid);
-  const headersDoctor = await generateTestHeaders('doctor', doctorRes.rows[0].firebase_uid);
+  const headers = await generateTestHeaders('patient', patientId);
+  const headersDoctor = await generateTestHeaders('doctor', doctorId);
   
   try {
     console.log('\n[1/5] Fetching medicine catalog...');
@@ -87,7 +56,7 @@ async function runTests() {
     console.log('\n[2/5] Creating a test prescription...');
     // Create appointment first
     const apptRes = await axios.post(`${API_URL}/appointments`, {
-      doctorId: doctorProfileId,
+      doctorId: doctorId,
       scheduledAt: new Date(Date.now() + 86400000).toISOString(),
       concernCategory: 'General'
     }, { headers: headers });
@@ -101,10 +70,10 @@ async function runTests() {
     const encounterId = encRes.data.id;
     
     const rxRes = await axios.post(`${API_URL}/encounters/${encounterId}/prescriptions`, {
-      doctorId: doctorProfileId,
-      medicinesJson: [{ name: 'Amoxicillin 500mg' }]
+      doctorName: 'Dr. Test',
+      medicinesJson: JSON.stringify([{ name: 'Amoxicillin 500mg' }])
     }, { headers: headersDoctor });
-    const prescriptionId = rxRes.data.id;
+    const prescriptionId = rxRes.data.prescriptionId;
     console.log(`✅ Prescription ${prescriptionId} created`);
 
     console.log('\n[3/5] Creating order without prescription for an Rx-required item (should fail)...');
@@ -131,7 +100,7 @@ async function runTests() {
         { medicineId: paracetamol.id, quantity: 2 } // OTC allowed
       ]
     }, { headers });
-    const orderId = orderRes.data.order.id;
+    const orderId = orderRes.data.orderId;
     const paymentId = orderRes.data.razorpayOrderId;
     console.log(`✅ Order ${orderId} created successfully`);
     

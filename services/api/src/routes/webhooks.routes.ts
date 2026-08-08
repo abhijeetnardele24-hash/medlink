@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { paymentRecords, appointments } from "../db/schema";
+import { paymentRecords, appointments, pharmacyOrders } from "../db/schema";
 import crypto from "crypto";
 import { logger } from "../logger";
 
@@ -18,23 +18,21 @@ router.post(
         res.status(400).json({ error: "Missing signature" });
         return;
       }
-
-      // Razorpay sends raw JSON body. Ensure it's treated as string for validation
-      // But since we use express.json(), req.body is already parsed.
-      // Actually, Razorpay signature validation requires the raw body string.
-      // We will assume express raw middleware or stringify works for simple tests,
-      // but in production, we should compute HMAC on req.rawBody
-      // For this implementation we will stringify req.body or use a custom raw parser.
-      const payloadString = JSON.stringify(req.body);
       
-      const secret = process.env.RAZORPAY_WEBHOOK_SECRET || "demo_webhook_secret";
+      const secret = process.env.RAZORPAY_WEBHOOK_SECRET || (process.env.TEST_BYPASS_AUTH === "true" ? "test_secret" : "");
+      if (!secret) {
+        logger.error("RAZORPAY_WEBHOOK_SECRET is not configured");
+        res.status(500).json({ error: "Webhook secret not configured" });
+        return;
+      }
 
+      const payloadString = JSON.stringify(req.body);
       const expectedSignature = crypto
         .createHmac("sha256", secret)
         .update(payloadString)
         .digest("hex");
 
-      if (expectedSignature !== signature && secret !== "demo_webhook_secret") {
+      if (expectedSignature !== signature) {
         logger.warn({ expectedSignature, signature }, "Invalid webhook signature");
         res.status(400).json({ error: "Invalid signature" });
         return;
@@ -47,33 +45,63 @@ router.post(
         const razorpayOrderId = paymentEntity.order_id;
         const razorpayPaymentId = paymentEntity.id;
 
-        // Find the payment record by order ID
+        // Check if it's an appointment payment
         const paymentRows = await getDb()
-          .select({ appointmentId: paymentRecords.appointmentId })
+          .select({ appointmentId: paymentRecords.appointmentId, state: paymentRecords.state })
           .from(paymentRecords)
           .where(eq(paymentRecords.razorpayOrderId, razorpayOrderId))
           .limit(1);
 
         if (paymentRows.length > 0) {
-          const appointmentId = paymentRows[0].appointmentId;
+          const { appointmentId, state } = paymentRows[0];
+          
+          if (state !== "success") {
+            // Update payment record to success
+            await getDb()
+              .update(paymentRecords)
+              .set({
+                state: "success",
+                razorpayPaymentId,
+                updatedAt: new Date(),
+              })
+              .where(eq(paymentRecords.appointmentId, appointmentId));
 
-          // Update payment record to success
-          await getDb()
-            .update(paymentRecords)
-            .set({
-              state: "success",
-              razorpayPaymentId,
-              updatedAt: new Date(),
-            })
-            .where(eq(paymentRecords.appointmentId, appointmentId));
+            // Confirm the appointment
+            await getDb()
+              .update(appointments)
+              .set({ status: "confirmed", updatedAt: new Date() })
+              .where(eq(appointments.id, appointmentId));
 
-          // Confirm the appointment
-          await getDb()
-            .update(appointments)
-            .set({ status: "confirmed", updatedAt: new Date() })
-            .where(eq(appointments.id, appointmentId));
+            logger.info({ appointmentId, razorpayPaymentId }, "Appointment payment captured via webhook");
+          } else {
+            logger.info({ appointmentId, razorpayPaymentId }, "Idempotent appointment webhook skip");
+          }
+        }
 
-          logger.info({ appointmentId, razorpayPaymentId }, "Payment captured via webhook");
+        // Check if it's a pharmacy order payment
+        const pharmacyRows = await getDb()
+          .select({ id: pharmacyOrders.id, status: pharmacyOrders.status })
+          .from(pharmacyOrders)
+          .where(eq(pharmacyOrders.razorpayOrderId, razorpayOrderId))
+          .limit(1);
+
+        if (pharmacyRows.length > 0) {
+          const { id, status } = pharmacyRows[0];
+          
+          if (status === "pending_payment") {
+            await getDb()
+              .update(pharmacyOrders)
+              .set({
+                status: "paid",
+                razorpayPaymentId,
+                updatedAt: new Date(),
+              })
+              .where(eq(pharmacyOrders.id, id));
+
+            logger.info({ orderId: id, razorpayPaymentId }, "Pharmacy order payment captured via webhook");
+          } else {
+             logger.info({ orderId: id, razorpayPaymentId }, "Idempotent pharmacy webhook skip");
+          }
         }
       }
 

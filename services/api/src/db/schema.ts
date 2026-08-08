@@ -653,7 +653,6 @@ export const pharmacyOrders = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     prescriptionId: uuid("prescription_id")
-      .notNull()
       .references(() => prescriptions.id),
     patientId: uuid("patient_id")
       .notNull()
@@ -675,3 +674,33 @@ export const pharmacyOrders = pgTable(
     index("pharmacy_orders_prescription_id_idx").on(t.prescriptionId),
   ]
 );
+
+export const medicines = pgTable("medicines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  genericName: text("generic_name"),
+  price: integer("price").notNull(), // Price in INR
+  stockQuantity: integer("stock_quantity").notNull().default(0),
+  requiresPrescription: boolean("requires_prescription").notNull().default(false),
+  category: text("category"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const pharmacyOrderItems = pgTable("pharmacy_order_items", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id").notNull().references(() => pharmacyOrders.id, { onDelete: "cascade" }),
+  medicineId: uuid("medicine_id").notNull().references(() => medicines.id),
+  quantity: integer("quantity").notNull(),
+  unitPrice: integer("unit_price").notNull(),
+});
+
+export const prescriptionReconciliationAudit = pgTable("prescription_reconciliation_audit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id),
+  prescriptionId: uuid("prescription_id").notNull().references(() => prescriptions.id),
+  medicineId: uuid("medicine_id").notNull().references(() => medicines.id),
+  matched: boolean("matched").notNull(),
+  reason: text("reason").notNull(), // Details on why it matched or rejected
+  occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+});

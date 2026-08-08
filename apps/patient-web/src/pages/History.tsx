@@ -103,9 +103,14 @@ export const History: React.FC = () => {
                     <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Prescription & Notes</span>
                   </div>
                   {encounter.prescriptionId ? (
-                    <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
-                      <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+                        <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
+                      </button>
+                      <a href={`http://localhost:5177?rxId=${encounter.prescriptionId}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', textDecoration: 'none' }}>
+                        Order Medicines
+                      </a>
+                    </div>
                   ) : (
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Not available</span>
                   )}

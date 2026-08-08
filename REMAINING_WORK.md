@@ -82,15 +82,20 @@ connection, not just the doctor's.
   more than one doctor)
 - Simple grant/revoke UI in patient-web
 
-### 2.3 Pharmacy frontend (`apps/pharmacy-web` — genuinely does not exist yet)
-**Current state (verified):** backend pharmacy-order logic exists in
-`prescriptions.routes.ts` and is tested (`test-pharmacy.ts` passes). No frontend app.
-**Build:** new Vite+React+TS app, same conventions as the other three apps (Firebase auth,
-same axios interceptor pattern, same design tokens). Needs: medicine catalog/search, cart,
-checkout (reuse the Razorpay pattern from appointments), prescription-required gating tied to
-a real prescription ID, order status view.
-**Process note:** propose the page list and any new backend routes needed *before* writing
-code — this is the single biggest net-new surface in the whole plan, review before building.
+### 2.3 Pharmacy Web App [DONE]
+**Target:** `apps/pharmacy-web` (New) / `services/api`
+**Status:** Completed.
+
+**Backend Changes (Done):**
+1. Scaffolded DB tables `medicines`, `pharmacy_orders`, `pharmacy_order_items`, and `prescription_reconciliation_audit`.
+2. Created endpoints `GET /medicines`, `POST /pharmacy/orders`, and `POST /webhooks/razorpay` in `pharmacy.routes.ts` and `webhooks.routes.ts`.
+3. Implemented robust prescription reconciliation (whole-word token matching with strict rejection and auditing).
+4. Implemented `test-pharmacy.ts` for end-to-end flow validation, including mock Razorpay support for bypassed auth scenarios.
+
+**Frontend Changes (Done):**
+1. Created new React/Vite app `apps/pharmacy-web`.
+2. Implemented medicine catalog UI with searching and Rx flags.
+3. Implemented cart and checkout logic checking prescription requirements locally and passing IDs to the backend.
 
 ### 2.4 Real-time notifications
 **Build:** Socket.IO `notification` events for appointment created/confirmed, payment
