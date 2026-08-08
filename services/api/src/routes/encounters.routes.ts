@@ -18,10 +18,16 @@ const router = Router();
 router.get(
   "/",
   authenticate,
-  requireRole("doctor"),
   async (_req: Request, res: Response): Promise<void> => {
-    const doctorId = (_req as any).user.id;
-    const myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, doctorId));
+    const user = (_req as any).user;
+    const userId = user.id;
+    let myAppts;
+    
+    if (user.role === "doctor") {
+      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, userId));
+    } else {
+      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.patientId, userId));
+    }
     
     if (myAppts.length === 0) {
       res.json({ data: [] });
@@ -29,12 +35,44 @@ router.get(
     }
 
     const apptIds = myAppts.map(a => a.id);
+    const { users: dbUsers, doctors } = require("../db/schema");
+
     const rows = await getDb()
-      .select()
+      .select({
+        id: encounters.id,
+        appointmentId: encounters.appointmentId,
+        status: encounters.status,
+        startedAt: encounters.startedAt,
+        endedAt: encounters.endedAt,
+        prescriptionId: prescriptions.id,
+        concernCategory: appointments.concernCategory,
+        doctorFullName: dbUsers.displayName,
+        doctorSpeciality: doctors.speciality,
+      })
       .from(encounters)
+      .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+      .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+      .innerJoin(dbUsers, eq(doctors.userId, dbUsers.id))
+      .leftJoin(prescriptions, eq(encounters.id, prescriptions.encounterId))
       .where(inArray(encounters.appointmentId, apptIds));
 
-    res.json({ data: rows });
+    const formattedRows = rows.map(r => ({
+      id: r.id,
+      appointmentId: r.appointmentId,
+      status: r.status,
+      startedAt: r.startedAt,
+      endedAt: r.endedAt,
+      prescriptionId: r.prescriptionId,
+      appointment: {
+        concernCategory: r.concernCategory,
+        doctor: {
+          fullName: r.doctorFullName,
+          speciality: r.doctorSpeciality
+        }
+      }
+    }));
+
+    res.json({ data: formattedRows });
   }
 );
 

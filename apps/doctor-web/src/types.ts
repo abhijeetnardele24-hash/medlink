@@ -63,6 +63,7 @@ export interface Encounter {
   networkEventSummary: any | null;
   startedAt: string | null;
   endedAt: string | null;
+  prescriptionId?: string;
   createdAt: string;
   updatedAt: string;
 }

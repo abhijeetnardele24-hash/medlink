@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { User, ArrowLeft, Calendar, Clock, Video, AlertCircle } from 'lucide-react';
+import { User, ArrowLeft, Calendar, Clock, Video, AlertCircle, Download } from 'lucide-react';
 import type { Patient, Appointment, Encounter } from '../types';
 
 export const PatientDetail: React.FC = () => {
@@ -40,6 +40,21 @@ export const PatientDetail: React.FC = () => {
     };
     if (id) fetchData();
   }, [id]);
+
+  const handleDownload = async (prescriptionId: string) => {
+    try {
+      const res = await api.get(`/prescriptions/${prescriptionId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Prescription-${prescriptionId}.html`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (err) {
+      console.error("Failed to download prescription", err);
+    }
+  };
 
   if (loading) return (
     <div style={{ display: 'flex', minHeight: '60vh', alignItems: 'center', justifyContent: 'center' }}>
@@ -118,16 +133,33 @@ export const PatientDetail: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <span style={{
-                  padding: '0.3rem 0.75rem',
-                  borderRadius: '999px',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  background: appt.status === 'confirmed' ? 'rgba(16,185,129,0.1)' : appt.status === 'requested' ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.06)',
-                  color: appt.status === 'confirmed' ? '#10b981' : appt.status === 'requested' ? '#f59e0b' : 'var(--text-muted)'
-                }}>
-                  {appt.status}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  {(() => {
+                    const enc = encounters.find(e => e.appointmentId === appt.id);
+                    if (enc && enc.prescriptionId) {
+                      return (
+                        <button 
+                          onClick={() => handleDownload(enc.prescriptionId!)}
+                          className="btn btn-secondary" 
+                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
+                        >
+                          <Download size={12} style={{ marginRight: '0.25rem' }} /> Prescription
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
+                  <span style={{
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    background: appt.status === 'confirmed' ? 'rgba(16,185,129,0.1)' : appt.status === 'requested' ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.06)',
+                    color: appt.status === 'confirmed' ? '#10b981' : appt.status === 'requested' ? '#f59e0b' : 'var(--text-muted)'
+                  }}>
+                    {appt.status}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

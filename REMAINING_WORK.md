@@ -44,7 +44,7 @@ encounter ID can join that video call's signalling room.
 it doesn't belong to, is rejected — demonstrate this with a real test script, not just a code
 review. *(Note: no-token case intentionally skipped in test script due to fake token injection complexity)*
 
-### 1.2 Prescription PDF — frontend integration (backend already works)
+### 1.2 Prescription PDF — frontend integration — [DONE]
 **Current state (verified):** `GET /prescriptions/:id/pdf` returns a real HTML receipt
 (confirmed via `test-prescriptions.ts`). `patient-web/src/pages/History.tsx` has a "Download"
 button with no click handler — it does nothing.

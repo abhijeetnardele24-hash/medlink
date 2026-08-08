@@ -14,6 +14,7 @@ interface Encounter {
       speciality: string;
     };
   };
+  prescriptionId?: string;
 }
 
 export const History: React.FC = () => {
@@ -35,6 +36,22 @@ export const History: React.FC = () => {
     };
     fetchHistory();
   }, []);
+
+  const handleDownload = async (prescriptionId?: string) => {
+    if (!prescriptionId) return;
+    try {
+      const res = await api.get(`/prescriptions/${prescriptionId}/pdf`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Prescription-${prescriptionId}.html`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+    } catch (err) {
+      console.error("Failed to download prescription", err);
+    }
+  };
 
   return (
     <div className="fade-in" style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
@@ -75,9 +92,13 @@ export const History: React.FC = () => {
                     <FileText size={16} color="var(--accent)" />
                     <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Prescription & Notes</span>
                   </div>
-                  <button className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
-                    <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
-                  </button>
+                  {encounter.prescriptionId ? (
+                    <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+                      <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Not available</span>
+                  )}
                 </div>
               </div>
             </div>
