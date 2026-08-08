@@ -42,16 +42,25 @@ export const PatientDetail: React.FC = () => {
   }, [id]);
 
   const handleDownload = async (prescriptionId: string) => {
+    // Open a blank tab synchronously to avoid popup blockers
+    const newWindow = window.open('', '_blank');
+    if (!newWindow) {
+      console.error("Popup blocked");
+      return;
+    }
+
     try {
       const res = await api.get(`/prescriptions/${prescriptionId}/pdf`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Prescription-${prescriptionId}.html`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
+      
+      newWindow.location.href = url;
+      
+      // Revoke the object URL after a short delay so the new tab has time to load it
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 5000);
     } catch (err) {
+      newWindow.close();
       console.error("Failed to download prescription", err);
     }
   };
