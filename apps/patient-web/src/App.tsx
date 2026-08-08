@@ -6,6 +6,7 @@ import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { DoctorProfile } from './pages/DoctorProfile';
 import { History } from './pages/History';
+import { Consents } from './pages/Consents';
 import { Consultation } from './pages/Consultation';
 import { Layout } from './components/Layout';
 import './index.css';
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/doctor/:id" element={<DoctorProfile />} />
               <Route path="/history" element={<History />} />
+              <Route path="/consents" element={<Consents />} />
             </Route>
             {/* Consultation is full screen, no sidebar */}
             <Route path="/consultation/:id" element={<Consultation />} />

@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { prescriptions, doctors, encounters, appointments, patients, users } from "../db/schema";
 import { authenticate } from "../middleware/auth";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ForbiddenError } from "../errors";
 
 const router = Router();
 
@@ -27,6 +27,8 @@ router.get(
         doctorReg: doctors.registrationNumber,
         facility: doctors.facilityName,
         patientName: users.displayName,
+        patientId: patients.id,
+        doctorUserId: doctors.userId,
       })
       .from(prescriptions)
       .innerJoin(doctors, eq(prescriptions.doctorId, doctors.id))
@@ -42,6 +44,37 @@ router.get(
     }
 
     const rx = data[0];
+
+    const firebaseUid = res.locals.user.uid;
+    const role = res.locals.user.role;
+    let authUserId = firebaseUid;
+    
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      authUserId = u.id;
+    }
+
+    if (role === "doctor" && rx.doctorUserId !== authUserId) {
+      // @ts-ignore
+      const { consentGrants } = await import("../db/schema");
+      const { and } = await import("drizzle-orm");
+      const [grant] = await getDb()
+        .select()
+        .from(consentGrants)
+        .where(
+           and(
+             eq(consentGrants.patientId, rx.patientId),
+             eq(consentGrants.granteeId, authUserId),
+             eq(consentGrants.status, "active")
+           )
+        )
+        .limit(1);
+        
+      if (!grant) {
+        throw new ForbiddenError("You do not have consent to view this patient's medical records");
+      }
+    }
     
     // Parse medicines json if it's stored as string, though Drizzle handles jsonb natively
     let medicines: any[] = [];
