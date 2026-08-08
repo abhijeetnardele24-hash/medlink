@@ -107,6 +107,21 @@ io.on("connection", (socket) => {
     socket.to(encounterId).emit("webrtc-ice-candidate", { candidate });
   });
 
+  socket.on("message", ({ encounterId, message }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("message", { message });
+  });
+
+  socket.on("typing", ({ encounterId, isTyping, senderId }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("typing", { isTyping, senderId });
+  });
+
+  socket.on("read-receipt", ({ encounterId, messageId, readerId }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("read-receipt", { messageId, readerId });
+  });
+
   socket.on("disconnect", () => {
     console.log(`[Socket.io] Disconnected: ${socket.id}`);
   });

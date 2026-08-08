@@ -12,7 +12,11 @@ import { attachments } from "../db/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+import messagesRouter from "./messages.routes";
+
 const router = Router();
+
+router.use("/:id/messages", messagesRouter);
 
 // ─── GET /encounters ────────────────────────────────────────────────────────
 router.get(

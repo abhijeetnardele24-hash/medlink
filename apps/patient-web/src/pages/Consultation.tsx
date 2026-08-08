@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Video, Mic, VideoOff, PhoneOff, Maximize } from 'lucide-react';
+import { Video, Mic, VideoOff, PhoneOff, Maximize, MessageSquare } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
+import { ChatBox } from '../components/ChatBox';
 
 export const Consultation: React.FC = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
   const { localStream, remoteStream, isConnected, error } = useWebRTC(id || null);
@@ -96,11 +98,23 @@ export const Consultation: React.FC = () => {
             <PhoneOff size={24} />
           </button>
           <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
+          <button 
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            style={{ width: 56, height: 56, borderRadius: '50%', background: isChatOpen ? '#423FDE' : 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <MessageSquare size={24} />
+          </button>
           <button style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <Maximize size={24} />
           </button>
         </div>
       </div>
+
+      {/* Chat Sidebar */}
+      {isChatOpen && id && (
+        <div style={{ position: 'absolute', right: '2rem', top: '5.5rem', bottom: '11rem', width: '24rem', zIndex: 20 }}>
+          <ChatBox encounterId={id} />
+        </div>
+      )}
     </div>
   );
 };

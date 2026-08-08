@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2 } from 'lucide-react';
+import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2, MessageSquare } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
+import { ChatBox } from '../components/ChatBox';
 
 export const Consultation: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { localStream, remoteStream, isConnected, error, startCall, connectionQuality } = useWebRTC(id || null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -231,8 +233,24 @@ export const Consultation: React.FC = () => {
           >
             <PhoneOff size={24} />
           </button>
+          
+          <div className="w-px h-8 bg-white/10 mx-2"></div>
+          
+          <button 
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${isChatOpen ? 'bg-blue-600' : 'bg-white/10 hover:bg-white/20'}`}
+          >
+            <MessageSquare size={24} />
+          </button>
         </div>
       </div>
+
+      {/* Chat Sidebar */}
+      {isChatOpen && id && (
+        <div className="absolute right-8 top-24 bottom-32 w-96 z-20">
+          <ChatBox encounterId={id} />
+        </div>
+      )}
     </div>
   );
 }

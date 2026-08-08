@@ -3,13 +3,15 @@ import { io, Socket } from 'socket.io-client';
 import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
 
+// Global socket ref for chat component
+export const socketRef: { current: Socket | null } = { current: null };
+
 export const useWebRTC = (encounterId: string | null) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const socketRef = useRef<Socket | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 
   useEffect(() => {
@@ -33,6 +35,10 @@ export const useWebRTC = (encounterId: string | null) => {
         }
         
         socketRef.current.on('connect', () => {
+          socketRef.current?.emit('join-encounter', encounterId);
+        });
+
+        socketRef.current.on('connect_error', () => {
           socketRef.current?.emit('join-encounter', encounterId);
         });
 
