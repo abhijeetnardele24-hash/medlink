@@ -11,8 +11,10 @@ export const useWebRTC = (encounterId: string | null) => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [connectionQuality, setConnectionQuality] = useState<'good' | 'poor' | 'audio-only'>('good');
 
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const qualityScore = useRef(5);
 
   useEffect(() => {
     if (!encounterId) return;
@@ -114,5 +116,51 @@ export const useWebRTC = (encounterId: string | null) => {
     };
   }, [encounterId]);
 
-  return { localStream, remoteStream, isConnected, error, peerConnectionRef };
+  // Adaptive Engine: monitor WebRTC stats
+  useEffect(() => {
+    if (!isConnected || !peerConnectionRef.current) return;
+    
+    const interval = setInterval(async () => {
+      if (!peerConnectionRef.current) return;
+      
+      try {
+        const stats = await peerConnectionRef.current.getStats();
+        let hasPoorStat = false;
+
+        stats.forEach(report => {
+          if (report.type === 'inbound-rtp' && report.kind === 'video') {
+            const packetLoss = report.packetsLost / (report.packetsReceived + report.packetsLost || 1);
+            if (packetLoss > 0.1 || report.jitter > 0.05) hasPoorStat = true;
+          }
+          if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+            if (report.currentRoundTripTime > 0.5) hasPoorStat = true; // > 500ms RTT
+          }
+        });
+
+        if (hasPoorStat) {
+          qualityScore.current = Math.max(0, qualityScore.current - 1);
+        } else {
+          qualityScore.current = Math.min(5, qualityScore.current + 1);
+        }
+
+        if (qualityScore.current === 0) {
+          setConnectionQuality('audio-only');
+          // Auto-downgrade by disabling video tracks locally
+          localStream?.getVideoTracks().forEach(t => t.enabled = false);
+        } else if (qualityScore.current <= 2) {
+          setConnectionQuality('poor');
+        } else {
+          setConnectionQuality('good');
+          // Auto-recover video tracks if quality is back to good
+          localStream?.getVideoTracks().forEach(t => t.enabled = true);
+        }
+      } catch (err) {
+        console.error('Failed to get stats', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isConnected, localStream]);
+
+  return { localStream, remoteStream, isConnected, error, peerConnectionRef, connectionQuality };
 };

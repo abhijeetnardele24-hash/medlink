@@ -8,7 +8,7 @@ export const Consultation: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
-  const { localStream, remoteStream, isConnected, error } = useWebRTC(id || null);
+  const { localStream, remoteStream, isConnected, error, connectionQuality } = useWebRTC(id || null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -66,8 +66,24 @@ export const Consultation: React.FC = () => {
             ) : 'Connecting to secure server...'}
           </p>
         </div>
-        <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1.25rem', borderRadius: '999px', color: 'white', fontWeight: 600 }}>
-          {isConnected ? '●  Live' : 'Waiting'}
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {isConnected && (
+            <div style={{ 
+              background: connectionQuality === 'good' ? 'rgba(16,185,129,0.2)' : connectionQuality === 'poor' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)', 
+              backdropFilter: 'blur(8px)', 
+              border: `1px solid ${connectionQuality === 'good' ? 'rgba(16,185,129,0.4)' : connectionQuality === 'poor' ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)'}`, 
+              padding: '0.5rem 1rem', 
+              borderRadius: '999px', 
+              color: connectionQuality === 'good' ? '#10b981' : connectionQuality === 'poor' ? '#f59e0b' : '#ef4444', 
+              fontWeight: 600,
+              fontSize: '0.875rem'
+            }}>
+              {connectionQuality === 'good' ? 'HQ Connection' : connectionQuality === 'poor' ? 'Poor Connection' : 'Audio Only'}
+            </div>
+          )}
+          <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1.25rem', borderRadius: '999px', color: 'white', fontWeight: 600 }}>
+            {isConnected ? '●  Live' : 'Waiting'}
+          </div>
         </div>
       </div>
 

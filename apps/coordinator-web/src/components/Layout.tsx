@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ShieldCheck, LogOut, CheckSquare, Users, UserCog, Settings, Calendar, ListTodo } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
 
 export const Layout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -73,8 +74,13 @@ export const Layout: React.FC = () => {
       </aside>
 
       {/* Main Content Area */}
-      <main style={{ flex: 1, overflowY: 'auto' }}>
-        <Outlet />
+      <main style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <header style={{ height: '64px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '0 2rem', background: 'var(--bg-surface)' }}>
+          <NotificationCenter />
+        </header>
+        <div style={{ flex: 1, padding: '0' }}>
+          <Outlet />
+        </div>
       </main>
     </div>
   );

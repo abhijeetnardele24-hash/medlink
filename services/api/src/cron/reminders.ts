@@ -23,8 +23,8 @@ export const startReminderCron = () => {
         .innerJoin(patients, eq(patients.id, appointments.patientId))
         .where(
           and(
-            isNull(reminderTasks.sentAt),
-            lte(reminderTasks.sendAt, now)
+            eq(reminderTasks.outcome, "pending"),
+            lte(reminderTasks.dueAt, now)
           )
         );
 
@@ -32,7 +32,7 @@ export const startReminderCron = () => {
         const { reminder, appointment, patient } = row;
         
         try {
-          if (reminder.targetRole === "patient") {
+          if (reminder.taskType === "pre_appointment_patient") {
             await emitNotification(
               patient.userId,
               "appointment_reminder",
@@ -40,7 +40,7 @@ export const startReminderCron = () => {
               `Reminder: You have an upcoming appointment scheduled for ${appointment.scheduledAt}`,
               { appointmentId: appointment.id }
             );
-          } else if (reminder.targetRole === "doctor") {
+          } else if (reminder.taskType === "pre_appointment_doctor") {
              const doctorRows = await getDb().select({ userId: doctors.userId }).from(doctors).where(eq(doctors.id, appointment.doctorId)).limit(1);
              if (doctorRows[0]?.userId) {
                 await emitNotification(
@@ -56,7 +56,7 @@ export const startReminderCron = () => {
           // Mark as sent
           await getDb()
             .update(reminderTasks)
-            .set({ status: "sent", sentAt: new Date() })
+            .set({ outcome: "attempted", resolvedAt: new Date() })
             .where(eq(reminderTasks.id, reminder.id));
             
           logger.info({ reminderId: reminder.id }, "Reminder sent successfully");
