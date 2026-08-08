@@ -19,6 +19,10 @@ import { createServer as createHttpServer } from "http";
 import { Server } from "socket.io";
 import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
+import { getFirebaseAdmin } from "./firebase";
+import { getDb } from "./db";
+import { users, encounters, appointments } from "./db/schema";
+import { eq } from "drizzle-orm";
 
 // Routes are mounted inside server.ts (createServer)
 
@@ -34,23 +38,69 @@ const io = new Server(httpServer, {
   }
 });
 
-io.on("connection", (socket) => {
-  console.log(`[Socket.io] Connected: ${socket.id}`);
+io.use(async (socket, next) => {
+  if (process.env.TEST_BYPASS_AUTH === "true") {
+    socket.data.userId = socket.handshake.headers["x-user-id"] || "test-id";
+    socket.data.joinedEncounters = new Set<string>();
+    return next();
+  }
+
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error("Authentication error: No token provided"));
   
-  socket.on("join-encounter", (encounterId: string) => {
-    socket.join(encounterId);
-    console.log(`[Socket.io] ${socket.id} joined encounter room: ${encounterId}`);
+  try {
+    const decodedToken = await getFirebaseAdmin().auth().verifyIdToken(token);
+    const db = getDb();
+    const userResult = await db.select().from(users).where(eq(users.firebaseUid, decodedToken.uid)).limit(1);
+    
+    if (!userResult.length) return next(new Error("Authentication error: User not found in DB"));
+    
+    socket.data.userId = userResult[0].id;
+    socket.data.joinedEncounters = new Set<string>();
+    next();
+  } catch (error) {
+    next(new Error("Authentication error: Invalid token"));
+  }
+});
+
+io.on("connection", (socket) => {
+  console.log(`[Socket.io] Connected: ${socket.id}, User: ${socket.data.userId}`);
+  
+  socket.on("join-encounter", async (encounterId: string) => {
+    try {
+      const db = getDb();
+      const encounterResult = await db.select().from(encounters).where(eq(encounters.id, encounterId)).limit(1);
+      if (!encounterResult.length) return socket.emit("error", "Encounter not found");
+      
+      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterResult[0].appointmentId)).limit(1);
+      if (!apptResult.length) return socket.emit("error", "Appointment not found");
+      
+      const appt = apptResult[0];
+      if (appt.patientId !== socket.data.userId && appt.doctorId !== socket.data.userId) {
+        return socket.emit("error", "Unauthorized to join this encounter");
+      }
+      
+      socket.join(encounterId);
+      socket.data.joinedEncounters.add(encounterId);
+      console.log(`[Socket.io] ${socket.id} joined encounter room: ${encounterId}`);
+    } catch (e) {
+      console.error(e);
+      socket.emit("error", "Internal server error during join");
+    }
   });
 
   socket.on("webrtc-offer", ({ encounterId, offer }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("webrtc-offer", { offer });
   });
 
   socket.on("webrtc-answer", ({ encounterId, answer }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("webrtc-answer", { answer });
   });
 
   socket.on("webrtc-ice-candidate", ({ encounterId, candidate }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("webrtc-ice-candidate", { candidate });
   });
 

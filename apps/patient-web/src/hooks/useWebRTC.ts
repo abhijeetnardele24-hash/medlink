@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { auth } from '../lib/firebase';
 
 const ICE_SERVERS = {
   iceServers: [
@@ -26,7 +27,11 @@ export const useWebRTC = (encounterId: string | null) => {
         setLocalStream(stream);
 
         if (!socketRef.current) {
-          socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', { withCredentials: true });
+          const token = await auth.currentUser?.getIdToken();
+          socketRef.current = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', { 
+            auth: { token },
+            withCredentials: true 
+          });
         }
         
         socketRef.current.on('connect', () => {
