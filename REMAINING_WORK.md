@@ -70,16 +70,9 @@ connection, not just the doctor's.
 
 ## 2. P1 — Core loop completion
 
-### 2.1 Async chat / messaging
-**Current state (verified):** `messages` table exists in the schema; **no route file uses
-it** — there is no chat API at all.
-**Build:**
-- `GET /encounters/:id/messages`, `POST /encounters/:id/messages`
-- Socket.IO events: `message`, `typing`, `read-receipt` — scoped to the same
-  room-authorization check as Section 1.1
-- Basic chat UI in both `doctor-web` and `patient-web` Consultation pages (this also becomes
-  the "chat mode" fallback referenced in the README's adaptive-consultation concept)
-- System messages for mode-switch notices (e.g. "Call downgraded to audio due to connection")
+### 2.1 Async chat / messaging — [DONE]
+**Current state (verified):** `messages` table schema exists and is fully implemented. `GET /encounters/:id/messages` and `POST /encounters/:id/messages` routes securely gate access using the `requireEncounterParticipant` middleware, ensuring only the assigned doctor or patient can access the conversation. Socket.IO events (`message`, `typing`, `read-receipt`) are correctly scoped to the encounter room, with `ChatBox` components integrated in both `patient-web` and `doctor-web` implementing the persist-then-relay pattern.
+**Build:** (Implemented)
 
 ### 2.2 Consent management
 **Current state (verified):** `consent_grants` table exists; **no route uses it.**
