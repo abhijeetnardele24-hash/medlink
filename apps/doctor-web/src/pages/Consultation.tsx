@@ -4,12 +4,17 @@ import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2, Mes
 import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
+import { PrescribeModal } from '../components/PrescribeModal';
+import { useAuth } from '../contexts/AuthContext';
+import { FileText } from 'lucide-react';
 
 export const Consultation: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { localStream, remoteStream, isConnected, error, startCall, connectionQuality } = useWebRTC(id || null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isPrescribeOpen, setIsPrescribeOpen] = useState(false);
+  const { profile } = useAuth();
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -239,8 +244,17 @@ export const Consultation: React.FC = () => {
           <button 
             onClick={() => setIsChatOpen(!isChatOpen)}
             className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${isChatOpen ? 'bg-blue-600' : 'bg-white/10 hover:bg-white/20'}`}
+            title="Chat"
           >
             <MessageSquare size={24} />
+          </button>
+
+          <button 
+            onClick={() => setIsPrescribeOpen(true)}
+            className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all shadow-lg shadow-blue-500/20"
+            title="Issue Prescription"
+          >
+            <FileText size={24} />
           </button>
         </div>
       </div>
@@ -250,6 +264,19 @@ export const Consultation: React.FC = () => {
         <div className="absolute right-8 top-24 bottom-32 w-96 z-20">
           <ChatBox encounterId={id} />
         </div>
+      )}
+
+      {/* Prescribe Modal */}
+      {isPrescribeOpen && id && profile?.id && (
+        <PrescribeModal
+          encounterId={id}
+          doctorId={profile.id}
+          onClose={() => setIsPrescribeOpen(false)}
+          onSuccess={() => {
+            setIsPrescribeOpen(false);
+            navigate('/dashboard');
+          }}
+        />
       )}
     </div>
   );

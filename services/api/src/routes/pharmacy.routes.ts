@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
-import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit } from "../db/schema";
+import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications } from "../db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 import Razorpay from "razorpay";
@@ -19,6 +19,62 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
 function normalizeText(text: string): string[] {
   return text.toLowerCase().replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(Boolean);
 }
+
+// POST /pharmacy/verify
+router.post("/verify", authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { licenseNumber } = req.body;
+    if (!licenseNumber) {
+      res.status(400).json({ error: "licenseNumber is required" });
+      return;
+    }
+
+    const { uid } = res.locals.user;
+    
+    // Find pharmacist by user uid
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+    
+    if (userRows.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+
+    const pharmacistRows = await getDb()
+      .select({ id: pharmacists.id })
+      .from(pharmacists)
+      .where(eq(pharmacists.userId, userRows[0].id))
+      .limit(1);
+
+    if (pharmacistRows.length === 0) {
+      res.status(403).json({ error: "Only pharmacists can submit verification" });
+      return;
+    }
+
+    const pharmacistId = pharmacistRows[0].id;
+
+    await getDb().transaction(async (tx) => {
+      // Update license number on pharmacist
+      await tx.update(pharmacists)
+        .set({ licenseNumber })
+        .where(eq(pharmacists.id, pharmacistId));
+
+      // Create verification request
+      await tx.insert(pharmacistVerifications).values({
+        pharmacistId,
+        status: "pending_verification",
+      });
+    });
+
+    res.status(201).json({ success: true, message: "Verification submitted successfully" });
+  } catch (err: any) {
+    logger.error({ err }, "Failed to submit pharmacist verification");
+    res.status(500).json({ error: "Failed to submit verification" });
+  }
+});
 
 // POST /pharmacy/orders
 router.post("/", authenticate, async (req: Request, res: Response): Promise<void> => {

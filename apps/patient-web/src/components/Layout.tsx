@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck } from 'lucide-react';
+import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck, Package } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -28,6 +28,9 @@ export const Layout: React.FC = () => {
           </NavLink>
           <NavLink to="/consents" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <ShieldCheck size={20} /> Consents
+          </NavLink>
+          <NavLink to="/pharmacy" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <Package size={20} /> Pharmacy
           </NavLink>
         </nav>
 

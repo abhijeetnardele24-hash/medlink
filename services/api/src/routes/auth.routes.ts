@@ -17,7 +17,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { users, patients, doctors } from "../db/schema";
+import { users, patients, doctors, pharmacists } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { validateBody } from "../middleware/validateBody";
 import { registerSchema } from "../schemas/auth.schema";
@@ -33,10 +33,13 @@ router.post(
   "/register",
   validateBody(registerSchema),
   async (req: Request, res: Response): Promise<void> => {
-    const { idToken, role, displayName } = req.body as {
+    const { idToken, role, displayName, contactNumber, shopName, registeredAddress } = req.body as {
       idToken: string;
-      role: "patient" | "doctor";
+      role: "patient" | "doctor" | "coordinator" | "pharmacist";
       displayName?: string;
+      contactNumber?: string;
+      shopName?: string;
+      registeredAddress?: string;
     };
 
     // Verify the token independently (this route is not behind authenticate
@@ -96,7 +99,18 @@ router.post(
         await tx.insert(doctors).values({
           userId: newUser.id,
           fullName: name,
-          contactNumber: req.body.contactNumber, // optional
+          contactNumber, // optional
+        });
+      } else if (role === "pharmacist") {
+        if (!shopName || !registeredAddress) {
+          throw new ConflictError("shopName and registeredAddress are required for pharmacists");
+        }
+        await tx.insert(pharmacists).values({
+          userId: newUser.id,
+          fullName: name,
+          contactNumber,
+          shopName,
+          registeredAddress,
         });
       }
 

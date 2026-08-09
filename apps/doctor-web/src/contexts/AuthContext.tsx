@@ -8,7 +8,7 @@ interface AuthContextType {
   loading: boolean;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
-  profile: { verificationStatus: string; fullName?: string } | null;
+  profile: { id: string; verificationStatus: string; fullName?: string } | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ verificationStatus: string } | null>(null);
+  const [profile, setProfile] = useState<{ id: string; verificationStatus: string } | null>(null);
 
   useEffect(() => {
     if (!auth) {

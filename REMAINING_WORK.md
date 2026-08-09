@@ -157,7 +157,7 @@ connection, not just the doctor's.
 ## 2.5 P1 — Pharmacist onboarding & enterprise pharmacy marketplace
 
 **Target:** `apps/pharmacy-web`, `apps/patient-web`, `apps/coordinator-web`, `services/api`
-**Status:** Planned.
+**Status:** Completed.
 
 ### Open Questions Resolved
 Before implementing the schema or the frontend, we established the following architectural decisions:
@@ -202,7 +202,7 @@ Before implementing the schema or the frontend, we established the following arc
 
 ### Execution Order
 1. Schema and DB Migrations (Done)
-2. Pharmacist-web Auth and Onboarding (Restructure and create Seller Portal)
-3. Patient-web Storefront Port (Move catalog/checkout logic from old pharmacy-web)
-4. Coordinator-web VerificationQueue Extension
-5. Doctor-web Tagging UI
+2. Pharmacist-web Auth and Onboarding (Done)
+3. Patient-web Storefront Port (Done)
+4. Coordinator-web VerificationQueue Extension (Done)
+5. Doctor-web Tagging UI (Done)

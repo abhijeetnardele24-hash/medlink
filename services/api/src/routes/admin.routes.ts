@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctorVerifications, doctors, appointments, patients, reminderTasks } from "../db/schema";
+import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError } from "../errors";
@@ -84,6 +84,77 @@ router.patch(
     });
 
     res.json({ success: true, message: `Doctor verification updated to ${status}` });
+  }
+);
+
+// ─── GET /admin/pharmacist-verifications ──────────────────────────────────
+router.get(
+  "/pharmacist-verifications",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const status = (_req.query.status as string) || "pending_verification";
+    
+    const rows = await getDb()
+      .select({
+        id: pharmacistVerifications.id,
+        pharmacistId: pharmacistVerifications.pharmacistId,
+        status: pharmacistVerifications.status,
+        createdAt: pharmacistVerifications.createdAt,
+        pharmacist: {
+          fullName: pharmacists.fullName,
+          shopName: pharmacists.shopName,
+          registeredAddress: pharmacists.registeredAddress,
+          contactNumber: pharmacists.contactNumber,
+          licenseNumber: pharmacists.licenseNumber,
+        }
+      })
+      .from(pharmacistVerifications)
+      .innerJoin(pharmacists, eq(pharmacistVerifications.pharmacistId, pharmacists.id))
+      .where(eq(pharmacistVerifications.status, status as any));
+
+    res.json(rows);
+  }
+);
+
+// ─── PATCH /admin/pharmacist-verifications/:id ──────────────────────────────
+router.patch(
+  "/pharmacist-verifications/:id",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    const { status, reasonCode } = _req.body as { status: string; reasonCode?: string };
+
+    const verifRows = await getDb()
+      .select()
+      .from(pharmacistVerifications)
+      .where(eq(pharmacistVerifications.id, id))
+      .limit(1);
+
+    if (verifRows.length === 0) throw new NotFoundError("Pharmacist Verification");
+    const verif = verifRows[0];
+
+    await getDb().transaction(async (tx) => {
+      await tx
+        .update(pharmacistVerifications)
+        .set({
+          status: status as any,
+          reasonCode: reasonCode || null,
+          decidedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(pharmacistVerifications.id, id));
+
+      if (status === "verified" || status === "rejected") {
+        await tx
+          .update(pharmacists)
+          .set({ verificationStatus: status as any, updatedAt: new Date() })
+          .where(eq(pharmacists.id, verif.pharmacistId));
+      }
+    });
+
+    res.json({ success: true, message: `Pharmacist verification updated to ${status}` });
   }
 );
 

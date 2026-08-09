@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments, users as dbUsers, doctors } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -155,6 +155,11 @@ router.post(
       return;
     }
 
+    // Find all medicines that have a medicineId and recommend=true
+    const recommendedMedicineIds = medicinesJson
+      .filter((m: any) => m.medicineId && m.recommend === true)
+      .map((m: any) => m.medicineId);
+
     const [prescription] = await getDb()
       .insert(prescriptions)
       .values({
@@ -166,6 +171,19 @@ router.post(
         issuedAt: new Date(),
       })
       .returning();
+
+    if (recommendedMedicineIds.length > 0) {
+      // Upsert into doctorMedicineRecommendations (ignore conflicts if already recommended)
+      await getDb()
+        .insert(doctorMedicineRecommendations)
+        .values(
+          recommendedMedicineIds.map((medicineId: string) => ({
+            doctorId,
+            medicineId,
+          }))
+        )
+        .onConflictDoNothing({ target: [doctorMedicineRecommendations.doctorId, doctorMedicineRecommendations.medicineId] });
+    }
 
     // Mark encounter as ended
     const [updatedEncounter] = await getDb()

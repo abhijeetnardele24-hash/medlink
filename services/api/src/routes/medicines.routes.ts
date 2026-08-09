@@ -10,7 +10,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { search, category, requiresPrescription } = req.query;
 
-    let conditions = [];
+    let conditions = [eq(medicines.listingStatus, 'approved')];
 
     if (typeof search === "string" && search.trim() !== "") {
       conditions.push(ilike(medicines.name, `%${search.trim()}%`));
