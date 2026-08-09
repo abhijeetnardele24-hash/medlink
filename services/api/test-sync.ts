@@ -50,6 +50,20 @@ async function testSyncAuth() {
     const otherUserResult = await pool.query('SELECT id FROM users WHERE id != $1 AND id != $2 LIMIT 1', [patientUserId, doctorUserId]);
     const invalidUserId = otherUserResult.rows[0].id;
 
+    console.log(`\n--- Testing PUSH as Valid User ---`);
+    const validPushPayload = {
+      idempotencyKey: randomUUID(),
+      entityType: 'message',
+      action: 'CREATE',
+      payload: { encounterId, body: 'Hello this is a valid message for sync testing!' },
+      timestamp: Date.now()
+    };
+    
+    const pushValidRes = await api.post('/sync/push', { operations: [validPushPayload] }, { 
+      headers: { 'x-user-id': patientUserId, 'x-user-role': 'patient' } 
+    });
+    console.log(`[VALID USER] /sync/push Result:`, pushValidRes.data.results[0]);
+
     console.log(`\n--- Testing PULL Authorization ---`);
     
     // Test 1: Pull as valid participant
@@ -57,7 +71,13 @@ async function testSyncAuth() {
       headers: { 'x-user-id': patientUserId, 'x-user-role': 'patient' } 
     });
     console.log(`[VALID USER] /sync/pull for ${encounterId} -> Status: ${pullValidRes.status}`);
-    console.log(`[VALID USER] Returned ${pullValidRes.data.data.messages.length} messages.`);
+    const validMessages = pullValidRes.data.data.messages;
+    console.log(`[VALID USER] Returned ${validMessages.length} messages.`);
+    if (validMessages.length > 0) {
+      console.log('SUCCESS: Valid user successfully pulled messages.');
+    } else {
+      console.log('FAIL: Valid user received 0 messages after pushing one.');
+    }
     
     // Test 2: Pull as invalid participant
     const pullInvalidRes = await api.get(`/sync/pull?encounterIds=${encounterId}`, { 
