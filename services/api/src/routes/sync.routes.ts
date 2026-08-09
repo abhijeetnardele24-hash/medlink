@@ -3,6 +3,7 @@ import { getDb } from "../db";
 import { messages } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { eq, gt, or, inArray, and } from "drizzle-orm";
+import { encounters, appointments, patients, doctors, users } from "../db/schema";
 import { logger } from "../logger";
 
 const router = Router();
@@ -10,7 +11,37 @@ const router = Router();
 // Require auth for all sync endpoints
 router.use(authenticate);
 
-// ─── POST /v1/sync/push ──────────────────────────────────────────────────
+// Helper to fetch authorized encounter IDs for a user
+async function getAuthorizedEncounterIds(db: any, firebaseUid: string, encounterIds: string[]): Promise<string[]> {
+  if (encounterIds.length === 0) return [];
+  
+  let userId = firebaseUid;
+  if (process.env.TEST_BYPASS_AUTH !== "true") {
+    const [u] = await db.select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+    if (!u) return [];
+    userId = u.id;
+  }
+
+  const results = await db
+    .select({ id: encounters.id })
+    .from(encounters)
+    .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+    .where(
+      and(
+        inArray(encounters.id, encounterIds),
+        or(
+          eq(patients.userId, userId),
+          eq(doctors.userId, userId)
+        )
+      )
+    );
+    
+  return results.map((r: any) => r.id);
+}
+
+// ──────────────── POST /v1/sync/push ─────────────────────────────────────────────────────────────
 // Drain client's outbox to the server
 router.post("/push", async (req: Request, res: Response): Promise<void> => {
   try {
@@ -33,6 +64,13 @@ router.post("/push", async (req: Request, res: Response): Promise<void> => {
           
           if (!idempotencyKey) {
             results.push({ status: "error", error: "Missing idempotencyKey" });
+            continue;
+          }
+
+          // Authorize the encounterId for push
+          const authorizedIds = await getAuthorizedEncounterIds(db, res.locals.user.uid, [encounterId]);
+          if (authorizedIds.length === 0) {
+            results.push({ idempotencyKey, status: "error", error: "Not authorized to access this encounter" });
             continue;
           }
 
@@ -97,12 +135,19 @@ router.get("/pull", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Filter to only encounters the user is authorized to read
+    const authorizedIds = await getAuthorizedEncounterIds(db, res.locals.user.uid, encounterIds);
+    if (authorizedIds.length === 0) {
+      res.json({ data: { messages: [] }, nextCursor: Date.now() });
+      return;
+    }
+
     const pulledMessages = await db
       .select()
       .from(messages)
       .where(
         and(
-          inArray(messages.encounterId, encounterIds),
+          inArray(messages.encounterId, authorizedIds),
           gt(messages.updatedAt, cursor)
         )
       )
