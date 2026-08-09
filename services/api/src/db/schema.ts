@@ -451,7 +451,11 @@ export const messages = pgTable(
     body: text("body"),
     attachmentId: uuid("attachment_id"), // FK wired after attachments table
     isSystemEvent: boolean("is_system_event").notNull().default(false), // mode-switch notices
+    idempotencyKey: varchar("idempotency_key", { length: 255 }).unique(),
     createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
   },
@@ -459,6 +463,7 @@ export const messages = pgTable(
     index("messages_encounter_id_idx").on(t.encounterId),
     index("messages_sender_id_idx").on(t.senderId),
     index("messages_created_at_idx").on(t.createdAt),
+    index("messages_updated_at_idx").on(t.updatedAt),
   ]
 );
 

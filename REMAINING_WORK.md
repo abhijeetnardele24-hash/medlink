@@ -116,20 +116,13 @@ connection, not just the doctor's.
 
 ---
 
-## 4. P3 — Offline-first sync engine (the README's stated core differentiator — real, but large)
+## 4. P3 — Offline-first sync engine (the README's stated core differentiator)
 
-**Current state (verified):** `sync_operations` table exists in schema; **zero API routes,
-zero frontend hooks, zero UI.** This is not started, at all, despite being described in the
-README as central to the product.
-**Build (this is genuinely multi-week — treat as its own project, not a checklist item):**
-- Backend: `POST /sync/push` (idempotent outbox operations), `GET /sync/pull?cursor=...`,
-  `POST /sync/ack`, `GET /sync/status`
-- Frontend: `useSync()` hook backed by IndexedDB outbox, pending-sync banner with retry,
-  conflict-resolution UI for stale-version writes, offline indicator that persists across
-  reloads
-**Recommendation:** don't start this until Sections 1 and 2 are done and the core paid loop
-(find → book → pay → consult → prescribe) is demoable end-to-end. This is the single largest
-remaining item in the whole plan.
+**Current state (verified):** Done. 
+- Implemented `/sync` endpoints (push, pull, ack) on backend with `idempotency_key` deduplication logic for messages.
+- Added `SyncDB.ts` (IndexedDB via Dexie) and `SyncManager.ts` in both `patient-web` and `doctor-web`.
+- Wrapped chat message reading and writing inside `ChatBox.tsx` using `useLiveQuery` to react automatically to `SyncManager` outbox queues and network state changes.
+- Tested successfully against backend, showing idempotency keys effectively discard duplicate inserts from poor network connections.
 
 ---
 

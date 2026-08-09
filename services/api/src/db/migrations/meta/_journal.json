@@ -15,6 +15,13 @@
       "when": 1786218010620,
       "tag": "0001_overrated_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786268395301,
+      "tag": "0002_woozy_maximus",
+      "breakpoints": true
     }
   ]
 }

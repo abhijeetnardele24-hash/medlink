@@ -35,6 +35,7 @@ import consentsRouter from "./routes/consents.routes";
 import medicinesRouter from "./routes/medicines.routes";
 import pharmacyRouter from "./routes/pharmacy.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
+import syncRouter from "./routes/sync.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -138,6 +139,7 @@ export const createServer = (): Express => {
   v1Router.use("/medicines", medicinesRouter);
   v1Router.use("/pharmacy/orders", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
+  v1Router.use("/sync", syncRouter);
 
   // Mount unversioned external webhooks
   app.use("/webhooks", webhooksRouter);

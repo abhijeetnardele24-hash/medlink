@@ -3,6 +3,9 @@ import { Send } from 'lucide-react';
 import { api } from '../lib/api';
 import { socketRef } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { syncDb } from '../lib/sync/SyncDB';
+import { syncManager } from '../lib/sync/SyncManager';
 
 export interface Message {
   id: string;
@@ -13,7 +16,6 @@ export interface Message {
 }
 
 export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [remoteTyping, setRemoteTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -21,9 +23,29 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
   
   const currentUserId = auth?.currentUser?.uid || 'test-id';
 
+  // Reactively query local Dexie DB for messages for this encounter
+  const messages = useLiveQuery(
+    () => syncDb.messages_cache.where({ encounterId }).sortBy('createdAt'),
+    [encounterId],
+    []
+  );
+
   useEffect(() => {
-    api.get(`/encounters/${encounterId}/messages`).then((res) => {
-      setMessages(res.data.messages);
+    // 1. Initial pull (either via REST or sync loop)
+    syncManager.sync([encounterId]).catch(console.error);
+    
+    // 2. Also fetch directly to populate cache for backward compatibility / initial load
+    api.get(`/encounters/${encounterId}/messages`).then(async (res) => {
+      const serverMsgs = res.data.messages.map((m: any) => ({
+        id: m.id,
+        encounterId: m.encounterId,
+        senderId: m.senderId,
+        body: m.body,
+        createdAt: new Date(m.createdAt).getTime(),
+        syncStatus: 'synced',
+        isSystemEvent: m.isSystemEvent
+      }));
+      await syncDb.messages_cache.bulkPut(serverMsgs);
     }).catch(console.error);
   }, [encounterId]);
 
@@ -31,8 +53,16 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
     const socket = socketRef.current;
     if (!socket) return;
 
-    const handleMessage = ({ message }: { message: Message }) => {
-      setMessages(prev => [...prev, message]);
+    const handleMessage = async ({ message }: { message: Message }) => {
+      // Put incoming socket message into local cache
+      await syncDb.messages_cache.put({
+        id: message.id,
+        encounterId: encounterId,
+        senderId: message.senderId,
+        body: message.body,
+        createdAt: new Date(message.createdAt).getTime(),
+        syncStatus: 'synced'
+      });
       setRemoteTyping(false); 
     };
 
@@ -66,10 +96,17 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
     socketRef.current?.emit('typing', { encounterId, isTyping: false, senderId: currentUserId });
 
     try {
-      const res = await api.post(`/encounters/${encounterId}/messages`, { body });
-      const savedMessage = res.data;
-      setMessages(prev => [...prev, savedMessage]);
-      socketRef.current?.emit('message', { encounterId, message: savedMessage });
+      // Offline-first sync enqueue
+      await syncManager.enqueueMessage(encounterId, currentUserId, body);
+      // We don't manually emit 'message' over socket here because the sync loop 
+      // is handling it (and backend handles broadcasting if we wanted to), 
+      // but for V1 we can still attempt an optimistic emit if online:
+      if (navigator.onLine) {
+        socketRef.current?.emit('message', { 
+          encounterId, 
+          message: { id: crypto.randomUUID(), senderId: currentUserId, body, createdAt: new Date().toISOString() } 
+        });
+      }
     } catch (error) {
       console.error('Failed to send message', error);
     }
@@ -93,8 +130,10 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
       </div>
       
       <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {messages.map((msg) => {
+        {messages.map((msg: any) => {
           const isMe = msg.senderId === currentUserId;
+          const isPending = msg.syncStatus === 'pending_push';
+
           if (msg.isSystemEvent) {
             return (
               <div key={msg.id} style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.875rem', fontStyle: 'italic', margin: '0.5rem 0' }}>
@@ -113,7 +152,8 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
                 background: isMe ? '#423FDE' : '#374151',
                 color: 'white',
                 fontSize: '0.95rem',
-                lineHeight: 1.4
+                lineHeight: 1.4,
+                opacity: isPending ? 0.7 : 1
               }}>
                 {msg.body}
               </div>
