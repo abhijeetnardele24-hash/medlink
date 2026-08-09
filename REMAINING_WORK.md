@@ -151,3 +151,27 @@ connection, not just the doctor's.
    explicitly and correct it, rather than silently working around the discrepancy.
 4. Update the status markers in this file (or note completion in the PR/commit) as sections
    are finished, so it stays a reliable source of truth rather than going stale.
+## 2.5 P1 — Pharmacist onboarding & enterprise pharmacy marketplace
+
+**Target:** pps/pharmacy-web, pps/patient-web, pps/coordinator-web, services/api
+**Status:** Planned.
+
+**Backend / Schema:**
+1. Add pharmacist to user_role enum.
+2. Create pharmacists and pharmacist_verifications tables mirroring the doctor onboarding pattern.
+3. Update medicines with pharmacist_id (nullable) and listing_status (pending/approved/rejected).
+4. Create doctor_medicine_recommendations table to track which doctors recommend which medicines.
+
+**Pharmacist Seller Portal (pharmacy-web):**
+1. Build full auth flow: Login, Signup, Onboarding (license upload, shop details).
+2. Build Inventory Dashboard for verified pharmacists to add/edit medicines and manage stock/pricing.
+
+**Coordinator Dashboard (coordinator-web):**
+1. Extend VerificationQueue to include a tab for pending Pharmacist applications, using the same approve/reject pattern.
+
+**Doctor App (doctor-web):**
+1. Add UI for doctors to tag/recommend specific medicines within their specialty.
+
+**Patient Storefront (patient-web):**
+1. Polish the medicine catalog with category filtering, search-as-you-type, and a multi-seller storefront view (if multiple pharmacists sell the same generic product).
+*(Note: Patients browse and buy here, not in pharmacy-web. Real-time inventory locking at checkout and courier logistics are out of scope for this pass).*

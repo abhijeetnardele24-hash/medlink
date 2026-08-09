@@ -30,6 +30,7 @@ import {
 export const userRoleEnum = pgEnum("user_role", [
   "patient",
   "doctor",
+  "pharmacist",
   "coordinator",
   "admin",
 ]);
@@ -49,6 +50,27 @@ export const doctorVerificationStatusEnum = pgEnum(
     "verified",
     "rejected",
     "suspended",
+  ]
+);
+
+export const pharmacistVerificationStatusEnum = pgEnum(
+  "pharmacist_verification_status",
+  [
+    "draft",
+    "pending_verification",
+    "needs_correction",
+    "verified",
+    "rejected",
+    "suspended",
+  ]
+);
+
+export const medicineListingStatusEnum = pgEnum(
+  "medicine_listing_status",
+  [
+    "pending",
+    "approved",
+    "rejected",
   ]
 );
 
@@ -274,6 +296,70 @@ export const doctorVerifications = pgTable(
   (t) => [
     index("doctor_verifications_doctor_id_idx").on(t.doctorId),
     index("doctor_verifications_status_idx").on(t.status),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────
+// PHARMACISTS
+// ─────────────────────────────────────────────────────────────
+
+export const pharmacists = pgTable(
+  "pharmacists",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    fullName: text("full_name").notNull(),
+    contactNumber: text("contact_number"),
+    shopName: text("shop_name").notNull(),
+    registeredAddress: text("registered_address").notNull(),
+    licenseNumber: text("license_number"),
+    verificationStatus: pharmacistVerificationStatusEnum("verification_status")
+      .notNull()
+      .default("draft"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("pharmacists_user_id_idx").on(t.userId),
+    index("pharmacists_verification_status_idx").on(t.verificationStatus),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────
+// PHARMACIST VERIFICATIONS
+// ─────────────────────────────────────────────────────────────
+
+export const pharmacistVerifications = pgTable(
+  "pharmacist_verifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pharmacistId: uuid("pharmacist_id")
+      .notNull()
+      .references(() => pharmacists.id, { onDelete: "cascade" }),
+    status: pharmacistVerificationStatusEnum("status")
+      .notNull()
+      .default("pending_verification"),
+    submittedDocumentsMeta: jsonb("submitted_documents_meta"),
+    reviewerId: uuid("reviewer_id").references(() => users.id),
+    reasonCode: text("reason_code"),
+    reviewerComment: text("reviewer_comment"),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("pharmacist_verifications_pharmacist_id_idx").on(t.pharmacistId),
+    index("pharmacist_verifications_status_idx").on(t.status),
   ]
 );
 
@@ -683,6 +769,8 @@ export const pharmacyOrders = pgTable(
 
 export const medicines = pgTable("medicines", {
   id: uuid("id").primaryKey().defaultRandom(),
+  pharmacistId: uuid("pharmacist_id").references(() => pharmacists.id, { onDelete: "cascade" }),
+  listingStatus: medicineListingStatusEnum("listing_status").notNull().default("approved"),
   name: text("name").notNull(),
   genericName: text("generic_name"),
   price: integer("price").notNull(), // Price in INR
@@ -692,6 +780,14 @@ export const medicines = pgTable("medicines", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const doctorMedicineRecommendations = pgTable("doctor_medicine_recommendations", {
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  medicineId: uuid("medicine_id").notNull().references(() => medicines.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("doc_med_recommendation_idx").on(t.doctorId, t.medicineId)
+]);
 
 export const pharmacyOrderItems = pgTable("pharmacy_order_items", {
   id: uuid("id").primaryKey().defaultRandom(),
