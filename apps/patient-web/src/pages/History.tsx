@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { FileText, Download, Calendar, Activity } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Encounter {
   id: string;
@@ -107,9 +108,9 @@ export const History: React.FC = () => {
                       <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
                         <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
                       </button>
-                      <a href={`http://localhost:5177?rxId=${encounter.prescriptionId}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', textDecoration: 'none' }}>
+                      <Link to={`/pharmacy?rxId=${encounter.prescriptionId}`} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', textDecoration: 'none' }}>
                         Order Medicines
-                      </a>
+                      </Link>
                     </div>
                   ) : (
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Not available</span>

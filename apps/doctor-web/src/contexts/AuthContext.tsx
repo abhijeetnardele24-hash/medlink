@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { api } from '../lib/api';
 
 interface AuthContextType {
   user: User | null;
@@ -29,10 +30,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentUser) {
         try {
           const idToken = await currentUser.getIdToken();
-          const res = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${idToken}` } });
-          if (res.ok) {
-            const data = await res.json();
-            setProfile(data.doctor ?? null);
+          const res = await api.get('/doctors/me', { headers: { Authorization: `Bearer ${idToken}` } });
+          if (res.data) {
+            setProfile(res.data ?? null);
           }
         } catch {
           setProfile(null);

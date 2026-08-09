@@ -97,12 +97,104 @@ test.describe('Core E2E Loop', () => {
     await patientPage.click('button:has-text("Book Appointment")');
     // Select the slot we just created. It might have a text like "9:00 AM"
     await patientPage.click('text=9:00 AM');
-    await patientPage.click('button:has-text("Confirm Booking")');
-
     // Complete payment (mock razorpay)
-    await expect(patientPage.locator('text=Razorpay')).toBeVisible({ timeout: 10000 });
-    await patientPage.click('button:has-text("Simulate Success")');
+    await patientPage.evaluate(() => {
+      (window as any).Razorpay = function(options: any) {
+        this.open = () => {
+          setTimeout(() => {
+            options.handler({
+              razorpay_order_id: 'mock_order_' + Date.now(),
+              razorpay_payment_id: 'mock_payment_' + Date.now(),
+              razorpay_signature: 'mock_signature'
+            });
+          }, 500);
+        };
+        this.on = () => {};
+      };
+    });
     
-    await expect(patientPage).toHaveURL('http://localhost:5173/history');
+    await patientPage.click('button:has-text("Confirm Booking")');
+    // Because of the mock, it will automatically call the success handler after 500ms
+    // which then verifies payment and navigates to history
+    
+    await expect(patientPage).toHaveURL('http://localhost:5176/history');
+
+    // --- Consultation ---
+    // Patient joins room
+    const historyCard = patientPage.locator('text=Patient Playwright').locator('..').locator('..').first(); // Actually the history page shows the concern. Let's just click Join Room in history if it exists, or go to dashboard to join.
+    // Wait, the appointment might not be "ended" yet so it won't show in history.
+    // Patient should go to Dashboard (Upcoming Appointments)
+    await patientPage.click('text=Dashboard');
+    // We expect a "Join Room" or "Join Call" button.
+    const patientJoinBtn = patientPage.locator('button:has-text("Join Room")').first();
+    await expect(patientJoinBtn).toBeVisible({ timeout: 10000 });
+    await patientJoinBtn.click();
+    await expect(patientPage).toHaveURL(/.*consultation\/.*/);
+
+    // Doctor joins room
+    await doctorPage.reload();
+    await doctorPage.click('text=Dashboard');
+    const doctorJoinBtn = doctorPage.locator('button:has-text("Join Room")').first();
+    await expect(doctorJoinBtn).toBeVisible({ timeout: 10000 });
+    await doctorJoinBtn.click();
+    await expect(doctorPage).toHaveURL(/.*consultation\/.*/);
+
+    // --- Prescription ---
+    // Wait for the room to connect (optional, but we can just click Prescribe)
+    await doctorPage.click('button:has-text("Prescribe")');
+    
+    // Search medicine (we seeded Amoxicillin 500mg)
+    await doctorPage.fill('input[placeholder="Search medicines..."]', 'Amoxicillin');
+    await doctorPage.click('text=Amoxicillin 500mg');
+    await doctorPage.fill('input[placeholder="Instructions (e.g. 1 pill after meals)"]', '1 pill twice a day');
+    await doctorPage.check('input[type="checkbox"]'); // Recommend flag
+    
+    await doctorPage.click('button:has-text("Issue Prescription & End Call")');
+    
+    // Once issued, the consultation might end or show a success message.
+    // Patient returns to history
+    await patientPage.goto('http://localhost:5176/history');
+    
+    // --- Pharmacy Storefront ---
+    // The history page now has "Order Medicines"
+    const orderBtn = patientPage.locator('text=Order Medicines').first();
+    await expect(orderBtn).toBeVisible({ timeout: 10000 });
+    await orderBtn.click();
+    
+    // Checks that we are on the pharmacy storefront
+    await expect(patientPage).toHaveURL(/.*pharmacy.*/);
+    
+    // Since the rxId is in the URL, the cart should auto-populate or we click Add to Cart
+    await expect(patientPage.locator('text=Amoxicillin 500mg')).toBeVisible({ timeout: 10000 });
+    // Assuming there is a checkout button
+    await patientPage.click('button:has-text("Add to Cart")');
+    
+    // Open the cart
+    await patientPage.locator('button:has-text("1")').click(); // Cart icon
+    await patientPage.fill('textarea[placeholder="Enter full delivery address"]', '123 E2E Street');
+
+    // Inject razorpay mock again
+    await patientPage.evaluate(() => {
+      (window as any).Razorpay = function(options: any) {
+        this.open = () => {
+          setTimeout(() => {
+            options.handler({
+              razorpay_order_id: 'mock_order_' + Date.now(),
+              razorpay_payment_id: 'mock_payment_' + Date.now(),
+              razorpay_signature: 'mock_signature'
+            });
+          }, 500);
+        };
+        this.on = () => {};
+      };
+    });
+
+    await patientPage.click('button:has-text("Checkout")');
+    
+    // Wait for the alert
+    patientPage.on('dialog', async dialog => {
+      expect(dialog.message()).toContain('Payment successful');
+      await dialog.accept();
+    });
   });
 });
