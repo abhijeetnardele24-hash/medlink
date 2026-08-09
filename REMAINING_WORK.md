@@ -112,8 +112,7 @@ connection, not just the doctor's.
 - **Rate limiting [DONE]**: global limit (100 req/min) and strict auth limit (20 req/15min) via `express-rate-limit`.
 - **Request size limits [DONE]**: file/json upload limit set to 10MB (`express.json({ limit: "10mb" })`).
 - **ICE restart / reconnection handling [DONE]**: implemented auto-reconnect (`pc.restartIce()`) on drop in `useWebRTC.ts`, with pause protection on the adaptive quality engine.
-- **API versioning**: none currently — decide a scheme (`/v1/...`) before the API surface
-  grows further.
+- **API versioning [DONE]**: mapped backend REST routes under `/v1` prefix and updated all 4 frontend API configurations to point to `/v1`.
 
 ---
 

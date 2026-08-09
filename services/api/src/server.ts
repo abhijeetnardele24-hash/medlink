@@ -123,21 +123,25 @@ export const createServer = (): Express => {
     next();
   });
 
-  // ── Routes ──────────────────────────────────────────────────────────────────
-  app.use("/", healthRouter);
-  app.use("/auth", authLimiter, authRouter);
-  app.use("/doctors", doctorsRouter);
-  app.use("/appointments", authenticate, appointmentsRouter);
-  app.use("/encounters", authenticate, encountersRouter);
-  app.use("/prescriptions", prescriptionsRouter); // Has own auth checks
-  app.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
-  app.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
-  app.use("/webhooks", webhooksRouter);
-  app.use("/webrtc", webrtcRouter);
-  app.use("/consents", authenticate, consentsRouter);
-  app.use("/medicines", medicinesRouter);
-  app.use("/pharmacy/orders", pharmacyRouter);
-  app.use("/notifications", notificationsRouter);
+  // ── Routes ───────────────────────────────────────────────────────────────────
+  const v1Router = express.Router();
+  v1Router.use("/", healthRouter);
+  v1Router.use("/auth", authLimiter, authRouter);
+  v1Router.use("/doctors", doctorsRouter);
+  v1Router.use("/appointments", authenticate, appointmentsRouter);
+  v1Router.use("/encounters", authenticate, encountersRouter);
+  v1Router.use("/prescriptions", prescriptionsRouter); // Has own auth checks
+  v1Router.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
+  v1Router.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
+  v1Router.use("/webhooks", webhooksRouter);
+  v1Router.use("/webrtc", webrtcRouter);
+  v1Router.use("/consents", authenticate, consentsRouter);
+  v1Router.use("/medicines", medicinesRouter);
+  v1Router.use("/pharmacy/orders", pharmacyRouter);
+  v1Router.use("/notifications", notificationsRouter);
+
+  // Mount v1 API
+  app.use("/v1", v1Router);
 
   // ── 404 handler ─────────────────────────────────────────────────────────────
   app.use((_req: Request, res: Response) => {

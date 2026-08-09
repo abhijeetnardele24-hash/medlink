@@ -21,7 +21,7 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-const API_URL = process.env.API_URL || 'http://localhost:3005';
+const API_URL = (process.env.API_URL || 'http://localhost:3005') + '/v1';
 
 async function generateTestHeaders(role: 'patient' | 'doctor', uid: string) {
   return {
@@ -201,3 +201,5 @@ async function runTests() {
 }
 
 runTests();
+
+
