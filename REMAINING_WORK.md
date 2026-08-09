@@ -120,9 +120,10 @@ connection, not just the doctor's.
 
 **Current state (verified):** Done. 
 - Implemented `/sync` endpoints (push, pull, ack) on backend with `idempotency_key` deduplication logic for messages.
+- Added strict authorization checking to `/sync` to guarantee users can only push or pull from encounters they belong to.
 - Added `SyncDB.ts` (IndexedDB via Dexie) and `SyncManager.ts` in both `patient-web` and `doctor-web`.
 - Wrapped chat message reading and writing inside `ChatBox.tsx` using `useLiveQuery` to react automatically to `SyncManager` outbox queues and network state changes.
-- Tested successfully against backend, showing idempotency keys effectively discard duplicate inserts from poor network connections.
+- Tested successfully against backend, showing idempotency keys effectively discard duplicate inserts from poor network connections, and testing proper authorization rejection for cross-encounter data attempts.
 
 ---
 
