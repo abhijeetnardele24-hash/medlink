@@ -336,7 +336,7 @@ router.patch(
     if (userId) {
       await getDb().insert(auditEvents).values({
         actorId: userId,
-        actorRole: role as "patient" | "doctor" | "coordinator" | "admin",
+        actorRole: role as "patient" | "doctor" | "coordinator" | "admin" | "pharmacist",
         action: `appointment.${body.action}`,
         resourceType: "appointment",
         resourceId: id,

@@ -21,7 +21,7 @@ import { eq } from "drizzle-orm";
 export interface AuthUser {
   uid: string;           // Firebase UID
   email: string;
-  role: string;          // custom claim: "patient" | "doctor" | "coordinator" | "admin"
+  role: string;          // custom claim: "patient" | "doctor" | "coordinator" | "admin" | "pharmacist"
 }
 
 // Extend Express locals so TypeScript knows about req.user
@@ -59,12 +59,7 @@ export const authenticate = async (
     // In local dev, checkRevoked can sometimes fail. We skip it here.
     const decoded = await admin.auth().verifyIdToken(idToken);
 
-    let role = decoded["role"] as
-      | "patient"
-      | "doctor"
-      | "coordinator"
-      | "admin"
-      | undefined;
+    let role: string | undefined = decoded["role"] as string | undefined;
 
     // Fallback: If custom claims haven't propagated to the client JWT yet,
     // look up the role from the database.
@@ -75,7 +70,7 @@ export const authenticate = async (
         .where(eq(users.firebaseUid, decoded.uid))
         .limit(1);
       
-      if (userRecord.length > 0) {
+      if (userRecord.length > 0 && userRecord[0].role) {
         role = userRecord[0].role;
       } else {
         role = "patient";
@@ -85,7 +80,7 @@ export const authenticate = async (
     res.locals.user = {
       uid: decoded.uid,
       email: decoded.email ?? "",
-      role,
+      role: role ?? "patient",
     };
 
     next();
