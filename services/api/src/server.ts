@@ -133,12 +133,14 @@ export const createServer = (): Express => {
   v1Router.use("/prescriptions", prescriptionsRouter); // Has own auth checks
   v1Router.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
   v1Router.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
-  v1Router.use("/webhooks", webhooksRouter);
   v1Router.use("/webrtc", webrtcRouter);
   v1Router.use("/consents", authenticate, consentsRouter);
   v1Router.use("/medicines", medicinesRouter);
   v1Router.use("/pharmacy/orders", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
+
+  // Mount unversioned external webhooks
+  app.use("/webhooks", webhooksRouter);
 
   // Mount v1 API
   app.use("/v1", v1Router);

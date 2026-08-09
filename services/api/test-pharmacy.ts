@@ -168,7 +168,7 @@ async function runTests() {
     });
     const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
     
-    const webhookRes = await axios.post(`${API_URL}/webhooks/razorpay`, payload, {
+    const webhookRes = await axios.post(`http://localhost:3005/webhooks/razorpay`, payload, {
       headers: {
         'x-razorpay-signature': signature,
         'Content-Type': 'application/json'
@@ -178,7 +178,7 @@ async function runTests() {
     
     // Verify idempotent nature
     console.log('\n[6/6] Verifying webhook idempotency...');
-    await axios.post(`${API_URL}/webhooks/razorpay`, payload, {
+    await axios.post(`http://localhost:3005/webhooks/razorpay`, payload, {
       headers: {
         'x-razorpay-signature': signature,
         'Content-Type': 'application/json'
@@ -201,5 +201,8 @@ async function runTests() {
 }
 
 runTests();
+
+
+
 
 
