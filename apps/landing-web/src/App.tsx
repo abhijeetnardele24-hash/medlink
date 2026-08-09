@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Zap, RefreshCw, Activity } from 'lucide-react';
+import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Zap, RefreshCw, Activity, Store } from 'lucide-react';
 import './index.css';
 
 const MedLinkLogo = () => (
@@ -114,12 +114,21 @@ function App() {
                   </div>
                   
                   <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
-                     <a href="http://localhost:5175" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                     <a href="http://localhost:5175" style={{ textDecoration: 'none', color: 'inherit', display: 'block', marginBottom: '1.25rem' }}>
                       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Server size={16} color="var(--text-main)" /></div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Admin Console</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Centralized global hospital operations.</div>
+                        </div>
+                      </div>
+                    </a>
+                     <a href="http://localhost:5177" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                        <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Store size={16} color="var(--text-main)" /></div>
+                        <div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Pharmacy Portal</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enterprise medicine marketplace & Rx fulfillment.</div>
                         </div>
                       </div>
                     </a>
@@ -181,7 +190,7 @@ function App() {
             <h2 style={{ fontSize: '3rem', marginBottom: '1.5rem', letterSpacing: '-0.03em' }}>The Clinical Workflow</h2>
             <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto' }}>
               How MedLink processes millions of remote encounters with zero friction, 
-              connecting three separate portals through a centralized API gateway.
+              connecting four separate portals through a centralized API gateway.
             </p>
           </motion.div>
 
@@ -207,6 +216,11 @@ function App() {
                 step: 4, title: 'Post-Encounter Processing', app: 'Doctor Portal', icon: <FileText size={24} />, link: "http://localhost:5174",
                 desc: 'The encounter concludes. The video recording is automatically compressed and uploaded to secure cloud storage. The doctor finalizes clinical notes and issues digital prescriptions.',
                 tags: [{i: <Cloud size={14}/>, t: 'Firebase Blob Storage'}, {i: <CheckCircle2 size={14}/>, t: 'Immutable Records'}]
+              },
+              { 
+                step: 5, title: 'Pharmacy Fulfillment', app: 'Pharmacy Portal', icon: <Store size={24} />, link: "http://localhost:5177",
+                desc: 'Digital prescriptions automatically flow into the secure Pharmacy marketplace. Registered pharmacists verify prescriptions, manage inventory, and process orders for patient pickup or delivery.',
+                tags: [{i: <Lock size={14}/>, t: 'Rx Verification'}, {i: <CheckCircle2 size={14}/>, t: 'Inventory Sync'}]
               },
             ].map((s, i) => (
               <motion.div 
@@ -252,12 +266,12 @@ function App() {
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}>
             <h2 style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '2rem', lineHeight: 1.1 }}>Built for massive throughput.</h2>
             <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
-              MedLink operates on a microservices-inspired architecture. A centralized Node.js API gateway handles requests from three distinct React applications, ensuring complete data isolation and strict role-based access control.
+              MedLink operates on a microservices-inspired architecture. A centralized Node.js API gateway handles requests from four distinct React applications, ensuring complete data isolation and strict role-based access control.
             </p>
             
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
               {[
-                'Three isolated React frontend portals',
+                'Four isolated React frontend portals',
                 'Centralized PostgreSQL database with Prisma ORM',
                 'Real-time socket.io signaling server for WebRTC handshakes',
                 'Direct Firebase Storage integration for media blobs'
@@ -280,10 +294,11 @@ function App() {
             className="dotted-bg" style={{ padding: '4rem', position: 'relative', minHeight: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1px solid var(--border)', borderRadius: '24px' }}
           >
             {/* Top Row: Frontend Portals */}
-            <div style={{ display: 'flex', gap: '1.5rem', zIndex: 2, width: '100%', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '1.5rem', zIndex: 2, width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
               <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Smartphone size={18}/> Patient App</motion.div>
               <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Stethoscope size={18}/> Doctor Hub</motion.div>
               <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Server size={18}/> Admin Web</motion.div>
+              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Store size={18}/> Pharmacy Web</motion.div>
             </div>
 
             {/* Middle: API Gateway */}
@@ -409,6 +424,7 @@ function App() {
                 <li><a href="http://localhost:5176" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Patient Gateway</a></li>
                 <li><a href="http://localhost:5174" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Doctor Hub</a></li>
                 <li><a href="http://localhost:5175" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Admin Console</a></li>
+                <li><a href="http://localhost:5177" style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Pharmacy Portal</a></li>
               </ul>
             </div>
             <div>

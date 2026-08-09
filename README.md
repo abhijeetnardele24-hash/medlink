@@ -98,6 +98,7 @@ flowchart TB
         PA[Patient App<br/>Flutter Android]
         DW[Doctor Dashboard<br/>React Web]
         CW[Coordinator Console<br/>React Web]
+        PW[Pharmacy Portal<br/>React Web]
     end
 
     subgraph Edge[Public Edge and Trust Boundary]
@@ -138,15 +139,18 @@ flowchart TB
     PA -->|HTTPS REST / WSS| DNS
     DW -->|HTTPS REST / WSS| DNS
     CW -->|HTTPS REST / WSS| DNS
+    PW -->|HTTPS REST / WSS| DNS
     DNS --> WAF --> GW
     CDN --> DW
     CDN --> CW
+    CDN --> PW
     GW --> API
     GW --> RT
 
     PA -->|OIDC sign-in| IDP
     DW -->|OIDC sign-in| IDP
     CW -->|OIDC sign-in| IDP
+    PW -->|OIDC sign-in| IDP
     API -->|verify identity token| IDP
     API --> RBAC
     API --> SECRETS
@@ -219,6 +223,7 @@ MedLink separates clinical care from platform operations. Every request is autho
 |---|---|---|
 | Patient | Maintains own profile, searches doctors, requests appointments, gives consent, joins consultations, reads own authorised records and prescriptions. | Can access only their own data and published doctor information. |
 | Doctor | Manages availability, accepts/reschedules appointments, consults assigned patients, writes notes and prescriptions. | Can access only patients with an authorised care/appointment relationship. |
+| Pharmacist | Manages medicine catalog listings, reviews verified stock, and processes digital prescriptions or direct orders. | Can access only medicine catalog and patient orders directed to their pharmacy. |
 | Clinic Coordinator/Admin | Verifies doctor profiles, manages operational scheduling, sends/escalates reminders and resolves non-clinical booking issues. | Does not view clinical notes, private chat, attachments, diagnoses or prescriptions by default. |
 | Recommendation engine | Ranks specialities/doctors from structured preferences and returns an explanation. | Never diagnoses, prescribes, makes the final choice or performs autonomous booking. |
 | Community Health Worker (future) | Helps a consented patient access the platform at a health centre or supports device use. | Receives only limited, time-bound, consent-scoped access. |
@@ -337,8 +342,9 @@ Each queued operation has an `operation_id`, record version, retry state and err
 
 | Domain entity | Purpose |
 |---|---|
-| User, Patient, Doctor | Identity and role-specific profile data. |
-| DoctorVerification, AvailabilitySlot | Verification state and publicly bookable time slots. |
+| User, Patient, Doctor, Pharmacist | Identity and role-specific profile data. |
+| DoctorVerification, PharmacistVerification, AvailabilitySlot | Verification state and publicly bookable time slots. |
+| Medicine, DoctorMedicineRecommendation | Centralized medicine catalog, listings, and doctor-specific trusted recommendations. |
 | Appointment, Encounter | Scheduled care relationship and actual consultation lifecycle. |
 | ConsultationNote, ConsultationSummary | Doctor-authored draft/final clinical documentation and a patient-visible final summary. |
 | Prescription, Attachment | Issued prescription versions and authorised clinical documents/reports. |
