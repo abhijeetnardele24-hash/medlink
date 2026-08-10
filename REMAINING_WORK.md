@@ -57,7 +57,7 @@ real prescription for a real encounter.
 **Acceptance:** demonstrate a call still connects when direct UDP is blocked (e.g. via
 `chrome://webrtc-internals` showing a relay candidate was used).
 
-### 1.4 Patient-side adaptive quality parity
+### 1.4 Patient-side adaptive quality parity — [DONE]
 **Current state (verified):** doctor-web's `useWebRTC.ts` has the full adaptive
 downgrade/recovery engine; patient-web's does not.
 **Fix:** port the same `getStats()`-based quality scoring, hysteresis, and downgrade/recovery
@@ -136,7 +136,7 @@ connection, not just the doctor's.
 - PWA: service worker for static asset caching, install manifest, offline fallback page.
 - Observability: OpenTelemetry tracing, `/metrics` (Prometheus), `/ready` + `/live` health
   checks, structured log correlation IDs, error tracking (Sentry).
-- Testing: **[Partial DONE]** Playwright E2E core loop (login → book → consult → prescribe) is implemented and passing. Remaining: Vitest for hooks/utils and basic API contract tests.
+- Testing: **[Deferred]** Playwright E2E deferred — requires coordinated local setup (Postgres, Firebase emulator/creds, Razorpay test mode, multiple dev servers) that's too unstable to prioritize right now. Revisit once the rest of Section 5 is done and the app has settled. Remaining: Vitest for hooks/utils and basic API contract tests.
 
 ---
 
@@ -153,7 +153,7 @@ connection, not just the doctor's.
 
 ---
 
-## 2.5 P1 — Pharmacist onboarding & enterprise pharmacy marketplace
+## 2.5 P1 — Pharmacist onboarding & enterprise pharmacy marketplace — [DONE]
 
 **Target:** `apps/pharmacy-web`, `apps/patient-web`, `apps/coordinator-web`, `services/api`
 **Status:** Completed.
