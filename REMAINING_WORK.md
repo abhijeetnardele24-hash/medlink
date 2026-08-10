@@ -1,6 +1,6 @@
 # MedLink — Remaining Work (Web Platform)
 
-**Status as of:** 2026-08-08
+**Status as of:** 2026-08-10
 **Scope:** `apps/doctor-web`, `apps/coordinator-web`, `apps/patient-web`, `apps/landing-web`, `services/api`
 **Out of scope for now:** `apps/patient-mobile` (Flutter — deliberately deferred until web is proven)
 
@@ -136,8 +136,7 @@ connection, not just the doctor's.
 - PWA: service worker for static asset caching, install manifest, offline fallback page.
 - Observability: OpenTelemetry tracing, `/metrics` (Prometheus), `/ready` + `/live` health
   checks, structured log correlation IDs, error tracking (Sentry).
-- Testing: currently **zero tests anywhere in the repo** — Vitest for hooks/utils, Playwright
-  for the core E2E flow (login → book → consult → prescribe), basic API contract tests.
+- Testing: **[Partial DONE]** Playwright E2E core loop (login → book → consult → prescribe) is implemented and passing. Remaining: Vitest for hooks/utils and basic API contract tests.
 
 ---
 
