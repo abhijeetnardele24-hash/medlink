@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Lock, Mail, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -103,9 +103,6 @@ export const Login: React.FC = () => {
             {loading ? <div className="spinner"></div> : 'Authenticate'}
           </button>
 
-          <div style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-            Need an admin account? <Link to="/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Sign up</Link>
-          </div>
         </form>
 
       </motion.div>

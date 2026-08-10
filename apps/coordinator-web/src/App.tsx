@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
 import { Layout } from './components/Layout';
 import { VerificationQueue } from './pages/VerificationQueue';
 import { DoctorsDirectory } from './pages/DoctorsDirectory';
@@ -18,7 +17,6 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
           
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>

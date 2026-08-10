@@ -35,7 +35,7 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     const { idToken, role, displayName, contactNumber, shopName, registeredAddress } = req.body as {
       idToken: string;
-      role: "patient" | "doctor" | "coordinator" | "pharmacist";
+      role: "patient" | "doctor" | "pharmacist";
       displayName?: string;
       contactNumber?: string;
       shopName?: string;

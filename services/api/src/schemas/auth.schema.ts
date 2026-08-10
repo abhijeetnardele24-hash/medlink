@@ -11,7 +11,7 @@ export const registerSchema = z.object({
   /** Firebase ID token obtained from the client SDK */
   idToken: z.string().min(1, "Firebase ID token is required"),
   /** Role the user is registering as */
-  role: z.enum(["patient", "doctor", "coordinator", "pharmacist"]),
+  role: z.enum(["patient", "doctor", "pharmacist"]),
   /** Optional display name (falls back to Firebase displayName) */
   displayName: z.string().optional(),
   /** Optional contact number */
