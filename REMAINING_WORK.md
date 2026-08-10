@@ -131,7 +131,7 @@ connection, not just the doctor's.
 
 - Accessibility (WCAG 2.1 AA): **[DONE]** Pass completed for core screens (booking flow, consultation, prescriptions, pharmacy checkout, and pharmacist onboarding). Added ARIA labels, tabIndex, focus-visible states, and verified basic keyboard navigation. Other screens deferred.
 - i18n: **[DONE]** Scaffolding via `react-i18next` completed for `patient-web` and `doctor-web` (English/Hindi) covering core loop screens. Full-app translation pass deferred.
-- PWA: service worker for static asset caching, install manifest, offline fallback page.
+- PWA: **[DONE]** Added `vite-plugin-pwa` to `patient-web` and `doctor-web`. Included manifest, basic SVG icons, service worker with Workbox asset caching, and an `offline.html` fallback page.
 - Observability: **[DONE]** Added `/live` and `/ready` probes and ensured Pino structured logging is consistent. OpenTelemetry tracing, Prometheus `/metrics`, Grafana, and Sentry error tracking are explicitly **[Deferred]** as they are disproportionate for the project's current stage.
 - Testing: **[Deferred]** Playwright E2E deferred — requires coordinated local setup (Postgres, Firebase emulator/creds, Razorpay test mode, multiple dev servers) that's too unstable to prioritize right now. Revisit once the rest of Section 5 is done and the app has settled. Remaining: Vitest for hooks/utils and basic API contract tests.
 
