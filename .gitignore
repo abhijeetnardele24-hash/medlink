@@ -63,3 +63,30 @@ Desktop.ini
 
 # Generated documentation artefacts (README.md is the canonical source)
 README.pdf
+
+# One-off / scratch scripts (local dev tooling, not part of the deliverable)
+append_readme.js
+append_readme2.js
+fix_readme.js
+fix_readme2.js
+delete-dashboard.js
+run-socket-tests.js
+test-build.js
+
+# Windows batch convenience scripts (local-only, not portable)
+build-all.bat
+git-push.bat
+install-deps.bat
+seed-users.bat
+start-all.bat
+
+# Agent planning artifacts (internal working docs)
+implementation_plan.md
+walkthrough.md
+
+# Playwright generated output
+e2e-tests/playwright-report/
+e2e-tests/test-results/
+
+# Design tool internals
+.superdesign/
