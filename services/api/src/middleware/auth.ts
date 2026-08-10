@@ -73,24 +73,7 @@ export const authenticate = async (
       if (userRecord.length > 0 && userRecord[0].role) {
         role = userRecord[0].role;
       } else {
-        // [HACK for Walkthrough]: Auto-seed coordinator if missing
-        if (decoded.email === "coordinator@medlink.com") {
-          console.log(`[Auto-seed] Inserting orphaned coordinator account ${decoded.email} into Postgres...`);
-          await getDb().insert(users).values({
-            firebaseUid: decoded.uid,
-            email: decoded.email,
-            displayName: 'Coordinator Admin',
-            role: 'coordinator',
-          });
-          role = "coordinator";
-          try {
-            await admin.auth().setCustomUserClaims(decoded.uid, { role: 'coordinator' });
-          } catch(e) {
-            console.log("Could not set custom claim during auto-seed, proceeding anyway.");
-          }
-        } else {
-          role = "patient";
-        }
+        role = "patient";
       }
     }
 
