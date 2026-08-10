@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2, MessageSquare } from 'lucide-react';
+import { Video, Mic, VideoOff, PhoneOff, Play, Square, UploadCloud, Loader2, MessageSquare, FileText } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
 import { PrescribeModal } from '../components/PrescribeModal';
 import { useAuth } from '../contexts/AuthContext';
-import { FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { localStream, remoteStream, isConnected, error, startCall, connectionQuality } = useWebRTC(id || null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPrescribeOpen, setIsPrescribeOpen] = useState(false);
@@ -147,15 +148,15 @@ export const Consultation: React.FC = () => {
       {/* Header Overlay */}
       <div className="absolute top-0 left-0 right-0 p-6 z-10 bg-gradient-to-b from-black/80 to-transparent flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-white font-['Manrope']">Doctor's Command Center</h2>
+          <h2 className="text-2xl font-bold text-white font-['Manrope']">{t('consultation.commandCenter')}</h2>
           <p className="text-white/70 text-sm flex items-center gap-2 mt-1">
             {isConnected ? (
               <>
                 <span className={`w-2 h-2 rounded-full ${connectionQuality === 'good' ? 'bg-green-500' : connectionQuality === 'poor' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
-                Connected E2EE {connectionQuality !== 'good' && <span className="font-bold">({connectionQuality.toUpperCase()})</span>}
+                {t('consultation.connectedE2E')} {connectionQuality !== 'good' && <span className="font-bold">({connectionQuality.toUpperCase()})</span>}
               </>
             ) : (
-              "Waiting for connection"
+              t('consultation.waiting')
             )}
           </p>
           {/* TODO: Add state machine fallback for offline / chat modes when connection is completely lost */}
@@ -176,7 +177,7 @@ export const Consultation: React.FC = () => {
               className="btn bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2"
             >
               {isUploading ? <Loader2 className="animate-spin" size={18} /> : <UploadCloud size={18} />}
-              {isUploading ? 'Uploading to Cloud...' : 'Upload Recording'}
+              {isUploading ? t('consultation.uploading') : t('consultation.uploadRecording')}
             </button>
           )}
         </div>

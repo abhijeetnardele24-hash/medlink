@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 import { api } from '../lib/api';
 import './PharmacyStorefront.css';
@@ -22,6 +23,7 @@ interface CartItem extends Medicine {
 
 export function PharmacyStorefront() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const rxId = searchParams.get('rxId');
   
@@ -118,12 +120,12 @@ export function PharmacyStorefront() {
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Package size={32} color="var(--accent)" />
-          <h1 style={{ margin: 0 }}>MedLink Pharmacy</h1>
+          <h1 style={{ margin: 0 }}>{t('pharmacy.title')}</h1>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           {rxId && (
             <span style={{ padding: '0.5rem 1rem', background: '#dcfce7', color: '#166534', borderRadius: '8px', fontWeight: 600 }}>
-              Prescription Attached
+              {t('pharmacy.prescriptionAttached')}
             </span>
           )}
           <button 
@@ -145,8 +147,8 @@ export function PharmacyStorefront() {
         <Search size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
         <input 
           type="search"
-          aria-label="Search medicines"
-          placeholder="Search medicines..." 
+          aria-label={t('pharmacy.searchMedicines')}
+          placeholder={t('pharmacy.searchMedicines')}
           className="input-field" 
           style={{ paddingLeft: '3rem', maxWidth: '400px' }}
           value={search}
@@ -168,7 +170,7 @@ export function PharmacyStorefront() {
             <div style={{ marginBottom: '1rem' }}>
               <span className="pill-badge" style={{ background: 'var(--bg-surface-elevated)' }}>{med.category}</span>
               {med.requiresPrescription && (
-                <span className="pill-badge" style={{ background: '#fef2f2', color: '#ef4444', marginLeft: '0.5rem' }}>Rx Required</span>
+                <span className="pill-badge" style={{ background: '#fef2f2', color: '#ef4444', marginLeft: '0.5rem' }}>{t('pharmacy.rxRequired')}</span>
               )}
             </div>
 
@@ -178,7 +180,7 @@ export function PharmacyStorefront() {
               style={{ marginTop: 'auto', width: '100%' }}
               onClick={() => addToCart(med)}
             >
-              Add to Cart
+              {t('pharmacy.addToCart')}
             </button>
           </div>
         ))}
@@ -186,12 +188,12 @@ export function PharmacyStorefront() {
 
       <div className={`cart-sidebar ${isCartOpen ? 'open' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <h2 style={{ margin: 0 }}>Your Cart</h2>
+          <h2 style={{ margin: 0 }}>{t('pharmacy.yourCart')}</h2>
           <button aria-label="Close cart" className="btn btn-secondary" onClick={() => setIsCartOpen(false)} style={{ padding: '0.5rem' }}>✕</button>
         </div>
 
         {cart.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>Your cart is empty</p>
+          <p style={{ color: 'var(--text-muted)', textAlign: 'center', marginTop: '2rem' }}>{t('pharmacy.emptyCart')}</p>
         ) : (
           <>
             <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -213,12 +215,12 @@ export function PharmacyStorefront() {
 
             <div style={{ marginTop: 'auto', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600 }}>
-                <span>Total</span>
+                <span>{t('pharmacy.total')}</span>
                 <span>₹{total}</span>
               </div>
               
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Delivery Address</label>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{t('pharmacy.deliveryAddress')}</label>
                 <textarea 
                   id="deliveryAddress"
                   aria-label="Delivery Address"
@@ -237,7 +239,7 @@ export function PharmacyStorefront() {
                 disabled={loading}
               >
                 <CreditCard size={20} />
-                {loading ? 'Processing...' : 'Checkout'}
+                {loading ? 'Processing...' : t('pharmacy.checkout')}
               </button>
             </div>
           </>

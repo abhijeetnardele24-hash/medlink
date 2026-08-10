@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Video, Mic, VideoOff, PhoneOff, Maximize, MessageSquare } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { ChatBox } from '../components/ChatBox';
+import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { localStream, remoteStream, isConnected, error, connectionQuality } = useWebRTC(id || null);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -30,9 +32,9 @@ export const Consultation: React.FC = () => {
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#0a0a0a' }}>
         <div style={{ textAlign: 'center', color: '#fca5a5', padding: '2rem' }}>
           <p style={{ fontSize: '1.25rem', fontWeight: 700 }}>{error}</p>
-          <p style={{ marginTop: '0.5rem', color: '#9ca3af' }}>Please ensure camera and microphone permissions are granted.</p>
+          <p style={{ marginTop: '0.5rem', color: '#9ca3af' }}>{t('consultation.permissionError')}</p>
           <button onClick={() => navigate('/')} style={{ marginTop: '1.5rem', padding: '0.75rem 2rem', borderRadius: '999px', background: '#423FDE', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
-            Go Back
+            {t('consultation.goBack')}
           </button>
         </div>
       </div>
@@ -48,7 +50,7 @@ export const Consultation: React.FC = () => {
         ) : (
           <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', border: '3px solid rgba(255,255,255,0.2)', borderTopColor: 'rgba(255,255,255,0.8)', animation: 'spin 1s linear infinite' }} />
-            <p style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: '1.1rem' }}>Waiting for doctor to connect...</p>
+            <p style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 600, fontSize: '1.1rem' }}>{t('consultation.waitingForDoctor')}</p>
           </div>
         )}
       </div>
@@ -56,33 +58,27 @@ export const Consultation: React.FC = () => {
       {/* Header Overlay */}
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '1.5rem 2rem', zIndex: 10, background: 'linear-gradient(to bottom, rgba(0,0,0,0.8), transparent)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <h2 style={{ color: 'white', fontFamily: 'Manrope, sans-serif', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Consultation Room</h2>
+          <h2 style={{ color: 'white', fontFamily: 'Manrope, sans-serif', fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('consultation.title')}</h2>
           <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.875rem', marginTop: '0.25rem' }}>
             {isConnected ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
-                Connected securely (E2EE)
+                {t('consultation.connectedSecurely')}
               </span>
-            ) : 'Connecting to secure server...'}
+            ) : t('consultation.connecting')}
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
           {isConnected && (
-            <div style={{ 
-              background: connectionQuality === 'good' ? 'rgba(16,185,129,0.2)' : connectionQuality === 'poor' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)', 
-              backdropFilter: 'blur(8px)', 
-              border: `1px solid ${connectionQuality === 'good' ? 'rgba(16,185,129,0.4)' : connectionQuality === 'poor' ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)'}`, 
-              padding: '0.5rem 1rem', 
-              borderRadius: '999px', 
-              color: connectionQuality === 'good' ? '#10b981' : connectionQuality === 'poor' ? '#f59e0b' : '#ef4444', 
-              fontWeight: 600,
-              fontSize: '0.875rem'
+            <div style={{
+              background: connectionQuality === 'good' ? '#10b981' : connectionQuality === 'poor' ? '#f59e0b' : '#ef4444',
+              color: 'white', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
             }}>
-              {connectionQuality === 'good' ? 'HQ Connection' : connectionQuality === 'poor' ? 'Poor Connection' : 'Audio Only'}
+              {connectionQuality === 'good' ? t('consultation.hqConnection') : connectionQuality === 'poor' ? t('consultation.poorConnection') : t('consultation.audioOnly')}
             </div>
           )}
           <div style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.5rem 1.25rem', borderRadius: '999px', color: 'white', fontWeight: 600 }}>
-            {isConnected ? '●  Live' : 'Waiting'}
+            {isConnected ? '●  ' + t('consultation.live') : t('consultation.waiting')}
           </div>
         </div>
       </div>

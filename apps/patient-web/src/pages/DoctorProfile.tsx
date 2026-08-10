@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -31,6 +32,7 @@ interface Slot {
 export const DoctorProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -176,18 +178,18 @@ export const DoctorProfile: React.FC = () => {
             </div>
             
             <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
-              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Consultation Fee</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{t('booking.consultationFee')}</div>
               <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>₹{doctor.consultationFee}</div>
             </div>
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>About</h3>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('booking.about')}</h3>
             <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{doctor.bio || 'No bio provided.'}</p>
           </div>
           
           <div style={{ marginBottom: '2rem' }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>Languages Spoken</h3>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('booking.languagesSpoken')}</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {doctor.languagesSpoken.map(lang => (
                 <span key={lang} style={{ padding: '0.25rem 0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: '16px', fontSize: '0.875rem' }}>{lang}</span>
@@ -204,12 +206,12 @@ export const DoctorProfile: React.FC = () => {
           style={{ padding: '2.5rem' }}
         >
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <CalendarPlus size={24} color="var(--accent)" /> Book Appointment
+            <CalendarPlus size={24} color="var(--accent)" /> {t('booking.bookAppointment')}
           </h2>
 
           <form onSubmit={handleBook}>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label className="input-label">Select Reason for Visit</label>
+              <label className="input-label">{t('booking.selectReason')}</label>
               <select className="input-field" value={concern} onChange={(e) => setConcern(e.target.value)} required>
                 <option value="general_consultation">General Consultation</option>
                 <option value="follow_up">Follow-up</option>
@@ -220,10 +222,10 @@ export const DoctorProfile: React.FC = () => {
             </div>
 
             <div style={{ marginBottom: '2.5rem' }}>
-              <label className="input-label">Available Time Slots</label>
+              <label className="input-label">{t('booking.availableTimeSlots')}</label>
               {slots.length === 0 ? (
                 <div style={{ padding: '1.5rem', background: 'var(--bg-surface-elevated)', borderRadius: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  No available slots found for this doctor.
+                  {t('booking.noSlots')}
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
