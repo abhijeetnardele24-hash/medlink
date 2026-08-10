@@ -15,6 +15,10 @@ interface Medicine {
   stockQuantity: number;
   requiresPrescription: boolean;
   category: string;
+  description?: string;
+  imageUrl?: string;
+  dosageForm?: string;
+  manufacturer?: string;
 }
 
 interface CartItem extends Medicine {
@@ -159,16 +163,34 @@ export function PharmacyStorefront() {
       <div className="medicine-grid">
         {medicines.map(med => (
           <div key={med.id} className="medicine-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+            {med.imageUrl && (
+              <div className="medicine-image-container">
+                <img src={med.imageUrl} alt={med.name} className="medicine-image" />
+              </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
               <div>
-                <h3 style={{ margin: '0 0 0.25rem 0' }}>{med.name}</h3>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>{med.genericName}</p>
+                <h3 style={{ margin: '0 0 0.25rem 0', fontSize: '1.1rem' }}>{med.name}</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{med.genericName}</p>
               </div>
               <span style={{ fontWeight: 'bold', fontSize: '1.25rem', color: 'var(--accent)' }}>₹{med.price}</span>
             </div>
             
-            <div style={{ marginBottom: '1rem' }}>
+            {med.manufacturer && (
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                By {med.manufacturer}
+              </div>
+            )}
+
+            {med.description && (
+              <p className="medicine-description">{med.description}</p>
+            )}
+            
+            <div style={{ marginBottom: '1rem', marginTop: 'auto' }}>
               <span className="pill-badge" style={{ background: 'var(--bg-surface-elevated)' }}>{med.category}</span>
+              {med.dosageForm && (
+                <span className="pill-badge" style={{ background: 'var(--bg-surface-elevated)', marginLeft: '0.5rem' }}>{med.dosageForm}</span>
+              )}
               {med.requiresPrescription && (
                 <span className="pill-badge" style={{ background: '#fef2f2', color: '#ef4444', marginLeft: '0.5rem' }}>{t('pharmacy.rxRequired')}</span>
               )}

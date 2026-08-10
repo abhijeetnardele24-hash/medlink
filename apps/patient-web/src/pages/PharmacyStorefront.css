@@ -58,3 +58,33 @@
   font-size: 0.75rem;
   font-weight: 600;
 }
+
+.medicine-image-container {
+  width: calc(100% + 3rem);
+  margin: -1.5rem -1.5rem 1rem -1.5rem;
+  height: 200px;
+  overflow: hidden;
+  border-radius: 1rem 1rem 0 0;
+  background: var(--bg-surface-elevated);
+}
+
+.medicine-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.medicine-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.medicine-card {
+  display: flex;
+  flex-direction: column;
+}
