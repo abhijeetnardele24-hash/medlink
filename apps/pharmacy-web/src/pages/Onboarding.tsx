@@ -30,7 +30,7 @@ export function Onboarding() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg-base)' }}>
       <header style={{ padding: '1.5rem 2rem', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0 }}>Pharmacist Onboarding</h2>
-        <button className="btn btn-secondary" onClick={() => auth.signOut()}>
+        <button aria-label="Log out" className="btn btn-secondary" onClick={() => auth.signOut()}>
           <LogOut size={20} />
         </button>
       </header>
@@ -53,8 +53,8 @@ export function Onboarding() {
             <>
               {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
               <div style={{ marginBottom: '2rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem' }}>License Number</label>
-                <input type="text" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} className="input-field" required placeholder="e.g. PH-12345678" />
+                <label htmlFor="licenseInput" style={{ display: 'block', marginBottom: '0.5rem' }}>License Number</label>
+                <input id="licenseInput" type="text" value={licenseNumber} onChange={e => setLicenseNumber(e.target.value)} className="input-field" required aria-required="true" placeholder="e.g. PH-12345678" />
               </div>
               <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
                 {loading ? 'Submitting...' : 'Submit Verification'}

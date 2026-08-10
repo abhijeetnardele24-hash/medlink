@@ -101,25 +101,30 @@ export const Consultation: React.FC = () => {
       {/* Controls Bar */}
       <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
         <div style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', padding: '1rem', borderRadius: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}>
-          <button style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button aria-label="Mute microphone" className="focus-ring" style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none' }}>
             <Mic size={24} />
           </button>
-          <button style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button aria-label="Turn off camera" className="focus-ring" style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none' }}>
             <Video size={24} />
           </button>
           <button
+            aria-label="End call"
+            className="focus-ring"
             onClick={() => navigate('/')}
-            style={{ width: 56, height: 56, borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 15px rgba(239,68,68,0.4)' }}
+            style={{ width: 56, height: 56, borderRadius: '50%', background: '#ef4444', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 15px rgba(239,68,68,0.4)', outline: 'none' }}
           >
             <PhoneOff size={24} />
           </button>
           <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.1)', margin: '0 0.5rem' }} />
           <button 
+            aria-label="Toggle chat"
+            className="focus-ring"
+            aria-expanded={isChatOpen}
             onClick={() => setIsChatOpen(!isChatOpen)}
-            style={{ width: 56, height: 56, borderRadius: '50%', background: isChatOpen ? '#423FDE' : 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            style={{ width: 56, height: 56, borderRadius: '50%', background: isChatOpen ? '#423FDE' : 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none' }}>
             <MessageSquare size={24} />
           </button>
-          <button style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button aria-label="Toggle fullscreen" className="focus-ring" style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none' }}>
             <Maximize size={24} />
           </button>
         </div>

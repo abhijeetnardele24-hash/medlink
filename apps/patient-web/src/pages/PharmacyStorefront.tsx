@@ -126,11 +126,16 @@ export function PharmacyStorefront() {
               Prescription Attached
             </span>
           )}
-          <button className="btn btn-secondary" onClick={() => setIsCartOpen(true)}>
+          <button 
+            aria-label={`Open cart with ${cart.length} items`}
+            aria-expanded={isCartOpen}
+            className="btn btn-secondary" 
+            onClick={() => setIsCartOpen(true)}
+          >
             <ShoppingCart size={20} />
             <span style={{ marginLeft: '0.5rem' }}>{cart.length}</span>
           </button>
-          <button className="btn btn-secondary" style={{ display: 'none' }}>
+          <button aria-label="Log out" className="btn btn-secondary" style={{ display: 'none' }}>
             <LogOut size={20} />
           </button>
         </div>
@@ -139,7 +144,8 @@ export function PharmacyStorefront() {
       <div style={{ position: 'relative', marginBottom: '2rem' }}>
         <Search size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
         <input 
-          type="text" 
+          type="search"
+          aria-label="Search medicines"
           placeholder="Search medicines..." 
           className="input-field" 
           style={{ paddingLeft: '3rem', maxWidth: '400px' }}
@@ -167,6 +173,7 @@ export function PharmacyStorefront() {
             </div>
 
             <button 
+              aria-label={`Add ${med.name} to cart`}
               className="btn btn-primary" 
               style={{ marginTop: 'auto', width: '100%' }}
               onClick={() => addToCart(med)}
@@ -180,7 +187,7 @@ export function PharmacyStorefront() {
       <div className={`cart-sidebar ${isCartOpen ? 'open' : ''}`}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
           <h2 style={{ margin: 0 }}>Your Cart</h2>
-          <button className="btn btn-secondary" onClick={() => setIsCartOpen(false)} style={{ padding: '0.5rem' }}>✕</button>
+          <button aria-label="Close cart" className="btn btn-secondary" onClick={() => setIsCartOpen(false)} style={{ padding: '0.5rem' }}>✕</button>
         </div>
 
         {cart.length === 0 ? (
@@ -198,7 +205,7 @@ export function PharmacyStorefront() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <span style={{ fontWeight: 600 }}>₹{item.price * item.quantity}</span>
-                    <button onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+                    <button aria-label={`Remove ${item.name} from cart`} className="focus-ring" onClick={() => removeFromCart(item.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', outline: 'none' }}>✕</button>
                   </div>
                 </div>
               ))}
@@ -213,6 +220,8 @@ export function PharmacyStorefront() {
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Delivery Address</label>
                 <textarea 
+                  id="deliveryAddress"
+                  aria-label="Delivery Address"
                   className="input-field" 
                   rows={3} 
                   value={address}

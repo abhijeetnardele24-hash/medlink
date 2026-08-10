@@ -233,14 +233,22 @@ export const DoctorProfile: React.FC = () => {
                     return (
                       <div 
                         key={slot.id} 
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
+                        aria-label={`Select slot on ${dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`}
                         onClick={() => setSelectedSlot(slot.id)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot.id); } }}
+                        onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent)'}
+                        onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
                         style={{ 
                           padding: '1rem', 
                           border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`, 
                           borderRadius: '12px', 
                           cursor: 'pointer',
                           background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--bg-surface)',
-                          transition: 'all 0.2s'
+                          transition: 'all 0.2s',
+                          outline: 'none'
                         }}
                       >
                         <div style={{ fontWeight: 600, color: isSelected ? 'var(--accent)' : 'var(--text-main)', marginBottom: '0.25rem' }}>

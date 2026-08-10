@@ -202,10 +202,10 @@ export const Consultation: React.FC = () => {
       {/* Controls Overlay */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
         <div className="bg-black/60 backdrop-blur-xl border border-white/10 p-4 rounded-3xl flex items-center gap-4 shadow-2xl">
-          <button className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+          <button aria-label="Mute microphone" className="focus:outline-none focus:ring-2 focus:ring-white w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
             <Mic size={24} />
           </button>
-          <button className="w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+          <button aria-label="Turn off camera" className="focus:outline-none focus:ring-2 focus:ring-white w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
             <Video size={24} />
           </button>
           
@@ -213,18 +213,20 @@ export const Consultation: React.FC = () => {
           
           {!isRecording ? (
              <button 
+               aria-label="Record Cloud Video"
                onClick={handleStartRecording}
                disabled={!remoteStream}
                title="Record Cloud Video"
-               className={`w-14 h-14 rounded-full ${remoteStream ? 'bg-white/10 hover:bg-red-500/20 text-white' : 'bg-white/5 text-white/30 cursor-not-allowed'} flex items-center justify-center transition-all`}
+               className={`focus:outline-none focus:ring-2 focus:ring-red-500 w-14 h-14 rounded-full ${remoteStream ? 'bg-white/10 hover:bg-red-500/20 text-white' : 'bg-white/5 text-white/30 cursor-not-allowed'} flex items-center justify-center transition-all`}
              >
                <Play size={24} />
              </button>
           ) : (
             <button 
+               aria-label="Stop Recording"
                onClick={handleStopRecording}
                title="Stop Recording"
-               className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
+               className="focus:outline-none focus:ring-2 focus:ring-red-500 w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
              >
                <Square size={20} fill="currentColor" />
              </button>
@@ -233,8 +235,9 @@ export const Consultation: React.FC = () => {
           <div className="w-px h-8 bg-white/10 mx-2"></div>
 
           <button 
+            aria-label="End call"
             onClick={() => navigate('/dashboard')}
-            className="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
+            className="focus:outline-none focus:ring-2 focus:ring-white w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center text-white transition-all shadow-lg shadow-red-500/20"
           >
             <PhoneOff size={24} />
           </button>
@@ -242,16 +245,19 @@ export const Consultation: React.FC = () => {
           <div className="w-px h-8 bg-white/10 mx-2"></div>
           
           <button 
+            aria-label="Toggle chat"
+            aria-expanded={isChatOpen}
             onClick={() => setIsChatOpen(!isChatOpen)}
-            className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${isChatOpen ? 'bg-blue-600' : 'bg-white/10 hover:bg-white/20'}`}
+            className={`focus:outline-none focus:ring-2 focus:ring-white w-14 h-14 rounded-full flex items-center justify-center text-white transition-all shadow-lg ${isChatOpen ? 'bg-blue-600' : 'bg-white/10 hover:bg-white/20'}`}
             title="Chat"
           >
             <MessageSquare size={24} />
           </button>
 
           <button 
+            aria-label="Issue Prescription"
             onClick={() => setIsPrescribeOpen(true)}
-            className="w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all shadow-lg shadow-blue-500/20"
+            className="focus:outline-none focus:ring-2 focus:ring-white w-14 h-14 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center text-white transition-all shadow-lg shadow-blue-500/20"
             title="Issue Prescription"
           >
             <FileText size={24} />

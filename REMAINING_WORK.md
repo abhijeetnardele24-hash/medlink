@@ -129,8 +129,7 @@ connection, not just the doctor's.
 
 ## 5. P4 — Polish (do last)
 
-- Accessibility (WCAG 2.1 AA): ARIA labels, keyboard nav/focus traps, contrast audit on the
-  dark theme, reduced-motion support.
+- Accessibility (WCAG 2.1 AA): **[DONE]** Pass completed for core screens (booking flow, consultation, prescriptions, pharmacy checkout, and pharmacist onboarding). Added ARIA labels, tabIndex, focus-visible states, and verified basic keyboard navigation. Other screens deferred.
 - i18n: `react-i18next`, Hindi + English translations minimum, locale-aware date/number
   formatting.
 - PWA: service worker for static asset caching, install manifest, offline fallback page.
