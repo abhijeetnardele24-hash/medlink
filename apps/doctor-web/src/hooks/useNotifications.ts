@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { auth } from '../lib/firebase';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 
