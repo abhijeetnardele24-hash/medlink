@@ -32,7 +32,7 @@ test.describe('Core E2E Loop', () => {
     await doctorPage.locator('input[type="tel"]').fill(`9999999999`);
     await doctorPage.click('button[type="submit"]');
 
-    await expect(doctorPage).toHaveURL('http://localhost:5173/');
+    await expect(doctorPage).toHaveURL('http://localhost:5173/onboarding');
     await doctorPage.fill('input[name="hospital"]', 'Playwright Hospital');
     await doctorPage.fill('input[name="speciality"]', 'General Medicine');
     await doctorPage.fill('input[name="education"]', 'MBBS, MD');
@@ -54,13 +54,13 @@ test.describe('Core E2E Loop', () => {
 
     await expect(adminPage).toHaveURL('http://localhost:5174/');
     // Wait for queue to load
-    const doctorRow = adminPage.locator(`text=Dr. Playwright ${runId}`).locator('..');
-    await expect(doctorRow).toBeVisible({ timeout: 10000 });
-    // Assuming the "Accept" button is a button inside the row
-    await doctorRow.locator('button:has-text("Verify")').click();
+    const doctorCard = adminPage.locator(`.glass-panel:has-text("Dr. Playwright ${runId}")`);
+    await expect(doctorCard).toBeVisible({ timeout: 10000 });
+    // The success button says "Authorize"
+    await doctorCard.locator('button:has-text("Authorize")').click();
     
-    // Actually let's look at coordinator's VerificationQueue.tsx to see the exact text
-    // I will fix the selector below if needed, assuming the success button says "Approve" or "Verify"
+    // Wait for it to disappear from the queue
+    await expect(doctorCard).not.toBeVisible();
   });
 
   test('Doctor sets availability', async () => {
@@ -69,13 +69,18 @@ test.describe('Core E2E Loop', () => {
     
     await doctorPage.click('text=Availability');
     
-    // The default date is probably today. Let's just set the time.
+    // Set a date (e.g. tomorrow)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toISOString().split('T')[0];
+    
+    await doctorPage.fill('input[id="date"]', dateStr);
     await doctorPage.fill('input[id="startTime"]', '09:00');
     await doctorPage.fill('input[id="endTime"]', '17:00');
     await doctorPage.click('button[type="submit"]');
     
     // Assuming it adds successfully
-    await expect(doctorPage.locator('text=09:00 - 17:00')).toBeVisible();
+    await expect(doctorPage.locator(`text=from 09:00 to 17:00`)).toBeVisible();
   });
 
   test('Patient signs up, searches, and books the doctor', async () => {
@@ -83,41 +88,48 @@ test.describe('Core E2E Loop', () => {
     await patientPage.fill('input[type="email"]', patientEmail);
     await patientPage.fill('input[type="password"]', password);
     await patientPage.locator('input[type="text"]').fill(`Patient Playwright`);
+    await patientPage.locator('input[type="tel"]').fill('9999999999');
     await patientPage.click('button[type="submit"]');
 
     await expect(patientPage).toHaveURL('http://localhost:5176/');
 
     // The patient dashboard lists all doctors. We find our test doctor's card and click Book Appointment.
-    const doctorCard = patientPage.locator(`text=Dr. Playwright ${runId}`).locator('..').locator('..');
-    await doctorCard.locator('text=Book Appointment').click();
+    const doctorCard = patientPage.locator(`.glass-panel:has-text("Dr. Playwright ${runId}")`).first();
+    await doctorCard.locator('a:has-text("Book Appointment")').click();
     
     await expect(patientPage).toHaveURL(/.*doctor\/.*/);
-
-    // Book appointment
-    await patientPage.click('button:has-text("Book Appointment")');
-    // Select the slot we just created. It might have a text like "9:00 AM"
-    await patientPage.click('text=9:00 AM');
-    // Complete payment (mock razorpay)
-    await patientPage.evaluate(() => {
-      (window as any).Razorpay = function(options: any) {
-        this.open = () => {
-          setTimeout(() => {
-            options.handler({
-              razorpay_order_id: 'mock_order_' + Date.now(),
-              razorpay_payment_id: 'mock_payment_' + Date.now(),
-              razorpay_signature: 'mock_signature'
-            });
-          }, 500);
-        };
-        this.on = () => {};
-      };
+    // Select the slot we just created. It could be formatted differently depending on locale,
+    // so we'll just select the first available slot in the grid.
+    await patientPage.locator('label:has-text("Available Time Slots")').locator('..').locator('div > div').first().click();
+    
+    // Complete payment (mock razorpay) - use route intercept to mock the script
+    await patientPage.route('https://checkout.razorpay.com/v1/checkout.js', route => {
+      route.fulfill({
+        status: 200,
+        contentType: 'application/javascript',
+        body: `
+          window.Razorpay = function(options) {
+            this.open = () => {
+              setTimeout(() => {
+                options.handler({
+                  razorpay_order_id: 'mock_order_' + Date.now(),
+                  razorpay_payment_id: 'mock_payment_' + Date.now(),
+                  razorpay_signature: 'mock_signature'
+                });
+              }, 500);
+            };
+            this.on = () => {};
+          };
+        `
+      });
     });
     
+    // Confirm booking (which loads Razorpay script)
     await patientPage.click('button:has-text("Confirm Booking")');
     // Because of the mock, it will automatically call the success handler after 500ms
-    // which then verifies payment and navigates to history
+    // which then verifies payment and navigates to dashboard
     
-    await expect(patientPage).toHaveURL('http://localhost:5176/history');
+    await expect(patientPage).toHaveURL('http://localhost:5176/');
 
     // --- Consultation ---
     // Patient joins room

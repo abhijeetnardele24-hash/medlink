@@ -52,7 +52,7 @@ flowchart TB
     P[Patient Mobile App<br/>Flutter / Android<br/>Offline SQLite + Sync Outbox]
     D[Doctor Web Dashboard<br/>React + TypeScript<br/>Clinical Workspace]
     C[Coordinator Web Console<br/>React + TypeScript<br/>Verification, Tasks, Scheduling]
-    PH[Pharmacy Web Portal<br/>React + TypeScript<br/>Medicine Marketplace]
+    PH[Pharmacy Web Portal<br/>React + TypeScript<br/>Medicine Marketplace & Orders]
     F[Future Community Health Worker<br/>Consent-Limited Support Access]
 
     API[MedLink Backend<br/>Node.js + TypeScript<br/>REST API + WebSocket Signalling]
@@ -80,9 +80,9 @@ flowchart TB
 |---|---|
 | Patient mobile app | Mobile-first appointment flow, local encrypted records, offline outbox, network quality measurement, video/audio/chat controls, prescription/history viewing. |
 | Doctor web dashboard | Appointment queue, availability, authorised patient record review, WebRTC consultation workspace, notes, prescription finalisation and encounter status. |
-| Coordinator console | Doctor profile verification, speciality/availability administration, appointment operations, reminder task queue, booking exceptions and audit visibility. |
-| Pharmacy web portal | Search/browse medicines, cart and checkout, integration with digital prescriptions for rx-required items, order status tracking. |
-| Node.js backend | Authentication token verification, role-based access control, consent enforcement, API validation, atomic booking, sync processing, recommendation logic, signalling and audit generation. |
+| Coordinator console | Doctor & Pharmacist profile verification, speciality/availability administration, appointment operations, reminder task queue, booking exceptions and audit visibility. |
+| Pharmacy web portal | Pharmacist verification onboarding, inventory management, search/browse medicines, patient cart/checkout, integration with digital prescriptions for rx-required items, order status tracking. |
+| Node.js backend | Authentication token verification, role-based access control (patient/doctor/coordinator/admin/pharmacist), consent enforcement, API validation, atomic booking, sync processing, recommendation logic, signalling and audit generation. |
 | PostgreSQL | Canonical shared data for users, roles, doctors, appointments, encounters, records, tasks, verification decisions and audit metadata. |
 | SQLite on patient device | Offline replica/cache and durable outbox; never the final shared source of truth. |
 | WebRTC + STUN/TURN | Low-latency audio/video media transport and connectivity traversal. |

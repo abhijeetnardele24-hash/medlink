@@ -404,11 +404,21 @@ router.post(
     });
 
     try {
-      const order = await razorpay.orders.create({
-        amount: fee * 100, // Razorpay amount is in paise
-        currency: "INR",
-        receipt: `receipt_${id}`,
-      });
+      let order: any;
+      if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === "rzp_test_demo") {
+        order = {
+          id: `order_mock_${Date.now()}`,
+          amount: fee * 100,
+          currency: "INR",
+          receipt: `receipt_${id}`,
+        };
+      } else {
+        order = await razorpay.orders.create({
+          amount: fee * 100, // Razorpay amount is in paise
+          currency: "INR",
+          receipt: `receipt_${id}`,
+        });
+      }
 
       // Update payment record with razorpay order
       await getDb()

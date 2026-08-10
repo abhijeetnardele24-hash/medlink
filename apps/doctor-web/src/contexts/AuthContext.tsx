@@ -10,6 +10,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
   profile: { id: string; verificationStatus: string; fullName?: string } | null;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(currentUser);
       if (currentUser) {
         try {
-          const idToken = await currentUser.getIdToken();
+          const idToken = await currentUser.getIdToken(true);
           const res = await api.get('/doctors/me', { headers: { Authorization: `Bearer ${idToken}` } });
           if (res.data) {
             setProfile(res.data ?? null);
@@ -46,6 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
+  const refreshProfile = async () => {
+    if (!auth?.currentUser) return;
+    try {
+      const idToken = await auth.currentUser.getIdToken(true);
+      const res = await api.get('/doctors/me', { headers: { Authorization: `Bearer ${idToken}` } });
+      if (res.data) {
+        setProfile(res.data ?? null);
+      }
+    } catch {
+      setProfile(null);
+    }
+  };
+
   const logout = async () => {
     if (!auth) return;
     await signOut(auth);
@@ -57,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, getToken, profile }}>
+    <AuthContext.Provider value={{ user, loading, logout, getToken, profile, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

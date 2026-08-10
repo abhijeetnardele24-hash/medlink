@@ -86,6 +86,24 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Quick Actions Strip */}
+      <div style={{ marginBottom: '3rem' }}>
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(37,99,235,0.05), rgba(99,102,241,0.05))', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 20.5L3 13l7.5-7.5"/><path d="M14 3v8h8"/><path d="M3 13h18l-7.5 7.5"/><path d="M3 13v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/></svg>
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Pharmacy Storefront</h2>
+              <p style={{ color: 'var(--text-muted)' }}>Order medicines directly with your digital prescriptions.</p>
+            </div>
+          </div>
+          <Link to="/pharmacy" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+            Shop Medicines <ArrowRight size={18} />
+          </Link>
+        </div>
+      </div>
+
       {/* Appointments Section */}
       <div style={{ marginBottom: '3rem' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
