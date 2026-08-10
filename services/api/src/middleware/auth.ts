@@ -79,10 +79,10 @@ export const authenticate = async (
           await getDb().insert(users).values({
             firebaseUid: decoded.uid,
             email: decoded.email,
-            name: 'Coordinator Admin',
-            role: 'COORDINATOR',
+            displayName: 'Coordinator Admin',
+            role: 'coordinator',
           });
-          role = "COORDINATOR";
+          role = "coordinator";
           try {
             await admin.auth().setCustomUserClaims(decoded.uid, { role: 'coordinator' });
           } catch(e) {
