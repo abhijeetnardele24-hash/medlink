@@ -126,7 +126,6 @@ export const createServer = (): Express => {
 
   // ── Routes ───────────────────────────────────────────────────────────────────
   const v1Router = express.Router();
-  v1Router.use("/", healthRouter);
   v1Router.use("/auth", authLimiter, authRouter);
   v1Router.use("/doctors", doctorsRouter);
   v1Router.use("/appointments", authenticate, appointmentsRouter);
@@ -141,7 +140,8 @@ export const createServer = (): Express => {
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
 
-  // Mount unversioned external webhooks
+  // Mount unversioned external webhooks and health probes
+  app.use("/", healthRouter);
   app.use("/webhooks", webhooksRouter);
 
   // Mount v1 API
