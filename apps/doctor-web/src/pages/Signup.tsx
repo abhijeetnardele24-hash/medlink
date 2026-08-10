@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useNavigate, Link } from 'react-router-dom';
 import { Stethoscope, Lock, Mail, AlertCircle, User, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useAuth } from '../contexts/AuthContext';
 
 export const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ export const Signup: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +35,13 @@ export const Signup: React.FC = () => {
         contactNumber: `+91${contactNumber}`,
       });
 
-      // 3. Navigate to dashboard (which will lock them into Onboarding since status is draft)
-      navigate('/');
+      // Fetch the profile explicitly now that the backend record exists
+      if (refreshProfile) {
+        await refreshProfile();
+      }
+
+      // 3. Navigate to onboarding directly since status is draft
+      navigate('/onboarding');
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.message || err.message || 'Failed to create account.');

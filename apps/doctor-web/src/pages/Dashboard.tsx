@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Appointment } from '../types';
 
 export const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -72,6 +72,16 @@ export const Dashboard: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {profile?.verificationStatus === 'pending_verification' && (
+        <div style={{ padding: '1rem 1.5rem', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '10px', color: '#b45309', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+          <AlertCircle size={20} />
+          <div>
+            <strong style={{ display: 'block', fontSize: '1rem', marginBottom: '0.25rem' }}>Pending Verification</strong>
+            <span style={{ fontSize: '0.9rem' }}>Your account is currently under review by our administration team. You won't be visible to patients until approved.</span>
+          </div>
+        </div>
+      )}
 
       {/* Stats Strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
