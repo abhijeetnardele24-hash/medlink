@@ -773,6 +773,11 @@ export const medicines = pgTable("medicines", {
   listingStatus: medicineListingStatusEnum("listing_status").notNull().default("approved"),
   name: text("name").notNull(),
   genericName: text("generic_name"),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  composition: text("composition"),
+  dosageForm: text("dosage_form"),
+  manufacturer: text("manufacturer"),
   price: integer("price").notNull(), // Price in INR
   stockQuantity: integer("stock_quantity").notNull().default(0),
   requiresPrescription: boolean("requires_prescription").notNull().default(false),
