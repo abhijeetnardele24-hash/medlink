@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { Link } from 'react-router-dom';
-import { Package } from 'lucide-react';
+import { Package, AlertCircle } from 'lucide-react';
 
-export function Login() {
+interface LoginProps {
+  profileError?: string | null;
+}
+
+export function Login({ profileError }: LoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -32,6 +36,13 @@ export function Login() {
         </div>
         <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Pharmacist Seller Portal</p>
         
+        {profileError && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem' }}>
+            <AlertCircle size={16} color="#92400e" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span style={{ fontSize: '0.8rem', color: '#92400e' }}>{profileError}</span>
+          </div>
+        )}
+
         {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
         
         <div style={{ marginBottom: '1rem' }}>
@@ -52,3 +63,4 @@ export function Login() {
     </div>
   );
 }
+

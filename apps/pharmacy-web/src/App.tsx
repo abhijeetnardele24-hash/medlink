@@ -55,6 +55,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth) {
@@ -68,10 +69,19 @@ function App() {
         try {
           const res = await api.get('/auth/me');
           setProfile(res.data);
-        } catch (err) {
+          setProfileError(null);
+        } catch (err: any) {
           console.error('Failed to fetch profile', err);
-          // If profile fails, it might mean the user exists in Firebase but not in our DB
           setProfile(null);
+          if (err?.response?.status === 404 || err?.response?.status === 403) {
+            setProfileError('Account not found in database. Please sign up first or contact support.');
+          } else if (err?.code === 'ERR_NETWORK' || !err?.response) {
+            setProfileError('Cannot connect to server. Make sure the backend is running on port 3005.');
+          } else {
+            setProfileError('Login failed: ' + (err?.response?.data?.error || err.message));
+          }
+          // Sign out so they can try again cleanly
+          await auth.signOut();
         }
       } else {
         setProfile(null);
@@ -86,7 +96,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={(!user || !profile) ? <Login /> : <Navigate to="/orders" />} />
+        <Route path="/login" element={(!user || !profile) ? <Login profileError={profileError} /> : <Navigate to="/orders" />} />
         <Route path="/signup" element={(!user || !profile) ? <Signup /> : <Navigate to="/orders" />} />
         <Route
           path="/onboarding"
@@ -104,7 +114,7 @@ function App() {
           path="/*"
           element={
             (!user || !profile) ? (
-              <Navigate to="/login" />
+              <Navigate to="/login" state={{ error: profileError }} />
             ) : profile.profileStatus === 'pending_verification' ? (
               <Navigate to="/onboarding" />
             ) : (

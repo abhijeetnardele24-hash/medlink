@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
-import { medicines } from "../db/schema";
-import { ilike, eq, and } from "drizzle-orm";
+import { medicines, pharmacists, users } from "../db/schema";
+import { ilike, eq, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -10,8 +10,8 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { search, category, prescriptionTier, pharmacistId } = req.query;
 
-    let conditions = [eq(medicines.listingStatus, 'approved')];
-    
+    let conditions: any[] = [];
+
     if (typeof pharmacistId === "string" && pharmacistId.trim() !== "") {
       conditions.push(eq(medicines.pharmacistId, pharmacistId.trim()));
     }
@@ -19,7 +19,7 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
     if (typeof search === "string" && search.trim() !== "") {
       conditions.push(ilike(medicines.name, `%${search.trim()}%`));
     }
-    
+
     if (typeof category === "string" && category.trim() !== "") {
       conditions.push(eq(medicines.category, category.trim()));
     }
@@ -30,17 +30,45 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
+    // Join with pharmacists to get seller info
     const results = await getDb()
-      .select()
+      .select({
+        id: medicines.id,
+        name: medicines.name,
+        genericName: medicines.genericName,
+        description: medicines.description,
+        imageUrl: medicines.imageUrl,
+        composition: medicines.composition,
+        dosageForm: medicines.dosageForm,
+        manufacturer: medicines.manufacturer,
+        price: medicines.price,
+        stockQuantity: medicines.stockQuantity,
+        prescriptionTier: medicines.prescriptionTier,
+        category: medicines.category,
+        listingStatus: medicines.listingStatus,
+        pharmacistId: medicines.pharmacistId,
+        // Seller info joined from pharmacists
+        sellerShopName: pharmacists.shopName,
+        sellerFullName: pharmacists.fullName,
+        sellerAddress: pharmacists.registeredAddress,
+      })
       .from(medicines)
+      .leftJoin(pharmacists, eq(pharmacists.id, medicines.pharmacistId))
       .where(whereClause)
       .orderBy(medicines.name);
 
-    res.json({ medicines: results });
+    // Map to add a display sellerName
+    const mapped = results.map(m => ({
+      ...m,
+      sellerName: m.sellerShopName || "MedLink Marketplace",
+    }));
+
+    res.json({ medicines: mapped });
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch medicines" });
   }
 });
+
 
 // GET /medicines/:id
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {

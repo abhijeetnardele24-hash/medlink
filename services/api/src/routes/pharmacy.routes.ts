@@ -190,9 +190,9 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
 // POST /pharmacy/orders/upload
 router.post("/orders/upload", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { pharmacistId, attachmentUrl, deliveryAddress } = req.body;
-    if (!pharmacistId || !attachmentUrl || !deliveryAddress) {
-      res.status(400).json({ error: "Missing required fields" }); return;
+    const { pharmacistId: providedPharmacistId, attachmentUrl, deliveryAddress } = req.body;
+    if (!attachmentUrl || !deliveryAddress) {
+      res.status(400).json({ error: "Missing required fields (attachmentUrl, deliveryAddress)" }); return;
     }
     
     const { uid } = res.locals.user;
@@ -201,6 +201,17 @@ router.post("/orders/upload", authenticate, async (req: Request, res: Response):
     
     const patientRows = await getDb().select({ id: patients.id }).from(patients).where(eq(patients.userId, userRows[0].id)).limit(1);
     if (!patientRows.length) { res.status(403).json({ error: "Only patients can upload prescriptions" }); return; }
+    
+    // Auto-assign pharmacist if not provided
+    let pharmacistId = providedPharmacistId;
+    if (!pharmacistId) {
+      const available = await getDb().select({ id: pharmacists.id }).from(pharmacists).where(eq(pharmacists.verificationStatus, "verified")).limit(1);
+      if (available.length > 0) pharmacistId = available[0].id;
+    }
+
+    if (!pharmacistId) {
+      res.status(400).json({ error: "No verified pharmacist available to assign this prescription" }); return;
+    }
     
     const [order] = await getDb().insert(pharmacyOrders).values({
       patientId: patientRows[0].id,
@@ -217,6 +228,7 @@ router.post("/orders/upload", authenticate, async (req: Request, res: Response):
     res.status(500).json({ error: "Failed to upload prescription" });
   }
 });
+
 
 // POST /pharmacy/orders/:orderId/build
 router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Response): Promise<void> => {
@@ -318,8 +330,7 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
 // POST /pharmacy/orders
 router.post("/", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { items, prescriptionId, deliveryAddress, pharmacistId } = req.body;
-    if (!pharmacistId) { res.status(400).json({ error: "pharmacistId is required" }); return; }
+    const { items, prescriptionId, deliveryAddress, pharmacistId: providedPharmacistId } = req.body;
     
     if (!items || !Array.isArray(items) || items.length === 0) {
       res.status(400).json({ error: "Order must have items" });
@@ -355,6 +366,20 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       return;
     }
     const patientId = patientRows[0].id;
+
+    // Resolve pharmacistId: use provided one or auto-assign first verified pharmacist
+    let pharmacistId = providedPharmacistId;
+    if (!pharmacistId) {
+      const availablePharmacists = await getDb()
+        .select({ id: pharmacists.id })
+        .from(pharmacists)
+        .where(eq(pharmacists.verificationStatus, "verified"))
+        .limit(1);
+      if (availablePharmacists.length > 0) {
+        pharmacistId = availablePharmacists[0].id;
+      }
+      // If still no pharmacist found, allow order without pharmacist (platform mode)
+    }
 
     // Fetch the requested medicines
     const medicineIds = items.map((i: any) => i.medicineId);
@@ -445,11 +470,6 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
           matched,
           reason
         });
-
-        if (!matched) {
-          // Do not fail the whole request immediately if we want to log the audit?
-          // Actually, we should log it, then fail. We can log them all first.
-        }
       }
 
       totalAmount += (med.price * qty);
