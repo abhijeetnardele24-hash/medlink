@@ -378,7 +378,11 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       if (availablePharmacists.length > 0) {
         pharmacistId = availablePharmacists[0].id;
       }
-      // If still no pharmacist found, allow order without pharmacist (platform mode)
+    }
+
+    if (!pharmacistId) {
+      res.status(400).json({ error: "No verified pharmacist available to assign this order" });
+      return;
     }
 
     // Fetch the requested medicines
