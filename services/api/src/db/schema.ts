@@ -732,6 +732,7 @@ export const recommendationEvents = pgTable(
 // ─────────────────────────────────────────────────────────────
 
 export const pharmacyOrderStatusEnum = pgEnum("pharmacy_order_status", [
+  "pending_pharmacist_review",
   "pending_payment",
   "paid",
   "processing",
@@ -749,9 +750,13 @@ export const pharmacyOrders = pgTable(
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id),
+    pharmacistId: uuid("pharmacist_id")
+      .notNull()
+      .references(() => pharmacists.id),
     totalAmount: integer("total_amount").notNull(), // Amount in INR
     status: pharmacyOrderStatusEnum("status").notNull().default("pending_payment"),
     deliveryAddress: text("delivery_address").notNull(),
+    attachmentUrl: text("attachment_url"),
     razorpayOrderId: text("razorpay_order_id"),
     razorpayPaymentId: text("razorpay_payment_id"),
     createdAt: timestamp("created_at", { withTimezone: true })

@@ -52,15 +52,15 @@ router.post(
     const email = decoded.email ?? "";
     const name = displayName ?? decoded.name ?? "";
 
-    // Idempotency: return existing user if already registered
-    const existing = await getDb()
+    // Idempotency: return existing user if already registered by firebaseUid
+    const existingByUid = await getDb()
       .select()
       .from(users)
       .where(eq(users.firebaseUid, firebaseUid))
       .limit(1);
 
-    if (existing.length > 0) {
-      const existingUser = existing[0]!;
+    if (existingByUid.length > 0) {
+      const existingUser = existingByUid[0]!;
       if (existingUser.role !== role) {
         throw new ConflictError(
           `Account already registered with role '${existingUser.role}'`
@@ -68,6 +68,35 @@ router.post(
       }
       res.status(200).json({
         message: "Account already exists",
+        user: {
+          id: existingUser.id,
+          role: existingUser.role,
+          email: existingUser.email,
+        },
+      });
+      return;
+    }
+
+    // Link seeded account if email matches
+    const existingByEmail = await getDb()
+      .select()
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+      
+    if (existingByEmail.length > 0) {
+      const existingUser = existingByEmail[0]!;
+      if (existingUser.role !== role) {
+        throw new ConflictError(
+          `Email already registered with role '${existingUser.role}'`
+        );
+      }
+      
+      // Update the seeded user with the real Firebase UID
+      await getDb().update(users).set({ firebaseUid }).where(eq(users.id, existingUser.id));
+      
+      res.status(200).json({
+        message: "Seeded account linked successfully",
         user: {
           id: existingUser.id,
           role: existingUser.role,

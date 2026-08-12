@@ -8,9 +8,13 @@ const router = Router();
 // GET /medicines - Search and browse catalog
 router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { search, category, requiresPrescription } = req.query;
+    const { search, category, requiresPrescription, pharmacistId } = req.query;
 
     let conditions = [eq(medicines.listingStatus, 'approved')];
+    
+    if (typeof pharmacistId === "string" && pharmacistId.trim() !== "") {
+      conditions.push(eq(medicines.pharmacistId, pharmacistId.trim()));
+    }
 
     if (typeof search === "string" && search.trim() !== "") {
       conditions.push(ilike(medicines.name, `%${search.trim()}%`));

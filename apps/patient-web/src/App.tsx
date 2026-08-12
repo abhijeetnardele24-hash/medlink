@@ -9,6 +9,7 @@ import { History } from './pages/History';
 import { Consents } from './pages/Consents';
 import { Consultation } from './pages/Consultation';
 import { PharmacyStorefront } from './pages/PharmacyStorefront';
+import { PharmacyOrders } from './pages/PharmacyOrders';
 import { Layout } from './components/Layout';
 import './index.css';
 
@@ -27,6 +28,7 @@ function App() {
               <Route path="/history" element={<History />} />
               <Route path="/consents" element={<Consents />} />
               <Route path="/pharmacy" element={<PharmacyStorefront />} />
+              <Route path="/pharmacy-orders" element={<PharmacyOrders />} />
             </Route>
             {/* Consultation is full screen, no sidebar */}
             <Route path="/consultation/:id" element={<Consultation />} />

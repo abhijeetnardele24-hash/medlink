@@ -33,7 +33,8 @@ export function Signup() {
         shopName,
         registeredAddress
       });
-      
+      window.location.href = '/';
+
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Signup failed');
       // If our API failed, delete the firebase user to maintain sync
