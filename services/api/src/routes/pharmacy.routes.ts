@@ -173,7 +173,7 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
         status: pharmacyOrders.status,
         attachmentUrl: pharmacyOrders.attachmentUrl,
         createdAt: pharmacyOrders.createdAt,
-        patientName: users.fullName,
+        patientName: users.displayName,
       })
       .from(pharmacyOrders)
       .innerJoin(patients, eq(patients.id, pharmacyOrders.patientId))

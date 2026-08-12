@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
 import { medicines, pharmacists, users } from "../db/schema";
 import { ilike, eq, and, sql } from "drizzle-orm";
+import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
@@ -90,9 +91,6 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     res.status(500).json({ error: "Failed to fetch medicine" });
   }
 });
-
-import { authenticate } from "../middleware/auth";
-import { users, pharmacists } from "../db/schema";
 
 // POST /medicines - Add new medicine to inventory
 router.post("/", authenticate, async (req: Request, res: Response): Promise<void> => {
