@@ -25,7 +25,7 @@ const seedData = [
     manufacturer: "Micro Labs Ltd",
     price: 33,
     stockQuantity: 500,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Fever & Pain",
   },
   {
@@ -38,7 +38,7 @@ const seedData = [
     manufacturer: "GlaxoSmithKline Pharmaceuticals Ltd",
     price: 204,
     stockQuantity: 150,
-    requiresPrescription: true,
+    prescriptionTier: "schedule_h",
     category: "Antibiotics",
   },
   {
@@ -51,7 +51,7 @@ const seedData = [
     manufacturer: "Alkem Laboratories Ltd",
     price: 199,
     stockQuantity: 200,
-    requiresPrescription: true,
+    prescriptionTier: "schedule_h",
     category: "Stomach Care",
   },
   {
@@ -64,7 +64,7 @@ const seedData = [
     manufacturer: "Sanofi India Ltd",
     price: 218,
     stockQuantity: 300,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Allergy",
   },
   {
@@ -77,7 +77,7 @@ const seedData = [
     manufacturer: "Abbott",
     price: 152,
     stockQuantity: 100,
-    requiresPrescription: true,
+    prescriptionTier: "schedule_h",
     category: "Thyroid Care",
   },
   {
@@ -90,7 +90,7 @@ const seedData = [
     manufacturer: "USV Ltd",
     price: 5,
     stockQuantity: 1000,
-    requiresPrescription: true,
+    prescriptionTier: "schedule_h",
     category: "Heart Care",
   },
   {
@@ -103,7 +103,7 @@ const seedData = [
     manufacturer: "Pfizer Ltd",
     price: 110,
     stockQuantity: 250,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Cough & Cold",
   },
   {
@@ -116,7 +116,7 @@ const seedData = [
     manufacturer: "Sun Pharmaceutical Industries Ltd",
     price: 185,
     stockQuantity: 150,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Pain Relief",
   },
   {
@@ -129,7 +129,7 @@ const seedData = [
     manufacturer: "GlaxoSmithKline Pharmaceuticals Ltd",
     price: 43,
     stockQuantity: 120,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Pediatric",
   },
   {
@@ -142,7 +142,7 @@ const seedData = [
     manufacturer: "Torrent Pharmaceuticals Ltd",
     price: 119,
     stockQuantity: 400,
-    requiresPrescription: false,
+    prescriptionTier: "otc",
     category: "Supplements",
   }
 ];
@@ -167,12 +167,12 @@ async function main() {
           price: med.price,
           category: med.category,
           genericName: med.genericName,
-          requiresPrescription: med.requiresPrescription
+          prescriptionTier: med.prescriptionTier as any
         }).where(eq(medicines.id, existing[0].id));
         console.log(`Updated: ${med.name}`);
       } else {
         // Insert new
-        await db.insert(medicines).values(med);
+        await db.insert(medicines).values({ ...med, prescriptionTier: med.prescriptionTier as any });
         console.log(`Inserted: ${med.name}`);
       }
       insertedCount++;

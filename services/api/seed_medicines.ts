@@ -22,18 +22,18 @@ async function run() {
   const db = getDb();
   
   const meds = [
-    { name: "Paracetamol 500mg", genericName: "Paracetamol", price: 15, stockQuantity: 100, requiresPrescription: false, category: "Pain Relief" },
-    { name: "Amoxicillin 500mg", genericName: "Amoxicillin", price: 120, stockQuantity: 50, requiresPrescription: true, category: "Antibiotics" },
-    { name: "Cetirizine 10mg", genericName: "Cetirizine", price: 30, stockQuantity: 200, requiresPrescription: false, category: "Allergy" },
-    { name: "Ibuprofen 400mg", genericName: "Ibuprofen", price: 40, stockQuantity: 150, requiresPrescription: false, category: "Pain Relief" },
-    { name: "Omeprazole 20mg", genericName: "Omeprazole", price: 60, stockQuantity: 80, requiresPrescription: true, category: "Gastrointestinal" },
+    { name: "Paracetamol 500mg", genericName: "Paracetamol", price: 15, stockQuantity: 100, prescriptionTier: "otc", category: "Pain Relief" },
+    { name: "Amoxicillin 500mg", genericName: "Amoxicillin", price: 120, stockQuantity: 50, prescriptionTier: "schedule_h", category: "Antibiotics" },
+    { name: "Cetirizine 10mg", genericName: "Cetirizine", price: 30, stockQuantity: 200, prescriptionTier: "otc", category: "Allergy" },
+    { name: "Ibuprofen 400mg", genericName: "Ibuprofen", price: 40, stockQuantity: 150, prescriptionTier: "otc", category: "Pain Relief" },
+    { name: "Omeprazole 20mg", genericName: "Omeprazole", price: 60, stockQuantity: 80, prescriptionTier: "schedule_h", category: "Gastrointestinal" },
   ];
 
   console.log("Seeding medicines...");
   for (const med of meds) {
     const existing = await db.select().from(medicines).where(eq(medicines.name, med.name)).limit(1);
     if (existing.length === 0) {
-      await db.insert(medicines).values(med);
+      await db.insert(medicines).values({ ...med, prescriptionTier: med.prescriptionTier as any });
       console.log(`Inserted ${med.name}`);
     } else {
       console.log(`Already exists: ${med.name}`);

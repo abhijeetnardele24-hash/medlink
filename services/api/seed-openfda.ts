@@ -63,7 +63,7 @@ async function main() {
       }
 
       const manufacturer = item.openfda?.manufacturer_name?.[0] || "Unknown Manufacturer";
-      const requiresPrescription = item.product_type?.includes('PRESCRIPTION') || false;
+      const prescriptionTier = item.product_type?.includes('PRESCRIPTION') ? 'schedule_h' : 'otc';
       const description = `FDA Approved Drug. NDC: ${item.product_ndc || 'N/A'}. Route: ${item.route ? item.route.join(', ') : 'Oral'}.`;
 
       const med = {
@@ -76,7 +76,7 @@ async function main() {
         manufacturer: manufacturer,
         price: Math.floor(Math.random() * 400) + 20, // Random price between 20 and 420
         stockQuantity: Math.floor(Math.random() * 500) + 50, // Random stock 50-550
-        requiresPrescription: requiresPrescription,
+        prescriptionTier: prescriptionTier as 'otc'|'schedule_h'|'restricted',
         category: category.slice(0, 100), // Max length safety
       };
 
