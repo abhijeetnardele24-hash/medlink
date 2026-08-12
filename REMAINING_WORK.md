@@ -208,7 +208,7 @@ Before implementing the schema or the frontend, we established the following arc
 ## 2.6 P1 — Enterprise pharmacist verification & compliance features
 
 **Target:** `services/api`, `apps/pharmacy-web`, `apps/patient-web`, `apps/coordinator-web`
-**Status:** Planning
+**Status:** Completed
 
 **Context:** Model realistic India e-pharmacy verification workflows (Drugs & Cosmetics Act 1940/Rules 1945, Pharmacy Act 1948). This is for portfolio realism and demo depth, not actual legal compliance or integration with state APIs.
 
