@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { ShoppingBag, CheckCircle, Clock, CreditCard, Activity } from 'lucide-react';
+import { ShoppingBag, CheckCircle, Clock, CreditCard, Activity, AlertTriangle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface PharmacyOrder {
@@ -17,6 +17,11 @@ export const PharmacyOrders: React.FC = () => {
   const { t } = useTranslation();
   const [orders, setOrders] = useState<PharmacyOrder[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [complaintModalOpen, setComplaintModalOpen] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+  const [issueDescription, setIssueDescription] = useState('');
+  const [submittingComplaint, setSubmittingComplaint] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -60,6 +65,27 @@ export const PharmacyOrders: React.FC = () => {
     };
     const rzp = new (window as any).Razorpay(options);
     rzp.open();
+  };
+
+  const handleComplaintSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrderId || !issueDescription) return;
+    
+    setSubmittingComplaint(true);
+    try {
+      await api.post('/pharmacy/complaints', {
+        orderId: selectedOrderId,
+        issueDescription
+      });
+      alert("Complaint filed successfully. Support will investigate.");
+      setComplaintModalOpen(false);
+      setIssueDescription('');
+      setSelectedOrderId(null);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to file complaint');
+    } finally {
+      setSubmittingComplaint(false);
+    }
   };
 
   const getStatusDisplay = (status: string) => {
@@ -125,9 +151,68 @@ export const PharmacyOrders: React.FC = () => {
                     Pay Now
                   </button>
                 )}
+                
+                {order.status !== 'pending_pharmacist_review' && (
+                  <button 
+                    onClick={() => { setSelectedOrderId(order.id); setComplaintModalOpen(true); }}
+                    className="text-xs text-red-600 hover:text-red-700 underline mt-2 text-right w-full"
+                  >
+                    Report Issue
+                  </button>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Complaint Modal */}
+      {complaintModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center p-6 border-b border-gray-100">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <AlertTriangle className="text-red-500" /> Report an Issue
+              </h2>
+              <button 
+                onClick={() => setComplaintModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 p-2 rounded-full transition-colors bg-gray-50"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleComplaintSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Issue Description</label>
+                <textarea 
+                  required
+                  value={issueDescription}
+                  onChange={e => setIssueDescription(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 outline-none transition-all resize-none"
+                  rows={4}
+                  placeholder="Describe the problem with this order..."
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setComplaintModalOpen(false)}
+                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={submittingComplaint}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
+                >
+                  {submittingComplaint ? 'Submitting...' : 'Submit Complaint'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -99,6 +99,16 @@ export const IncomingOrders: React.FC = () => {
     }
   };
 
+  const handleDispense = async (orderId: string) => {
+    try {
+      await api.patch(`/pharmacy/orders/${orderId}/dispense`);
+      alert("Order marked as dispensed.");
+      fetchOrders();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to dispense order');
+    }
+  };
+
   const filteredMeds = medicines.filter(m => m.name.toLowerCase().includes(search.toLowerCase()));
   const total = cart.reduce((acc, item) => acc + (item.med.price * item.quantity), 0);
 
@@ -253,11 +263,12 @@ export const IncomingOrders: React.FC = () => {
                 <th className="p-4">Patient</th>
                 <th className="p-4">Amount</th>
                 <th className="p-4">Status</th>
+                <th className="p-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {orders.filter(o => o.status !== 'pending_pharmacist_review').length === 0 && (
-                <tr><td colSpan={4} className="p-6 text-center text-gray-500">No processed orders.</td></tr>
+                <tr><td colSpan={5} className="p-6 text-center text-gray-500">No processed orders.</td></tr>
               )}
               {orders.filter(o => o.status !== 'pending_pharmacist_review').map(o => (
                 <tr key={o.id} className="hover:bg-gray-50">
@@ -268,10 +279,21 @@ export const IncomingOrders: React.FC = () => {
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                       o.status === 'pending_payment' ? 'bg-blue-100 text-blue-800' :
                       o.status === 'paid' ? 'bg-green-100 text-green-800' :
+                      o.status === 'dispensed' ? 'bg-indigo-100 text-indigo-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {o.status.replace('_', ' ').toUpperCase()}
                     </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    {o.status === 'paid' && (
+                      <button 
+                        onClick={() => handleDispense(o.id)}
+                        className="text-xs bg-teal-600 text-white px-3 py-1.5 rounded hover:bg-teal-700 font-medium"
+                      >
+                        Dispense
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

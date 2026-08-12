@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications } from "../db/schema";
+import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications, pharmacistVerificationHistory, users } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError } from "../errors";
@@ -106,7 +106,11 @@ router.get(
           shopName: pharmacists.shopName,
           registeredAddress: pharmacists.registeredAddress,
           contactNumber: pharmacists.contactNumber,
-          licenseNumber: pharmacists.licenseNumber,
+          drugLicenseNumber: pharmacists.drugLicenseNumber,
+          drugLicenseDocumentUrl: pharmacists.drugLicenseDocumentUrl,
+          pharmacyCouncilRegistrationNumber: pharmacists.pharmacyCouncilRegistrationNumber,
+          licenseIssuingState: pharmacists.licenseIssuingState,
+          licenseExpiryDate: pharmacists.licenseExpiryDate,
         }
       })
       .from(pharmacistVerifications)
@@ -124,7 +128,17 @@ router.patch(
   requireRole("coordinator"),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-    const { status, reasonCode } = _req.body as { status: string; reasonCode?: string };
+    const { status, reasonCode, notes } = _req.body as { status: string; reasonCode?: string; notes?: string };
+    const { uid } = res.locals.user;
+
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+
+    if (userRows.length === 0) throw new NotFoundError("User");
+    const coordinatorId = userRows[0].id;
 
     const verifRows = await getDb()
       .select()
@@ -143,6 +157,8 @@ router.patch(
           reasonCode: reasonCode || null,
           decidedAt: new Date(),
           updatedAt: new Date(),
+          reviewerId: coordinatorId,
+          reviewerComment: notes,
         })
         .where(eq(pharmacistVerifications.id, id));
 
@@ -152,6 +168,19 @@ router.patch(
           .set({ verificationStatus: status as any, updatedAt: new Date() })
           .where(eq(pharmacists.id, verif.pharmacistId));
       }
+
+      // Add to verification history
+      let actionName = status;
+      if (status === "needs_correction") actionName = "correction_requested";
+      
+      await tx
+        .insert(pharmacistVerificationHistory)
+        .values({
+          pharmacistId: verif.pharmacistId,
+          coordinatorId,
+          action: actionName as any,
+          notes: notes || reasonCode,
+        });
     });
 
     res.json({ success: true, message: `Pharmacist verification updated to ${status}` });

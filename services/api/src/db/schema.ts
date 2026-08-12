@@ -74,6 +74,34 @@ export const medicineListingStatusEnum = pgEnum(
   ]
 );
 
+export const pharmacistVerificationActionEnum = pgEnum(
+  "pharmacist_verification_action",
+  [
+    "submitted",
+    "approved",
+    "rejected",
+    "correction_requested"
+  ]
+);
+
+export const prescriptionTierEnum = pgEnum(
+  "prescription_tier",
+  [
+    "otc",
+    "schedule_h",
+    "restricted"
+  ]
+);
+
+export const orderComplaintStatusEnum = pgEnum(
+  "order_complaint_status",
+  [
+    "open",
+    "investigating",
+    "resolved"
+  ]
+);
+
 export const slotStatusEnum = pgEnum("slot_status", [
   "available",
   "booked",
@@ -314,7 +342,11 @@ export const pharmacists = pgTable(
     contactNumber: text("contact_number"),
     shopName: text("shop_name").notNull(),
     registeredAddress: text("registered_address").notNull(),
-    licenseNumber: text("license_number"),
+    drugLicenseNumber: text("drug_license_number"),
+    drugLicenseDocumentUrl: text("drug_license_document_url"),
+    pharmacyCouncilRegistrationNumber: text("pharmacy_council_registration_number"),
+    licenseIssuingState: text("license_issuing_state"),
+    licenseExpiryDate: timestamp("license_expiry_date", { withTimezone: true }),
     verificationStatus: pharmacistVerificationStatusEnum("verification_status")
       .notNull()
       .default("draft"),
@@ -361,6 +393,21 @@ export const pharmacistVerifications = pgTable(
     index("pharmacist_verifications_pharmacist_id_idx").on(t.pharmacistId),
     index("pharmacist_verifications_status_idx").on(t.status),
   ]
+);
+
+export const pharmacistVerificationHistory = pgTable(
+  "pharmacist_verification_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    pharmacistId: uuid("pharmacist_id")
+      .notNull()
+      .references(() => pharmacists.id, { onDelete: "cascade" }),
+    coordinatorId: uuid("coordinator_id")
+      .references(() => users.id),
+    action: pharmacistVerificationActionEnum("action").notNull(),
+    notes: text("notes"),
+    timestamp: timestamp("timestamp", { withTimezone: true }).notNull().defaultNow(),
+  }
 );
 
 // ─────────────────────────────────────────────────────────────
@@ -785,7 +832,7 @@ export const medicines = pgTable("medicines", {
   manufacturer: text("manufacturer"),
   price: integer("price").notNull(), // Price in INR
   stockQuantity: integer("stock_quantity").notNull().default(0),
-  requiresPrescription: boolean("requires_prescription").notNull().default(false),
+  prescriptionTier: prescriptionTierEnum("prescription_tier").notNull().default("otc"),
   category: text("category"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
@@ -805,6 +852,25 @@ export const pharmacyOrderItems = pgTable("pharmacy_order_items", {
   medicineId: uuid("medicine_id").notNull().references(() => medicines.id),
   quantity: integer("quantity").notNull(),
   unitPrice: integer("unit_price").notNull(),
+});
+
+export const pharmacyDispenseAudit = pgTable("pharmacy_dispense_audit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id").notNull().references(() => pharmacyOrders.id, { onDelete: "cascade" }),
+  pharmacistId: uuid("pharmacist_id").notNull().references(() => pharmacists.id),
+  dispensedAt: timestamp("dispensed_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const orderComplaints = pgTable("order_complaints", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id").notNull().references(() => pharmacyOrders.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  coordinatorId: uuid("coordinator_id").references(() => users.id),
+  issueDescription: text("issue_description").notNull(),
+  status: orderComplaintStatusEnum("status").notNull().default("open"),
+  coordinatorNotes: text("coordinator_notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const prescriptionReconciliationAudit = pgTable("prescription_reconciliation_audit", {

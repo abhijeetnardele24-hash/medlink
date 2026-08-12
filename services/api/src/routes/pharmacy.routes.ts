@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
-import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications } from "../db/schema";
+import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications, pharmacyDispenseAudit, orderComplaints } from "../db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 import Razorpay from "razorpay";
@@ -23,9 +23,16 @@ function normalizeText(text: string): string[] {
 // POST /pharmacy/verify
 router.post("/verify", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { licenseNumber } = req.body;
-    if (!licenseNumber) {
-      res.status(400).json({ error: "licenseNumber is required" });
+    const { 
+      drugLicenseNumber,
+      drugLicenseDocumentUrl,
+      pharmacyCouncilRegistrationNumber,
+      licenseIssuingState,
+      licenseExpiryDate
+    } = req.body;
+
+    if (!drugLicenseNumber || !pharmacyCouncilRegistrationNumber) {
+      res.status(400).json({ error: "drugLicenseNumber and pharmacyCouncilRegistrationNumber are required" });
       return;
     }
 
@@ -59,7 +66,13 @@ router.post("/verify", authenticate, async (req: Request, res: Response): Promis
     await getDb().transaction(async (tx) => {
       // Update license number on pharmacist
       await tx.update(pharmacists)
-        .set({ licenseNumber })
+        .set({ 
+          drugLicenseNumber,
+          drugLicenseDocumentUrl,
+          pharmacyCouncilRegistrationNumber,
+          licenseIssuingState,
+          licenseExpiryDate: licenseExpiryDate ? new Date(licenseExpiryDate) : null
+        })
         .where(eq(pharmacists.id, pharmacistId));
 
       // Create verification request
@@ -94,6 +107,49 @@ router.get("/pharmacists", async (req: Request, res: Response): Promise<void> =>
   } catch (err: any) {
     logger.error({ err }, "Failed to fetch pharmacists");
     res.status(500).json({ error: "Failed to fetch pharmacists" });
+  }
+});
+
+// GET /pharmacy/inventory
+router.get("/inventory", authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { uid } = res.locals.user;
+    
+    // Find pharmacist by user uid
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+    
+    if (userRows.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+
+    const pharmacistRows = await getDb()
+      .select({ id: pharmacists.id })
+      .from(pharmacists)
+      .where(eq(pharmacists.userId, userRows[0].id))
+      .limit(1);
+
+    if (pharmacistRows.length === 0) {
+      res.status(403).json({ error: "Only pharmacists have inventory" });
+      return;
+    }
+
+    const pharmacistId = pharmacistRows[0].id;
+
+    const inventory = await getDb()
+      .select()
+      .from(medicines)
+      .where(eq(medicines.pharmacistId, pharmacistId))
+      .orderBy(medicines.name);
+
+    res.json(inventory);
+  } catch (err: any) {
+    logger.error({ err }, "Failed to fetch inventory");
+    res.status(500).json({ error: "Failed to fetch inventory" });
   }
 });
 
@@ -350,7 +406,12 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
         return;
       }
 
-      if (med.requiresPrescription) {
+      if (med.prescriptionTier === "restricted") {
+        res.status(403).json({ error: `Medicine '${med.name}' is restricted and cannot be ordered online.` });
+        return;
+      }
+
+      if (med.prescriptionTier === "schedule_h") {
         if (!prescriptionId) {
           res.status(403).json({ error: `Medicine '${med.name}' requires a prescription, but none was provided.` });
           return;
@@ -466,6 +527,126 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
   } catch (err: any) {
     logger.error({ err }, "Failed to create pharmacy order");
     res.status(500).json({ error: "Failed to create order" });
+  }
+});
+
+// PATCH /pharmacy/orders/:id/dispense
+router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const orderId = req.params.id;
+    const { uid } = res.locals.user;
+
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+
+    if (userRows.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+
+    const pharmacistRows = await getDb()
+      .select({ id: pharmacists.id })
+      .from(pharmacists)
+      .where(eq(pharmacists.userId, userRows[0].id))
+      .limit(1);
+
+    if (pharmacistRows.length === 0) {
+      res.status(403).json({ error: "Only pharmacists can dispense orders" });
+      return;
+    }
+    const pharmacistId = pharmacistRows[0].id;
+
+    const orderRows = await getDb()
+      .select()
+      .from(pharmacyOrders)
+      .where(eq(pharmacyOrders.id, orderId))
+      .limit(1);
+
+    if (orderRows.length === 0) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    const order = orderRows[0];
+    if (order.pharmacistId !== pharmacistId) {
+      res.status(403).json({ error: "Not authorized to dispense this order" });
+      return;
+    }
+
+    await getDb().transaction(async (tx) => {
+      // Update order status
+      await tx.update(pharmacyOrders)
+        .set({ status: "processing" })
+        .where(eq(pharmacyOrders.id, orderId));
+
+      // Log to dispense audit
+      await tx.insert(pharmacyDispenseAudit)
+        .values({
+          orderId,
+          pharmacistId,
+        });
+    });
+
+    res.json({ success: true, message: "Order dispensed successfully" });
+  } catch (error) {
+    logger.error({ error }, "Failed to dispense order");
+    res.status(500).json({ error: "Failed to dispense order" });
+  }
+});
+
+// POST /pharmacy/complaints
+router.post("/complaints", authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { orderId, issueDescription } = req.body;
+    const { uid } = res.locals.user;
+
+    if (!orderId || !issueDescription) {
+      res.status(400).json({ error: "orderId and issueDescription are required" });
+      return;
+    }
+
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+
+    if (userRows.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+    const patientId = userRows[0].id;
+
+    const orderRows = await getDb()
+      .select()
+      .from(pharmacyOrders)
+      .where(eq(pharmacyOrders.id, orderId))
+      .limit(1);
+
+    if (orderRows.length === 0) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    if (orderRows[0].patientId !== patientId) {
+      res.status(403).json({ error: "Not authorized to file complaint for this order" });
+      return;
+    }
+
+    await getDb().insert(orderComplaints).values({
+      orderId,
+      patientId,
+      issueDescription,
+      status: "open"
+    });
+
+    res.status(201).json({ success: true, message: "Complaint filed successfully" });
+  } catch (error) {
+    logger.error({ error }, "Failed to file complaint");
+    res.status(500).json({ error: "Failed to file complaint" });
   }
 });
 

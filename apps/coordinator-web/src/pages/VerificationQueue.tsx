@@ -29,7 +29,11 @@ interface PharmacistVerification {
     shopName: string;
     registeredAddress: string;
     contactNumber: string | null;
-    licenseNumber: string | null;
+    drugLicenseNumber: string | null;
+    drugLicenseDocumentUrl: string | null;
+    pharmacyCouncilRegistrationNumber: string | null;
+    licenseIssuingState: string | null;
+    licenseExpiryDate: string | null;
   };
 }
 
@@ -199,20 +203,35 @@ export const VerificationQueue: React.FC = () => {
               </div>
               
               <div style={{ background: 'var(--bg-surface-elevated)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.5rem', flex: 1, border: '1px solid var(--border)' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>License Number</span>
-                    <span style={{ fontWeight: 500, fontSize: '0.95rem', color: 'var(--text-main)' }}>{v.pharmacist.licenseNumber || 'N/A'}</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Drug License No.</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.95rem', color: 'var(--text-main)' }}>{v.pharmacist.drugLicenseNumber || 'N/A'}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>State Council Reg No.</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.95rem' }}>{v.pharmacist.pharmacyCouncilRegistrationNumber || 'N/A'}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Issuing State</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.95rem' }}>{v.pharmacist.licenseIssuingState || 'N/A'}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Expiry Date</span>
+                    <span style={{ fontWeight: 500, fontSize: '0.95rem' }}>{v.pharmacist.licenseExpiryDate ? new Date(v.pharmacist.licenseExpiryDate).toLocaleDateString() : 'N/A'}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gridColumn: '1 / -1' }}>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Registered Address</span>
                     <span style={{ fontWeight: 500, fontSize: '0.95rem' }}>{v.pharmacist.registeredAddress}</span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Contact Number</span>
-                    <span style={{ fontWeight: 500, fontSize: '0.95rem' }}>{v.pharmacist.contactNumber || 'N/A'}</span>
-                  </div>
                 </div>
+                {v.pharmacist.drugLicenseDocumentUrl && (
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+                    <a href={v.pharmacist.drugLicenseDocumentUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      View License Document
+                    </a>
+                  </div>
+                )}
               </div>
               
               <div style={{ display: 'flex', gap: '1rem' }}>

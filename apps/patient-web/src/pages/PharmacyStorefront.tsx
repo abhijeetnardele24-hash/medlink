@@ -12,6 +12,7 @@ interface Pharmacist {
   fullName: string;
   shopName: string;
   registeredAddress: string;
+  drugLicenseNumber?: string;
 }
 
 interface Medicine {
@@ -20,7 +21,7 @@ interface Medicine {
   genericName: string;
   price: number;
   stockQuantity: number;
-  requiresPrescription: boolean;
+  prescriptionTier: string;
   category: string;
   description?: string;
   imageUrl?: string;
@@ -82,7 +83,11 @@ export function PharmacyStorefront() {
   };
 
   const addToCart = (med: Medicine) => {
-    if (med.requiresPrescription && !rxId) {
+    if (med.prescriptionTier === 'restricted') {
+      alert("This medicine is restricted and cannot be sold online according to regulations.");
+      return;
+    }
+    if (med.prescriptionTier === 'schedule_h' && !rxId) {
       alert("This medicine requires a prescription. Please use the Upload Prescription feature.");
       return;
     }
@@ -194,7 +199,8 @@ export function PharmacyStorefront() {
           {pharmacists.map(p => (
             <div key={p.id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedPharmacist(p)}>
               <h2 className="text-xl font-semibold text-teal-700">{p.shopName}</h2>
-              <p className="text-gray-600 mt-2">{p.fullName}</p>
+              {p.drugLicenseNumber && <div className="inline-block mt-2 mb-1 bg-gray-50 text-gray-500 text-xs px-2 py-1 rounded border border-gray-200">DL: {p.drugLicenseNumber}</div>}
+              <p className="text-gray-600">{p.fullName}</p>
               <p className="text-sm text-gray-500 mt-1">{p.registeredAddress}</p>
             </div>
           ))}
@@ -216,7 +222,12 @@ export function PharmacyStorefront() {
             </button>
             <h1 className="text-2xl font-bold text-teal-700 flex items-center gap-2">
               <Package className="text-teal-600" />
-              {selectedPharmacist.shopName}
+              <div>
+                <div>{selectedPharmacist.shopName}</div>
+                {selectedPharmacist.drugLicenseNumber && (
+                  <div className="text-xs font-normal text-teal-600 mt-0.5">DL No: {selectedPharmacist.drugLicenseNumber}</div>
+                )}
+              </div>
             </h1>
           </div>
           
@@ -282,17 +293,20 @@ export function PharmacyStorefront() {
                 </div>
                 <p className="text-sm text-gray-500 mb-4 line-clamp-2">{med.genericName || med.category}</p>
                 
-                {med.requiresPrescription && !rxId && (
-                  <p className="text-xs text-red-500 mb-3 font-medium">Prescription Required</p>
+                {med.prescriptionTier === 'restricted' && (
+                  <p className="text-xs text-red-600 bg-red-50 p-1.5 rounded border border-red-100 mb-3 font-medium text-center">Restricted: In-Store Only</p>
+                )}
+                {med.prescriptionTier === 'schedule_h' && !rxId && (
+                  <p className="text-xs text-amber-600 mb-3 font-medium">Prescription Required</p>
                 )}
                 
                 <button 
                   onClick={() => addToCart(med)}
-                  disabled={med.stockQuantity <= 0}
+                  disabled={med.stockQuantity <= 0 || med.prescriptionTier === 'restricted'}
                   className="w-full py-2 bg-gray-900 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                 >
                   <ShoppingCart size={16} />
-                  {med.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
+                  {med.prescriptionTier === 'restricted' ? 'Unavailable Online' : med.stockQuantity > 0 ? 'Add to Cart' : 'Out of Stock'}
                 </button>
               </div>
             </div>

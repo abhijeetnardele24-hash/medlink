@@ -202,3 +202,18 @@ Before implementing the schema or the frontend, we established the following arc
 3. Patient-web Storefront Port (Done)
 4. Coordinator-web VerificationQueue Extension (Done)
 5. Doctor-web Tagging UI (Done)
+
+---
+
+## 2.6 P1 — Enterprise pharmacist verification & compliance features
+
+**Target:** `services/api`, `apps/pharmacy-web`, `apps/patient-web`, `apps/coordinator-web`
+**Status:** Planning
+
+**Context:** Model realistic India e-pharmacy verification workflows (Drugs & Cosmetics Act 1940/Rules 1945, Pharmacy Act 1948). This is for portfolio realism and demo depth, not actual legal compliance or integration with state APIs.
+
+1. **Extend pharmacist verification fields:** Add state drug license, pharmacy council registration, issuing state, and expiry date. Store verification history with coordinator IDs and timestamps.
+2. **Tiered prescription requirements:** Replace boolean `requiresPrescription` with an enum (`otc`, `schedule_h`, `restricted`). `restricted` items cannot be ordered.
+3. **Public license display:** Show each seller's pharmacy name and license number on `patient-web` storefront.
+4. **Dispense audit log:** Log which pharmacist account fulfilled a prescription-gated item.
+5. **Complaint/support channel:** Add lightweight "report an issue" action on patient orders for coordinator review.
