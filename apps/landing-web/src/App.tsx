@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Zap, RefreshCw, Activity, Store } from 'lucide-react';
+import { ArchitectureDiagram } from './components/ArchitectureDiagram';
 import './index.css';
 
 const MedLinkLogo = () => (
@@ -331,151 +332,25 @@ function App() {
         </div>
       </section>
 
-      {/* 5. Clean Architecture Graphic Section */}
-      <section id="architecture" style={{ padding: '8rem 4rem', background: 'var(--bg-base)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '6rem', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-          
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}>
-            <h2 style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '2rem', lineHeight: 1.1 }}>Built for massive throughput.</h2>
-            <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.5rem' }}>
-              MedLink operates on a microservices-inspired architecture. A centralized Node.js API gateway handles requests from four distinct React applications, ensuring complete data isolation and strict role-based access control.
-            </p>
-            
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '3rem' }}>
-              {[
-                'Four isolated React frontend portals',
-                'Centralized PostgreSQL database with Prisma ORM',
-                'Real-time socket.io signaling server for WebRTC handshakes',
-                'Direct Firebase Storage integration for media blobs'
-              ].map((item, i) => (
-                <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1rem', fontWeight: 500 }}>
-                  <div style={{ width: '20px', height: '20px', borderRadius: '6px', background: 'var(--bg-muted)', color: 'var(--text-main)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <CheckCircle2 size={12} />
-                  </div>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <a href="http://localhost:5175" className="btn btn-secondary" style={{ width: 'fit-content' }}>Login to Admin Console <ArrowRight size={16}/></a>
-          </motion.div>
-
-          {/* Clean Graphic 1 */}
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.98 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
-            className="dotted-bg" style={{ padding: '4rem', position: 'relative', minHeight: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1px solid var(--border)', borderRadius: '24px' }}
-          >
-            {/* Top Row: Frontend Portals */}
-            <div style={{ display: 'flex', gap: '1.5rem', zIndex: 2, width: '100%', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Smartphone size={18}/> Patient App</motion.div>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Stethoscope size={18}/> Doctor Hub</motion.div>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Server size={18}/> Admin Web</motion.div>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.25rem', borderRadius: '12px', fontWeight: 600, fontSize: '0.9rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Store size={18}/> Pharmacy Web</motion.div>
-            </div>
-
-            {/* Middle: API Gateway */}
-            <div style={{ background: 'var(--text-main)', color: 'white', border: 'none', padding: '1.5rem 3rem', borderRadius: '16px', fontWeight: 700, fontSize: '1.1rem', zIndex: 2, display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
-              <Activity size={24} /> Central REST API Gateway
-            </div>
-
-            {/* Clean SVG Lines */}
-            <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.2, ease: "easeOut" }} d="M180,180 C180,250 350,250 350,280" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="4 4" />
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.3, ease: "easeOut" }} d="M380,180 L380,280" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="4 4" />
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.4, ease: "easeOut" }} d="M580,180 C580,250 410,250 410,280" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="4 4" />
-              
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.5, ease: "easeOut" }} d="M380,360 L380,440" fill="none" stroke="#d1d5db" strokeWidth="2" />
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.6, ease: "easeOut" }} d="M380,360 C380,410 180,410 180,440" fill="none" stroke="#d1d5db" strokeWidth="2" />
-              <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.7, ease: "easeOut" }} d="M380,360 C380,410 580,410 580,440" fill="none" stroke="#d1d5db" strokeWidth="2" />
-            </svg>
-
-            {/* Bottom Row: Databases */}
-            <div style={{ display: 'flex', gap: '1.5rem', zIndex: 2, width: '100%', justifyContent: 'center' }}>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--text-main)', padding: '1.5rem', borderRadius: '16px', fontWeight: 600, fontSize: '0.95rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: 'var(--text-main)', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
-                <Database size={24} /> PostgreSQL
-              </motion.div>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.5rem', borderRadius: '16px', fontWeight: 600, fontSize: '0.95rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <RefreshCw size={24} color="#111827" /> WebRTC Signaling
-              </motion.div>
-              <motion.div whileHover={{ y: -2 }} style={{ background: 'white', border: '1px solid var(--border)', padding: '1.5rem', borderRadius: '16px', fontWeight: 600, fontSize: '0.95rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                <Cloud size={24} color="#111827" /> Firebase Storage
-              </motion.div>
-            </div>
-
-          </motion.div>
-
-        </div>
-      </section>
-
-      {/* 6. NEW: Live WebRTC Signaling Diagram Section */}
-      <section id="webrtc" style={{ padding: '8rem 4rem', background: 'var(--bg-surface)', position: 'relative', overflow: 'hidden' }}>
+      {/* 5 & 6. Unified Architecture Section */}
+      <section id="architecture" style={{ padding: '8rem 4rem', background: 'var(--bg-surface)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-            <h2 style={{ fontSize: '3rem', marginBottom: '1.5rem', letterSpacing: '-0.03em' }}>Zero-Latency Encrypted Video</h2>
-            <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto' }}>
-              Once a handshake is completed via our Socket.io gateway, video streams flow directly peer-to-peer, bypassing the server entirely for maximum performance and HIPAA compliance.
+            <h2 style={{ fontSize: '3.5rem', fontWeight: 800, letterSpacing: '-0.04em', marginBottom: '1.5rem', lineHeight: 1.1 }}>Built for massive throughput.</h2>
+            <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
+              MedLink operates on a microservices-inspired architecture. A centralized Node.js API gateway handles requests from four distinct React applications, ensuring complete data isolation and strict role-based access control. Video streams flow directly peer-to-peer for maximum performance and HIPAA compliance.
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-            
-            {/* Diagram Container */}
-            <div style={{ width: '100%', maxWidth: '800px', background: 'white', border: '1px solid var(--border)', borderRadius: '24px', padding: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-              
-              {/* Patient Node */}
-              <motion.div initial={{ x: -30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', zIndex: 2 }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Smartphone size={32} color="var(--text-main)" />
-                </div>
-                <div style={{ fontWeight: 700 }}>Patient Browser</div>
-              </motion.div>
+          <ArchitectureDiagram />
 
-              {/* Signaling Server (Top) */}
-              <motion.div initial={{ y: -30, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }} style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', zIndex: 2 }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: 'var(--text-main)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}>
-                  <Zap size={24} />
-                </div>
-                <div style={{ fontWeight: 600, fontSize: '0.85rem', background: 'var(--bg-surface)', padding: '0.2rem 0.75rem', borderRadius: '99px', border: '1px solid var(--border)' }}>Socket.io Signaling</div>
-              </motion.div>
-
-              {/* Doctor Node */}
-              <motion.div initial={{ x: 30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', zIndex: 2 }}>
-                <div style={{ width: '80px', height: '80px', borderRadius: '20px', background: 'var(--bg-surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Stethoscope size={32} color="var(--text-main)" />
-                </div>
-                <div style={{ fontWeight: 700 }}>Doctor Browser</div>
-              </motion.div>
-
-              {/* Animated Connection Lines */}
-              <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1, pointerEvents: 'none' }}>
-                {/* SDP Offer Line (Patient -> Server) */}
-                <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 0.5, repeat: Infinity, repeatType: 'loop', repeatDelay: 2 }} d="M150,110 C200,60 300,50 380,40" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="4 4" />
-                <motion.circle initial={{ pathOffset: 0 }} whileInView={{ offsetDistance: "100%" }} transition={{ duration: 1, delay: 0.5, repeat: Infinity, repeatType: 'loop', repeatDelay: 2 }} cx="0" cy="0" r="4" fill="var(--text-muted)" style={{ offsetPath: 'path("M150,110 C200,60 300,50 380,40")' }} />
-
-                {/* SDP Answer Line (Server -> Doctor) */}
-                <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} transition={{ duration: 1, delay: 1, repeat: Infinity, repeatType: 'loop', repeatDelay: 2 }} d="M420,40 C500,50 600,60 650,110" fill="none" stroke="var(--border)" strokeWidth="2" strokeDasharray="4 4" />
-                
-                {/* P2P Video Stream Line (Direct) */}
-                <motion.path initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1, delay: 2 }} d="M160,150 L640,150" fill="none" stroke="var(--accent)" strokeWidth="4" />
-                {/* Moving packets on P2P line */}
-                <motion.rect initial={{ x: 160 }} whileInView={{ x: 620 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} y="146" width="16" height="8" rx="4" fill="var(--accent)" />
-                <motion.rect initial={{ x: 620 }} whileInView={{ x: 160 }} transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }} y="146" width="16" height="8" rx="4" fill="#10b981" />
-              </svg>
-
-              {/* Direct P2P Label */}
-              <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 2.5 }} style={{ position: 'absolute', top: '165px', left: '50%', transform: 'translateX(-50%)', fontWeight: 700, color: 'var(--accent)', fontSize: '0.85rem', background: 'white', padding: '0.2rem 0.5rem' }}>
-                Encrypted E2E Media Stream (UDP)
-              </motion.div>
-
-            </div>
-
-            <div style={{ marginTop: '4rem' }}>
-               <a href="http://localhost:5174" className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
-                Join as a Doctor <ArrowRight size={18}/>
-              </a>
-            </div>
+          <div style={{ marginTop: '5rem', display: 'flex', justifyContent: 'center' }}>
+            <a href="http://localhost:5175" className="btn btn-secondary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
+              Login to Admin Console <ArrowRight size={18} style={{ marginLeft: '0.5rem' }}/>
+            </a>
           </div>
+
         </div>
       </section>
 
