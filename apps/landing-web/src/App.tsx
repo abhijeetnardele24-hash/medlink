@@ -179,26 +179,6 @@ function App() {
             </a>
           </motion.div>
 
-          {/* Apple-Style Hero Image */}
-          <motion.div variants={itemVars} style={{ 
-            width: '100%', 
-            maxWidth: '1000px', 
-            marginTop: '2rem',
-            position: 'relative'
-          }}>
-            <img 
-              src="/hero-image.jpg" 
-              alt="MedLink Platform Usage" 
-              style={{ 
-                width: '100%', 
-                height: 'auto', 
-                display: 'block',
-                borderRadius: '32px',
-                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(0,0,0,0.05)'
-              }} 
-            />
-          </motion.div>
         </motion.div>
       </main>
 
