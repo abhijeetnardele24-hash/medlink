@@ -71,7 +71,7 @@ function App() {
         </div>
         
         <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          <div onClick={() => scrollToSection('architecture')} style={{ cursor: 'pointer', transition: 'color 0.2s', color: 'var(--text-main)' }}>Architecture</div>
+          <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} onClick={() => scrollToSection('architecture')} style={{ cursor: 'pointer', transition: 'color 0.2s', color: 'var(--text-main)' }}>Architecture</motion.div>
 
           {/* Solutions Dropdown */}
           <div 
@@ -79,9 +79,9 @@ function App() {
             onMouseEnter={() => setActiveDropdown('solutions')}
             onMouseLeave={() => setActiveDropdown(null)}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', transition: 'color 0.2s' }}>
+            <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', transition: 'color 0.2s' }}>
               Solutions <ChevronDown size={14} style={{ transform: activeDropdown === 'solutions' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
-            </div>
+            </motion.div>
             
             <AnimatePresence>
               {activeDropdown === 'solutions' && (
@@ -94,44 +94,44 @@ function App() {
                 >
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <a href="http://localhost:5176" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Smartphone size={16} color="var(--text-main)" /></div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Patient App</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>Self-service booking & video consults.</div>
                         </div>
-                      </div>
+                      </motion.div>
                     </a>
                     
                     <a href="http://localhost:5174" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Stethoscope size={16} color="var(--text-main)" /></div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Doctor Hub</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>WebRTC hub with clinical prescribing.</div>
                         </div>
-                      </div>
+                      </motion.div>
                     </a>
                   </div>
                   
                   <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
                      <a href="http://localhost:5175" style={{ textDecoration: 'none', color: 'inherit', display: 'block', marginBottom: '1.25rem' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Server size={16} color="var(--text-main)" /></div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Admin Console</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Centralized global hospital operations.</div>
                         </div>
-                      </div>
+                      </motion.div>
                     </a>
                      <a href="http://localhost:5177" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Store size={16} color="var(--text-main)" /></div>
                         <div>
                           <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Pharmacy Portal</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enterprise medicine marketplace & Rx fulfillment.</div>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enterprise medicine marketplace.</div>
                         </div>
-                      </div>
+                      </motion.div>
                     </a>
                   </div>
                 </motion.div>
@@ -139,7 +139,7 @@ function App() {
             </AnimatePresence>
           </div>
 
-          <div onClick={() => scrollToSection('webrtc')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>Video Engine</div>
+          <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} onClick={() => scrollToSection('workflow')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>Video Engine</motion.div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -307,13 +307,16 @@ function App() {
                 <div className="workflow-icon" style={s.highlight ? { background: 'var(--text-main)', color: 'white', borderColor: 'var(--text-main)' } : {}}>
                   {s.icon}
                 </div>
-                <div className="workflow-content" style={s.highlight ? { borderColor: 'var(--text-main)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' } : {}}>
+                <motion.div 
+                  whileHover={{ y: -4, boxShadow: '0 15px 30px -5px rgba(0,0,0,0.1)' }}
+                  className="workflow-content" style={s.highlight ? { borderColor: 'var(--text-main)', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' } : {}}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <h3 style={{ fontSize: '1.5rem', fontWeight: 700 }}>{s.step}. {s.title}</h3>
                     <a href={s.link} style={{ textDecoration: 'none' }}>
-                      <span style={{ cursor: 'pointer', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, background: s.highlight ? 'var(--text-main)' : 'var(--bg-muted)', color: s.highlight ? 'white' : 'var(--text-main)', border: `1px solid ${s.highlight ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <motion.span whileHover={{ scale: 1.05 }} style={{ cursor: 'pointer', padding: '0.25rem 0.75rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, background: s.highlight ? 'var(--text-main)' : 'var(--bg-muted)', color: s.highlight ? 'white' : 'var(--text-main)', border: `1px solid ${s.highlight ? 'transparent' : 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         {s.app} <ArrowRight size={12}/>
-                      </span>
+                      </motion.span>
                     </a>
                   </div>
                   <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>{s.desc}</p>
@@ -324,7 +327,7 @@ function App() {
                       </span>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             ))}
 
