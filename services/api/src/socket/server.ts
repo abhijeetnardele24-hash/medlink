@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import Redis from "ioredis";
 import { createAdapter } from "@socket.io/redis-adapter";
+import { registerWebRTCHandlers } from "./handlers";
+import { logger } from "../logger";
 
 let io: Server | null = null;
 
@@ -24,6 +26,14 @@ export function initSocketServer(httpServer: any) {
   } else {
     console.log("No REDIS_URL provided. Using in-memory adapter for Socket.IO");
   }
+
+  // Handle client connections
+  io.on("connection", (socket) => {
+    logger.info({ socketId: socket.id }, "New Socket.IO connection established");
+
+    // Register WebRTC signaling handlers
+    registerWebRTCHandlers(io!, socket);
+  });
 
   return io;
 }
