@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
   /* Ultra-Polished Clean SaaS Palette */
@@ -40,7 +40,7 @@ body {
 
 /* Typography Overrides */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-main);
@@ -97,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-title {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: clamp(3.5rem, 7vw, 6.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;

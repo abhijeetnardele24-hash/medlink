@@ -65,7 +65,7 @@ function App() {
 
       {/* 2. Crisp Navbar */}
       <nav style={{ padding: '1rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', background: 'white', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Manrope, sans-serif' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif' }}>
           <MedLinkLogo />
           MEDLINK
         </div>
@@ -361,7 +361,7 @@ function App() {
       <footer style={{ background: 'var(--bg-base)', borderTop: '1px solid var(--border)', color: 'var(--text-main)', padding: '4rem 4rem 2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '3rem', marginBottom: '2rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Manrope, sans-serif', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif', marginBottom: '1rem' }}>
               <MedLinkLogo />
               MEDLINK
             </div>
