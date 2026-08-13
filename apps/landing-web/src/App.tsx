@@ -5,11 +5,9 @@ import { ArchitectureDiagram } from './components/ArchitectureDiagram';
 import './index.css';
 
 const MedLinkLogo = () => (
-  <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="36" height="36" rx="10" fill="#111827"/>
-    {/* Interlocking modern medical cross / link */}
-    <path d="M10 18H14L17 10L23 26L26 18H30" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-    <circle cx="28" cy="12" r="3" fill="#10b981" />
+  <svg width="42" height="42" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* A massive, bold geometric cross / star that looks extremely premium and structural */}
+    <path fillRule="evenodd" clipRule="evenodd" d="M20 0 L28 12 L40 20 L28 28 L20 40 L12 28 L0 20 L12 12 Z M20 12 L28 20 L20 28 L12 20 Z" fill="#09090b" />
   </svg>
 );
 
@@ -63,15 +61,17 @@ function App() {
         MedLink Unified Telemedicine Platform v2.0 is now live for all Enterprise customers.
       </motion.div>
 
-      {/* 2. Crisp Navbar */}
-      <nav style={{ padding: '1rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', background: 'white', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif' }}>
+      {/* 2. Apple-Style Liquid Glass Navbar */}
+      <nav style={{ padding: '0.85rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(0,0,0,0.05)', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <MedLinkLogo />
-          MEDLINK
+          <span style={{ fontWeight: 700, fontSize: '1.4rem', letterSpacing: '0.02em', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif', color: '#09090b' }}>
+            MedLink
+          </span>
         </div>
         
-        <div style={{ display: 'flex', gap: '2.5rem', alignItems: 'center', fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-          <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} onClick={() => scrollToSection('architecture')} style={{ cursor: 'pointer', transition: 'color 0.2s', color: 'var(--text-main)' }}>Architecture</motion.div>
+        <div style={{ display: 'flex', gap: '3rem', alignItems: 'center', fontWeight: 400, fontSize: '0.75rem', color: 'rgba(0,0,0,0.8)', letterSpacing: '-0.01em', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+          <motion.div whileHover={{ color: '#000000', opacity: 1 }} onClick={() => scrollToSection('architecture')} style={{ cursor: 'pointer', transition: 'color 0.2s', opacity: 0.8 }}>Architecture</motion.div>
 
           {/* Solutions Dropdown */}
           <div 
@@ -79,7 +79,7 @@ function App() {
             onMouseEnter={() => setActiveDropdown('solutions')}
             onMouseLeave={() => setActiveDropdown(null)}
           >
-            <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', transition: 'color 0.2s' }}>
+            <motion.div whileHover={{ color: '#000000', opacity: 1 }} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', transition: 'color 0.2s', opacity: 0.8 }}>
               Solutions <ChevronDown size={14} style={{ transform: activeDropdown === 'solutions' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
             </motion.div>
             
@@ -97,7 +97,7 @@ function App() {
                       <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Smartphone size={16} color="var(--text-main)" /></div>
                         <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Patient App</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>Patient App</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>Self-service booking & video consults.</div>
                         </div>
                       </motion.div>
@@ -107,7 +107,7 @@ function App() {
                       <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Stethoscope size={16} color="var(--text-main)" /></div>
                         <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Doctor Hub</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>Doctor Hub</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>WebRTC hub with clinical prescribing.</div>
                         </div>
                       </motion.div>
@@ -119,7 +119,7 @@ function App() {
                       <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Server size={16} color="var(--text-main)" /></div>
                         <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Admin Console</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>Admin Console</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Centralized global hospital operations.</div>
                         </div>
                       </motion.div>
@@ -128,7 +128,7 @@ function App() {
                       <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
                         <div style={{ background: 'var(--bg-muted)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)' }}><Store size={16} color="var(--text-main)" /></div>
                         <div>
-                          <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: 'Inter, sans-serif' }}>Pharmacy Portal</div>
+                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>Pharmacy Portal</div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Enterprise medicine marketplace.</div>
                         </div>
                       </motion.div>
@@ -139,115 +139,65 @@ function App() {
             </AnimatePresence>
           </div>
 
-          <motion.div whileHover={{ color: 'var(--text-main)', y: -1 }} onClick={() => scrollToSection('workflow')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>Video Engine</motion.div>
+          <motion.div whileHover={{ color: '#000000', opacity: 1 }} onClick={() => scrollToSection('workflow')} style={{ cursor: 'pointer', transition: 'color 0.2s', opacity: 0.8 }}>Video Engine</motion.div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <a href="http://localhost:5176" style={{ fontWeight: 600, color: 'var(--text-muted)', textDecoration: 'none', fontSize: '0.9rem' }}>Patient Login</a>
-          <a href="http://localhost:5174" className="btn btn-primary" style={{ padding: '8px 16px' }}>Doctor Portal <ArrowRight size={14}/></a>
+          <a href="http://localhost:5176" style={{ fontWeight: 400, color: 'rgba(0,0,0,0.8)', textDecoration: 'none', fontSize: '0.75rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif', opacity: 0.8, transition: 'opacity 0.2s' }} onMouseOver={(e) => e.currentTarget.style.opacity = '1'} onMouseOut={(e) => e.currentTarget.style.opacity = '0.8'}>Patient Login</a>
+          <a href="http://localhost:5174" style={{ padding: '6px 14px', background: '#0071e3', color: 'white', borderRadius: '999px', fontSize: '0.75rem', textDecoration: 'none', fontWeight: 400, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>Doctor Portal</a>
         </div>
       </nav>
 
       {/* 3. Clean Polished Hero Section */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 2rem 10rem', position: 'relative', background: 'var(--bg-base)', overflow: 'hidden' }}>
-        {/* Subtle background glow for glassmorphism */}
-        <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%, -50%)', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(37,99,235,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }}></div>
-
+      <main className="dotted-bg" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 2rem 10rem', position: 'relative', overflow: 'hidden' }}>
+        
         <motion.div
           variants={containerVars}
           initial="hidden"
           animate="show"
           style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '1000px' }}
         >
-          <motion.div variants={itemVars} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 1rem', borderRadius: '999px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2.5rem', color: 'var(--text-main)', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' }}>
+          <motion.div variants={itemVars} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 1rem', borderRadius: '999px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2.5rem', color: 'var(--text-main)', background: 'var(--bg-surface)' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
             Continuity of care under network failure
           </motion.div>
 
-          <motion.h1 variants={itemVars} className="hero-title" style={{ fontSize: '4rem', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '1.5rem', fontWeight: 800 }}>
-            Adaptive Telemedicine for <br />
-            <span style={{ color: '#2563eb' }}>Low-Bandwidth Contexts</span>
+          <motion.h1 variants={itemVars} className="hero-title" style={{ fontSize: '5rem', letterSpacing: '-0.03em', lineHeight: 1.05, marginBottom: '1rem', fontWeight: 600, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif', color: '#1d1d1f' }}>
+            Healthcare, unified.
           </motion.h1>
 
-          <motion.p variants={itemVars} className="hero-subtitle" style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '750px', marginBottom: '3rem', lineHeight: 1.6 }}>
-            MedLink intelligently degrades from video to audio, secure async chat, and offline-first modes based on real-time network conditions. Includes an integrated, offline-capable pharmacy marketplace built for rural workflows.
+          <motion.p variants={itemVars} className="hero-subtitle" style={{ fontSize: '1.4rem', color: '#1d1d1f', maxWidth: '700px', marginBottom: '2.5rem', lineHeight: 1.4, fontWeight: 400, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+            Get resilient healthcare delivery with real-time video degradation and offline sync when you deploy MedLink across your global networks.
           </motion.p>
 
-          <motion.div variants={itemVars} style={{ display: 'flex', gap: '1rem', marginBottom: '5rem' }}>
-            <button onClick={() => scrollToSection('workflow')} className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.05rem', boxShadow: '0 0 20px rgba(37,99,235,0.3)' }}>
+          <motion.div variants={itemVars} style={{ display: 'flex', gap: '1rem', marginBottom: '4rem' }}>
+            <button onClick={() => scrollToSection('architecture')} style={{ padding: '14px 28px', fontSize: '1rem', borderRadius: '999px', background: '#0071e3', color: 'white', border: 'none', fontWeight: 400, cursor: 'pointer', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
               Explore the Architecture
             </button>
-            <a href="http://localhost:5174" className="btn btn-secondary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
-              Doctor Demo
+            <a href="http://localhost:5174" style={{ padding: '14px 28px', fontSize: '1rem', borderRadius: '999px', background: 'transparent', color: '#0071e3', border: 'none', fontWeight: 400, textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
+              Doctor Demo <ArrowRight size={14} />
             </a>
           </motion.div>
 
-          {/* Glassmorphic UI Mockup */}
+          {/* Apple-Style Hero Image */}
           <motion.div variants={itemVars} style={{ 
             width: '100%', 
-            maxWidth: '900px', 
-            background: 'rgba(0, 0, 0, 0.6)', 
-            backdropFilter: 'blur(24px)', 
-            border: '1px solid rgba(255, 255, 255, 0.1)', 
-            borderRadius: '24px',
-            padding: '1.5rem',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem'
+            maxWidth: '1000px', 
+            marginTop: '2rem',
+            position: 'relative'
           }}>
-            {/* Window controls */}
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308' }}></div>
-              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
-              <div style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Activity size={12} color="#f59e0b" /> Connection: DEGRADED (Switching to Audio)
-              </div>
-            </div>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', height: '400px' }}>
-              {/* Video Area */}
-              <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.4) 100%)' }}></div>
-                <div style={{ textAlign: 'center', zIndex: 1 }}>
-                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                    <Users size={32} color="rgba(255,255,255,0.5)" />
-                  </div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'white' }}>Patient (Audio Only)</div>
-                  <div style={{ fontSize: '0.9rem', color: '#f59e0b', marginTop: '0.5rem' }}>Video disabled to preserve call quality</div>
-                </div>
-                <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', display: 'flex', gap: '0.5rem' }}>
-                  <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Server size={14} /> Ping: 420ms
-                  </div>
-                  <div style={{ background: 'rgba(245, 158, 11, 0.2)', backdropFilter: 'blur(10px)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <RefreshCw size={14} /> Packet Loss: 8%
-                  </div>
-                </div>
-              </div>
-              
-              {/* Sidebar: Notes & Chat */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {/* Async Sync Queue */}
-                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span>OFFLINE SYNC QUEUE</span>
-                    <Cloud size={14} />
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Prescription Update</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Synced to server ✓</div>
-                    </div>
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Clinical Note</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Pending Sync (Offline) ⏳</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <img 
+              src="/hero-image.jpg" 
+              alt="MedLink Platform Usage" 
+              style={{ 
+                width: '100%', 
+                height: 'auto', 
+                display: 'block',
+                borderRadius: '32px',
+                boxShadow: '0 30px 60px -15px rgba(0, 0, 0, 0.1)',
+                border: '1px solid rgba(0,0,0,0.05)'
+              }} 
+            />
           </motion.div>
         </motion.div>
       </main>
@@ -361,9 +311,11 @@ function App() {
       <footer style={{ background: 'var(--bg-base)', borderTop: '1px solid var(--border)', color: 'var(--text-main)', padding: '4rem 4rem 2rem' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '3rem', marginBottom: '2rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', fontFamily: 'Outfit, sans-serif', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.2rem' }}>
               <MedLinkLogo />
-              MEDLINK
+              <span style={{ fontWeight: 900, fontSize: '1.6rem', letterSpacing: '0.12em', fontFamily: 'Inter, sans-serif', color: '#09090b', textTransform: 'uppercase' }}>
+                Med<span style={{ fontWeight: 300, color: '#09090b' }}>Link</span>
+              </span>
             </div>
             <p style={{ color: 'var(--text-muted)', maxWidth: '300px', fontSize: '0.9rem' }}>Enterprise Telemedicine Infrastructure built for the modern health system.</p>
           </div>

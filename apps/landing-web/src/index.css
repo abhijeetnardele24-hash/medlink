@@ -30,7 +30,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
   line-height: 1.6;
@@ -40,7 +40,7 @@ body {
 
 /* Typography Overrides */
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Outfit', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text-main);
@@ -54,7 +54,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
   padding: 12px 24px;
   border-radius: 8px;
-  font-family: 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
@@ -97,7 +97,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-title {
-  font-family: 'Outfit', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(3.5rem, 7vw, 6.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
