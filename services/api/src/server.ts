@@ -43,7 +43,7 @@ import { requireRole } from "./middleware/requireRole";
 import { RedisStore } from "rate-limit-redis";
 import Redis from "ioredis";
 
-export const createServer = (): Express => {
+export function createServer(): Express {
   const app = express();
 
   // ── Redis Setup (Optional) ──────────────────────────────────────────────────

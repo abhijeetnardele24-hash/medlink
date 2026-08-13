@@ -1,4 +1,4 @@
-import { io } from "../index";
+import { getIo } from "./server";
 import { getDb } from "../db";
 import { notifications } from "../db/schema";
 
@@ -22,8 +22,8 @@ export async function emitNotification(
       })
       .returning();
 
-    // 2. Emit via socket.io
-    io.to(`user_${userId}`).emit("notification", savedNotification);
+    // 2. Emit to user's personal room via WebSockets
+    getIo().to(`user_${userId}`).emit("notification", savedNotification);
     
     return savedNotification;
   } catch (error) {

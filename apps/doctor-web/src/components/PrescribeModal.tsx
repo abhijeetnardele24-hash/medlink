@@ -33,6 +33,12 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
   const [isSearching, setIsSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  // Diagnosis State (ICD-10)
+  const [diagnosisQuery, setDiagnosisQuery] = useState('');
+  const [diagnosisResults, setDiagnosisResults] = useState<any[]>([]);
+  const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(null);
+  const [isSearchingDiagnosis, setIsSearchingDiagnosis] = useState(false);
+
   // Debounced search
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -52,6 +58,28 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Debounced search for ICD-10 Diagnoses via ClinicalTables API
+  useEffect(() => {
+    if (!diagnosisQuery.trim()) {
+      setDiagnosisResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearchingDiagnosis(true);
+      try {
+        const res = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(diagnosisQuery)}`);
+        const data = await res.json();
+        // data format: [count, [codes], null, [[code, name], ...]]
+        setDiagnosisResults(data[3] || []);
+      } catch (err) {
+        console.error("Failed to fetch ICD-10 codes:", err);
+      } finally {
+        setIsSearchingDiagnosis(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [diagnosisQuery]);
 
   const addMedicine = (med: Medicine) => {
     if (medicines.some(m => m.medicineId === med.id)) return;
@@ -75,16 +103,22 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
   };
 
   const handleSubmit = async () => {
-    if (medicines.length === 0 && !instructions.trim()) {
-      alert("Please add at least one medicine or instructions.");
+    if (medicines.length === 0 && !instructions.trim() && !selectedDiagnosis) {
+      alert("Please add at least one medicine, diagnosis, or instructions.");
       return;
     }
     setSubmitting(true);
+
+    let finalInstructions = instructions;
+    if (selectedDiagnosis) {
+      finalInstructions = `Diagnosis: ${selectedDiagnosis.code} - ${selectedDiagnosis.name}\n\n${finalInstructions}`.trim();
+    }
+
     try {
       await api.post(`/encounters/${encounterId}/prescriptions`, {
         doctorId,
         medicinesJson: medicines,
-        instructionsText: instructions
+        instructionsText: finalInstructions
       });
       onSuccess();
     } catch (err: any) {
@@ -201,14 +235,69 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
               )}
             </div>
 
-            <div className="flex-1 flex flex-col">
-              <h3 className="font-semibold text-white/80 mb-2">Clinical Instructions</h3>
-              <textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="Add general advice, diet restrictions, or next steps..."
-                className="w-full flex-1 min-h-[120px] bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 focus:outline-none focus:border-blue-500 resize-none"
-              ></textarea>
+            <div className="flex-1 flex flex-col gap-4">
+              {/* Diagnosis Field */}
+              <div className="bg-white/5 border border-white/10 rounded-xl p-4">
+                <h3 className="font-semibold text-white/80 mb-3 flex items-center gap-2">
+                  <Search size={16} /> ICD-10 Diagnosis
+                </h3>
+                {selectedDiagnosis ? (
+                  <div className="flex justify-between items-center bg-blue-500/20 border border-blue-500/30 p-3 rounded-lg">
+                    <div>
+                      <span className="font-bold text-blue-400">{selectedDiagnosis.code}</span>
+                      <span className="text-white ml-2">{selectedDiagnosis.name}</span>
+                    </div>
+                    <button onClick={() => setSelectedDiagnosis(null)} className="text-white/50 hover:text-white transition-colors">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search condition (e.g., Asthma, J00)..."
+                      value={diagnosisQuery}
+                      onChange={(e) => setDiagnosisQuery(e.target.value)}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg py-2.5 px-4 text-white focus:outline-none focus:border-blue-500"
+                    />
+                    {diagnosisQuery && (
+                      <div className="absolute z-10 w-full mt-1 bg-[#2a2a2a] border border-white/10 rounded-lg shadow-xl max-h-48 overflow-y-auto">
+                        {isSearchingDiagnosis ? (
+                          <div className="p-3 text-center text-white/50 text-sm">Searching ICD-10...</div>
+                        ) : diagnosisResults.length === 0 ? (
+                          <div className="p-3 text-center text-white/50 text-sm">No codes found.</div>
+                        ) : (
+                          diagnosisResults.map((res, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setSelectedDiagnosis({ code: res[0], name: res[1] });
+                                setDiagnosisQuery('');
+                                setDiagnosisResults([]);
+                              }}
+                              className="w-full text-left p-3 hover:bg-white/10 border-b border-white/5 flex gap-3 items-start last:border-0 transition-colors"
+                            >
+                              <span className="font-bold text-blue-400 shrink-0">{res[0]}</span>
+                              <span className="text-white/80 text-sm">{res[1]}</span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Instructions Field */}
+              <div className="flex-1 flex flex-col">
+                <h3 className="font-semibold text-white/80 mb-2">Clinical Instructions</h3>
+                <textarea
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  placeholder="Add general advice, diet restrictions, or next steps..."
+                  className="w-full flex-1 min-h-[120px] bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-white/30 focus:outline-none focus:border-blue-500 resize-none"
+                ></textarea>
+              </div>
             </div>
           </div>
         </div>
@@ -219,7 +308,7 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
           </button>
           <button 
             onClick={handleSubmit} 
-            disabled={submitting || (medicines.length === 0 && !instructions.trim())}
+            disabled={submitting || (medicines.length === 0 && !instructions.trim() && !selectedDiagnosis)}
             className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-all shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center gap-2"
           >
             {submitting ? 'Issuing...' : <><CheckCircle size={18} /> Issue Prescription & End Call</>}
