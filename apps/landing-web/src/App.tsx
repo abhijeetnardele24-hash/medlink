@@ -148,33 +148,105 @@ function App() {
       </nav>
 
       {/* 3. Clean Polished Hero Section */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '8rem 2rem 10rem', position: 'relative', background: 'var(--bg-base)' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '6rem 2rem 10rem', position: 'relative', background: 'var(--bg-base)', overflow: 'hidden' }}>
+        {/* Subtle background glow for glassmorphism */}
+        <div style={{ position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%, -50%)', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(37,99,235,0.1) 0%, rgba(0,0,0,0) 70%)', filter: 'blur(100px)', zIndex: 0, pointerEvents: 'none' }}></div>
+
         <motion.div
           variants={containerVars}
           initial="hidden"
           animate="show"
-          style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+          style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '1000px' }}
         >
-          <motion.div variants={itemVars} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 1rem', borderRadius: '999px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2.5rem', color: 'var(--text-main)', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)' }}></span>
-            WebRTC Engine handles 10k+ concurrent streams
+          <motion.div variants={itemVars} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 1rem', borderRadius: '999px', border: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 600, marginBottom: '2.5rem', color: 'var(--text-main)', background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(10px)' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></span>
+            Continuity of care under network failure
           </motion.div>
 
-          <motion.h1 variants={itemVars} className="hero-title">
-            Healthcare routing,<br />engineered for speed.
+          <motion.h1 variants={itemVars} className="hero-title" style={{ fontSize: '4rem', letterSpacing: '-0.04em', lineHeight: 1.1, marginBottom: '1.5rem', fontWeight: 800 }}>
+            Adaptive Telemedicine for <br />
+            <span style={{ color: '#2563eb' }}>Low-Bandwidth Contexts</span>
           </motion.h1>
 
-          <motion.p variants={itemVars} className="hero-subtitle">
-            MedLink unifies patient intake, clinical verification, and zero-latency video consults into a single, automated data platform for modern health networks.
+          <motion.p variants={itemVars} className="hero-subtitle" style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '750px', marginBottom: '3rem', lineHeight: 1.6 }}>
+            MedLink intelligently degrades from video to audio, secure async chat, and offline-first modes based on real-time network conditions. Includes an integrated, offline-capable pharmacy marketplace built for rural workflows.
           </motion.p>
 
-          <motion.div variants={itemVars} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-            <button onClick={() => scrollToSection('workflow')} className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
-              Explore the Workflow
+          <motion.div variants={itemVars} style={{ display: 'flex', gap: '1rem', marginBottom: '5rem' }}>
+            <button onClick={() => scrollToSection('workflow')} className="btn btn-primary" style={{ padding: '16px 32px', fontSize: '1.05rem', boxShadow: '0 0 20px rgba(37,99,235,0.3)' }}>
+              Explore the Architecture
             </button>
-            <a href="http://localhost:5175" className="btn btn-secondary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
-              Access Admin Console
+            <a href="http://localhost:5174" className="btn btn-secondary" style={{ padding: '16px 32px', fontSize: '1.05rem' }}>
+              Doctor Demo
             </a>
+          </motion.div>
+
+          {/* Glassmorphic UI Mockup */}
+          <motion.div variants={itemVars} style={{ 
+            width: '100%', 
+            maxWidth: '900px', 
+            background: 'rgba(0, 0, 0, 0.6)', 
+            backdropFilter: 'blur(24px)', 
+            border: '1px solid rgba(255, 255, 255, 0.1)', 
+            borderRadius: '24px',
+            padding: '1.5rem',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            {/* Window controls */}
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308' }}></div>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981' }}></div>
+              <div style={{ marginLeft: 'auto', fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Activity size={12} color="#f59e0b" /> Connection: DEGRADED (Switching to Audio)
+              </div>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1rem', height: '400px' }}>
+              {/* Video Area */}
+              <div style={{ background: '#111827', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.4) 100%)' }}></div>
+                <div style={{ textAlign: 'center', zIndex: 1 }}>
+                  <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                    <Users size={32} color="rgba(255,255,255,0.5)" />
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: 'white' }}>Patient (Audio Only)</div>
+                  <div style={{ fontSize: '0.9rem', color: '#f59e0b', marginTop: '0.5rem' }}>Video disabled to preserve call quality</div>
+                </div>
+                <div style={{ position: 'absolute', bottom: '1rem', left: '1rem', display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Server size={14} /> Ping: 420ms
+                  </div>
+                  <div style={{ background: 'rgba(245, 158, 11, 0.2)', backdropFilter: 'blur(10px)', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '0.5rem 1rem', borderRadius: '8px', fontSize: '0.8rem', color: '#fcd34d', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <RefreshCw size={14} /> Packet Loss: 8%
+                  </div>
+                </div>
+              </div>
+              
+              {/* Sidebar: Notes & Chat */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Async Sync Queue */}
+                <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>OFFLINE SYNC QUEUE</span>
+                    <Cloud size={14} />
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #10b981' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Prescription Update</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Synced to server ✓</div>
+                    </div>
+                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px', borderLeft: '3px solid #f59e0b' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'white' }}>Clinical Note</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Pending Sync (Offline) ⏳</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       </main>
