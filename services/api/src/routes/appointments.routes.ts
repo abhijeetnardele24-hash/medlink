@@ -366,6 +366,39 @@ router.patch(
       "Appointment status transitioned"
     );
 
+    // If confirmed, send email with video link to the patient
+    if (body.action === "confirm") {
+      try {
+        const patientRows = await getDb()
+          .select({ email: users.email, displayName: users.displayName })
+          .from(patients)
+          .innerJoin(users, eq(users.id, patients.userId))
+          .where(eq(patients.id, appt.patientId))
+          .limit(1);
+          
+        if (patientRows[0]?.email) {
+          const patientPortalUrl = process.env.PATIENT_PORTAL_URL || "http://localhost:5176";
+          const videoLink = `${patientPortalUrl}/consult/${appt.id}`;
+          
+          await sendEmail(
+            patientRows[0].email,
+            'Appointment Confirmed - MedLink',
+            `<h2>Appointment Confirmed</h2>
+             <p>Hello ${patientRows[0].displayName || 'Patient'},</p>
+             <p>Your doctor has confirmed your appointment for <strong>${new Date(appt.scheduledAt).toLocaleString()}</strong>.</p>
+             <p>At the scheduled time, please join the video consultation using the secure link below:</p>
+             <br/>
+             <a href="${videoLink}" style="padding: 10px 20px; background-color: #0071e3; color: white; text-decoration: none; border-radius: 5px;">Join Video Call</a>
+             <br/><br/>
+             <p>Ensure you have a stable internet connection. Our adaptive video engine will handle the rest.</p>`
+          );
+        }
+      } catch (err) {
+        logger.error({ err, appointmentId: id }, "Failed to send appointment confirmation email to patient");
+        // Do not throw; we still want the appointment confirmation to succeed
+      }
+    }
+
     // Return the updated record
     const updated = await getDb()
       .select()
