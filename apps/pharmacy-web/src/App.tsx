@@ -11,6 +11,7 @@ import { Signup } from './pages/Signup';
 import { Onboarding } from './pages/Onboarding';
 import { InventoryDashboard } from './pages/InventoryDashboard';
 import { IncomingOrders } from './pages/IncomingOrders';
+import { OrderDetail } from './pages/OrderDetail';
 
 export interface UserProfile {
   id: string;
@@ -121,6 +122,7 @@ function App() {
               <Layout user={user} profile={profile}>
                 <Routes>
                   <Route path="/orders" element={<IncomingOrders />} />
+                  <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/inventory" element={<InventoryDashboard user={user} profile={profile} />} />
                   <Route path="*" element={<Navigate to="/orders" replace />} />
                 </Routes>

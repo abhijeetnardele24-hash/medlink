@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Activity, Calendar, Clock, User, LogOut, Users } from 'lucide-react';
+import { Activity, Calendar, Clock, User, LogOut, Users, DollarSign } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -28,6 +28,9 @@ export const Layout: React.FC = () => {
           </NavLink>
           <NavLink to="/availability" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Clock size={20} /> Availability
+          </NavLink>
+          <NavLink to="/earnings" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <DollarSign size={20} /> Earnings
           </NavLink>
           <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <User size={20} /> Profile

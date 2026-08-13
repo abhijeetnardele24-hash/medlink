@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { ShieldCheck, LogOut, CheckSquare, Users, UserCog, Settings, Calendar, ListTodo } from 'lucide-react';
+import { ShieldCheck, LogOut, CheckSquare, Users, UserCog, Settings, Calendar, ListTodo, BarChart2 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 
 export const Layout: React.FC = () => {
@@ -10,6 +10,7 @@ export const Layout: React.FC = () => {
 
   const navItems = [
     { path: '/', icon: <CheckSquare size={20} />, label: 'Verification Queue' },
+    { path: '/analytics', icon: <BarChart2 size={20} />, label: 'Analytics' },
     { path: '/tasks', icon: <ListTodo size={20} />, label: 'Task Queue' },
     { path: '/appointments', icon: <Calendar size={20} />, label: 'Appointments' },
     { path: '/doctors', icon: <UserCog size={20} />, label: 'Doctor Directory' },

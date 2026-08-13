@@ -7,6 +7,50 @@ import { NotFoundError, ForbiddenError } from "../errors";
 
 const router = Router();
 
+// ─── GET /me ─────────────────────────────────────────────────────────────────
+router.get(
+  "/me",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const firebaseUid = res.locals.user.uid;
+    const role = res.locals.user.role;
+
+    if (role !== "patient") {
+      throw new ForbiddenError("Only patients can fetch their own prescriptions here");
+    }
+
+    let authUserId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      authUserId = u.id;
+    }
+
+    const [patient] = await getDb().select().from(patients).where(eq(patients.userId, authUserId)).limit(1);
+    if (!patient) throw new NotFoundError("Patient profile");
+
+    const data = await getDb()
+      .select({
+        id: prescriptions.id,
+        issuedAt: prescriptions.issuedAt,
+        medicinesJson: prescriptions.medicinesJson,
+        instructionsText: prescriptions.instructionsText,
+        doctorName: doctors.fullName,
+        doctorSpeciality: doctors.speciality,
+        encounterId: prescriptions.encounterId,
+      })
+      .from(prescriptions)
+      .innerJoin(encounters, eq(prescriptions.encounterId, encounters.id))
+      .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+      .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+      .where(eq(appointments.patientId, patient.id))
+      .orderBy(prescriptions.issuedAt);
+
+    res.json({ data });
+  }
+);
+
+
 // ─── GET /prescriptions/:id/pdf ──────────────────────────────────────────────
 router.get(
   "/:id/pdf",

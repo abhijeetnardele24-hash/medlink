@@ -305,6 +305,78 @@ router.get("/:id/availability", async (req: Request, res: Response): Promise<voi
     .orderBy(availabilitySlots.startsAt);
 
   res.json({ data: slots });
+// ─── GET /doctors/:id/earnings ────────────────────────────────────────────────
+
+router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id as string;
+  const { uid } = res.locals.user;
+  
+  // Verify doctor id matches logged in user's doctor profile
+  const db = getDb();
+  
+  // To avoid circular dependency on schema loading, we just check the id against their auth
+  let authUserId = uid;
+  if (process.env.TEST_BYPASS_AUTH !== "true") {
+    const [u] = await db.select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
+    if (!u) throw new ForbiddenError("User not found in db");
+    authUserId = u.id;
+  }
+  
+  const [doc] = await db.select().from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
+  if (!doc || doc.id !== id) {
+    throw new ForbiddenError("You can only view your own earnings");
+  }
+
+  // Calculate earnings (simplified: sum of successful appointment payments)
+  // Need to import paymentRecords, appointments
+  const { paymentRecords, appointments } = await import("../db/schema");
+  
+  const earningsData = await db
+    .select({
+      amount: paymentRecords.amount,
+      updatedAt: paymentRecords.updatedAt
+    })
+    .from(paymentRecords)
+    .innerJoin(appointments, eq(paymentRecords.appointmentId, appointments.id))
+    .where(
+      and(
+        eq(appointments.doctorId, id),
+        eq(paymentRecords.state, "success")
+      )
+    )
+    .orderBy(paymentRecords.updatedAt);
+    
+  // Calculate total and this month
+  const total = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  
+  const now = new Date();
+  const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const thisMonthEarnings = earningsData
+    .filter(e => new Date(e.updatedAt) >= firstDayOfMonth)
+    .reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    
+  // Monthly distribution for chart
+  const monthlyData: Record<string, number> = {};
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthStr = d.toLocaleString('default', { month: 'short' });
+    monthlyData[monthStr] = 0;
+  }
+  
+  earningsData.forEach(e => {
+    const d = new Date(e.updatedAt);
+    const monthStr = d.toLocaleString('default', { month: 'short' });
+    if (monthlyData[monthStr] !== undefined) {
+      monthlyData[monthStr] += (e.amount || 0);
+    }
+  });
+
+  res.json({ 
+    totalEarnings: total,
+    thisMonthEarnings: thisMonthEarnings,
+    recentTransactions: earningsData.slice(-10).reverse(), // last 10
+    monthlyData: Object.entries(monthlyData).map(([name, amount]) => ({ name, amount }))
+  });
 });
 
 export default router;

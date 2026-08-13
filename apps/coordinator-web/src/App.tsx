@@ -9,6 +9,7 @@ import { PatientsDirectory } from './pages/PatientsDirectory';
 import { AppointmentsOverview } from './pages/AppointmentsOverview';
 import { Tasks } from './pages/Tasks';
 import { Settings } from './pages/Settings';
+import { Analytics } from './pages/Analytics';
 import './index.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
               <Route path="/" element={<VerificationQueue />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="/doctors" element={<DoctorsDirectory />} />
               <Route path="/patients" element={<PatientsDirectory />} />
               <Route path="/appointments" element={<AppointmentsOverview />} />

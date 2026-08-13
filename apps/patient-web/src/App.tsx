@@ -10,6 +10,8 @@ import { Consents } from './pages/Consents';
 import { Consultation } from './pages/Consultation';
 import { PharmacyStorefront } from './pages/PharmacyStorefront';
 import { PharmacyOrders } from './pages/PharmacyOrders';
+import { HealthProfile } from './pages/HealthProfile';
+import { MedicalRecords } from './pages/MedicalRecords';
 import { Layout } from './components/Layout';
 import './index.css';
 
@@ -26,6 +28,8 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/doctor/:id" element={<DoctorProfile />} />
               <Route path="/history" element={<History />} />
+              <Route path="/profile" element={<HealthProfile />} />
+              <Route path="/medical-records" element={<MedicalRecords />} />
               <Route path="/consents" element={<Consents />} />
               <Route path="/pharmacy" element={<PharmacyStorefront />} />
               <Route path="/pharmacy-orders" element={<PharmacyOrders />} />

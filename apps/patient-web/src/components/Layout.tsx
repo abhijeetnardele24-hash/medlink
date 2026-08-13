@@ -1,6 +1,6 @@
   import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck, Package, ShoppingBag } from 'lucide-react';
+import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck, Package, ShoppingBag, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationCenter } from './NotificationCenter';
 
@@ -24,7 +24,13 @@ export const Layout: React.FC = () => {
             <Calendar size={20} /> Appointments
           </NavLink>
           <NavLink to="/history" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <Clock size={20} /> Medical History
+            <Clock size={20} /> Appt History
+          </NavLink>
+          <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <User size={20} /> Health Profile
+          </NavLink>
+          <NavLink to="/medical-records" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <FileText size={20} /> Medical Records
           </NavLink>
           <NavLink to="/consents" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <ShieldCheck size={20} /> Consents

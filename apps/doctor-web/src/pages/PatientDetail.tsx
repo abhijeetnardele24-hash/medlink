@@ -128,49 +128,59 @@ export const PatientDetail: React.FC = () => {
             <p>No appointments found for this patient.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {appointments.map((appt: Appointment) => (
-              <div key={appt.id} style={{ padding: '1rem 1.25rem', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Video size={20} color="var(--accent)" />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, marginBottom: '0.15rem' }}>{appt.concernCategory?.replace(/_/g, ' ')}</div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <Clock size={12} /> {new Date(appt.scheduledAt).toLocaleString()}
+          <div style={{ position: 'relative', paddingLeft: '2rem' }}>
+            {/* Timeline vertical line */}
+            <div style={{ position: 'absolute', left: '11px', top: '1rem', bottom: '1rem', width: '2px', background: 'var(--border)' }} />
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {appointments.sort((a,b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()).map((appt: Appointment, idx: number) => (
+                <div key={appt.id} style={{ position: 'relative' }}>
+                  {/* Timeline dot */}
+                  <div style={{ position: 'absolute', left: '-2rem', top: '1.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent)', border: '2px solid white', boxShadow: '0 0 0 1px var(--accent)' }} />
+                  
+                  <div style={{ padding: '1rem 1.25rem', background: 'var(--bg-surface)', borderRadius: '12px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Video size={20} color="var(--accent)" />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600, marginBottom: '0.15rem' }}>{appt.concernCategory?.replace(/_/g, ' ')}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Clock size={12} /> {new Date(appt.scheduledAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      {(() => {
+                        const enc = encounters.find(e => e.appointmentId === appt.id);
+                        if (enc && enc.prescriptionId) {
+                          return (
+                            <button 
+                              onClick={() => handleDownload(enc.prescriptionId!)}
+                              className="btn btn-secondary" 
+                              style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
+                            >
+                              <Download size={12} style={{ marginRight: '0.25rem' }} /> Prescription
+                            </button>
+                          );
+                        }
+                        return null;
+                      })()}
+                      <span style={{
+                        padding: '0.3rem 0.75rem',
+                        borderRadius: '999px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        background: appt.status === 'completed' ? 'rgba(16,185,129,0.1)' : appt.status === 'requested' ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.06)',
+                        color: appt.status === 'completed' ? '#10b981' : appt.status === 'requested' ? '#f59e0b' : 'var(--text-muted)'
+                      }}>
+                        {appt.status}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  {(() => {
-                    const enc = encounters.find(e => e.appointmentId === appt.id);
-                    if (enc && enc.prescriptionId) {
-                      return (
-                        <button 
-                          onClick={() => handleDownload(enc.prescriptionId!)}
-                          className="btn btn-secondary" 
-                          style={{ padding: '0.25rem 0.75rem', fontSize: '0.75rem' }}
-                        >
-                          <Download size={12} style={{ marginRight: '0.25rem' }} /> Prescription
-                        </button>
-                      );
-                    }
-                    return null;
-                  })()}
-                  <span style={{
-                    padding: '0.3rem 0.75rem',
-                    borderRadius: '999px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    background: appt.status === 'confirmed' ? 'rgba(16,185,129,0.1)' : appt.status === 'requested' ? 'rgba(245,158,11,0.1)' : 'rgba(0,0,0,0.06)',
-                    color: appt.status === 'confirmed' ? '#10b981' : appt.status === 'requested' ? '#f59e0b' : 'var(--text-muted)'
-                  }}>
-                    {appt.status}
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

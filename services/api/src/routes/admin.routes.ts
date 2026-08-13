@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, count, sql } from "drizzle-orm";
 import { getDb } from "../db";
 import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications, pharmacistVerificationHistory, users } from "../db/schema";
 import { authenticate } from "../middleware/auth";
@@ -293,6 +293,51 @@ router.patch(
   }
 );
 
+
+// ─── GET /admin/analytics ───────────────────────────────────────────────────
+router.get(
+  "/analytics",
+  authenticate,
+  requireRole("coordinator"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const db = getDb();
+    
+    // Quick counts for the dashboard
+    const [patientCount] = await db.select({ value: count() }).from(patients);
+    const [doctorCount] = await db.select({ value: count() }).from(doctors);
+    const [apptCount] = await db.select({ value: count() }).from(appointments);
+    const [pharmacistCount] = await db.select({ value: count() }).from(pharmacists);
+    
+    // Appointments by status
+    const apptsByStatus = await db
+      .select({
+        status: appointments.status,
+        count: count()
+      })
+      .from(appointments)
+      .groupBy(appointments.status);
+      
+    // Doctors by speciality
+    const docsBySpeciality = await db
+      .select({
+        speciality: doctors.speciality,
+        count: count()
+      })
+      .from(doctors)
+      .groupBy(doctors.speciality);
+
+    res.json({
+      overview: {
+        totalPatients: patientCount.value,
+        totalDoctors: doctorCount.value,
+        totalAppointments: apptCount.value,
+        totalPharmacists: pharmacistCount.value,
+      },
+      appointmentsByStatus: apptsByStatus,
+      doctorsBySpeciality: docsBySpeciality,
+    });
+  }
+);
 
 // ─── GET|POST /admin/seed-test-appointment ──────────────────────────────────
 // DEV ONLY: Creates a confirmed appointment between the first doctor and first

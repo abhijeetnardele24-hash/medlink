@@ -36,6 +36,7 @@ import medicinesRouter from "./routes/medicines.routes";
 import pharmacyRouter from "./routes/pharmacy.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
 import syncRouter from "./routes/sync.routes";
+import patientsRouter from "./routes/patients.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -142,6 +143,7 @@ export const createServer = (): Express => {
   v1Router.use("/doctors", doctorsRouter);
   v1Router.use("/appointments", authenticate, appointmentsRouter);
   v1Router.use("/encounters", authenticate, encountersRouter);
+  v1Router.use("/patients", patientsRouter);
   v1Router.use("/prescriptions", prescriptionsRouter); // Has own auth checks
   v1Router.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
   v1Router.use("/admin", authenticate, requireRole("coordinator"), adminRouter);

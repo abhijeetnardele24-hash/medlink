@@ -11,6 +11,7 @@ import { Consultation } from './pages/Consultation';
 import { Profile } from './pages/Profile';
 import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
+import { Earnings } from './pages/Earnings';
 import './index.css';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
               <Route path="/patients" element={<Patients />} />
               <Route path="/patients/:id" element={<PatientDetail />} />
               <Route path="/availability" element={<Availability />} />
+              <Route path="/earnings" element={<Earnings />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
 
