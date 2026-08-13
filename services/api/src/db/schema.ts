@@ -235,6 +235,13 @@ export const patients = pgTable(
     preferredLanguage: text("preferred_language").notNull().default("en"),
     ageGroup: text("age_group"), // e.g. "adult", "child", "senior" — not exact DOB
     genderSelfDescribed: text("gender_self_described"),
+    gender: text("gender"),
+    dateOfBirth: text("date_of_birth"),
+    bloodGroup: text("blood_group"),
+    height: integer("height"), // in cm
+    weight: integer("weight"), // in kg
+    allergies: text("allergies").array(),
+    chronicConditions: text("chronic_conditions").array(),
     locationDistrict: text("location_district"),
     consentTeleconsultation: boolean("consent_teleconsultation")
       .notNull()

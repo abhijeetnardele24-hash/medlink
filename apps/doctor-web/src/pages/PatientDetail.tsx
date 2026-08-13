@@ -133,7 +133,7 @@ export const PatientDetail: React.FC = () => {
             <div style={{ position: 'absolute', left: '11px', top: '1rem', bottom: '1rem', width: '2px', background: 'var(--border)' }} />
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {appointments.sort((a,b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()).map((appt: Appointment, idx: number) => (
+              {appointments.sort((a,b) => new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()).map((appt: Appointment) => (
                 <div key={appt.id} style={{ position: 'relative' }}>
                   {/* Timeline dot */}
                   <div style={{ position: 'absolute', left: '-2rem', top: '1.25rem', width: '12px', height: '12px', borderRadius: '50%', background: 'var(--accent)', border: '2px solid white', boxShadow: '0 0 0 1px var(--accent)' }} />

@@ -103,7 +103,7 @@ export const createServer = (): Express => {
       standardHeaders: true,
       legacyHeaders: false,
       message: { error: "Too many requests. Please try again in a minute." },
-      ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(...args) }) }),
+      ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any }) }),
     })
   );
 
@@ -114,7 +114,7 @@ export const createServer = (): Express => {
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many authentication attempts. Please wait 15 minutes." },
-    ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(...args), prefix: "rl:auth:" }) }),
+    ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any, prefix: "rl:auth:" }) }),
   });
 
   // ── Body parsing ────────────────────────────────────────────────────────────

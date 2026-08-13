@@ -120,10 +120,10 @@ export const Analytics: React.FC = () => {
                   paddingAngle={5}
                   dataKey="count"
                   nameKey="speciality"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
-                  {data.doctorsBySpeciality.map((entry, index) => (
+                  {data.doctorsBySpeciality.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

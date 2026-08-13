@@ -305,6 +305,8 @@ router.get("/:id/availability", async (req: Request, res: Response): Promise<voi
     .orderBy(availabilitySlots.startsAt);
 
   res.json({ data: slots });
+});
+
 // ─── GET /doctors/:id/earnings ────────────────────────────────────────────────
 
 router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {

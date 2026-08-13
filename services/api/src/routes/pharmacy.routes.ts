@@ -233,7 +233,7 @@ router.post("/orders/upload", authenticate, async (req: Request, res: Response):
 // POST /pharmacy/orders/:orderId/build
 router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { orderId } = req.params;
+    const orderId = req.params.orderId as string;
     const { items } = req.body; // { medicineId, quantity }[]
     if (!items || !items.length) { res.status(400).json({ error: "Items are required" }); return; }
     
@@ -281,10 +281,11 @@ router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Re
     if ((global as any).razorpay || 1) { // Will just use the outer scope razorpay instance
       // hack for razorpay access inside script string eval: the variable is in the outer scope
     }
+    const idToUpdate = orderId as string;
     // Let's just update the order and add items
     await getDb().transaction(async (tx) => {
       await tx.insert(pharmacyOrderItems).values(orderItemsToInsert);
-      await tx.update(pharmacyOrders).set({ totalAmount, status: "pending_payment" }).where(eq(pharmacyOrders.id, orderId));
+      await tx.update(pharmacyOrders).set({ totalAmount, status: "pending_payment" }).where(eq(pharmacyOrders.id, idToUpdate));
     });
     
     res.json({ success: true });
@@ -557,15 +558,10 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
 // PATCH /pharmacy/orders/:id/dispense
 router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
-    const orderId = req.params.id;
+    const orderId = req.params.orderId as string;
     const { uid } = res.locals.user;
-
-    const userRows = await getDb()
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.firebaseUid, uid))
-      .limit(1);
-
+    
+    const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
     if (userRows.length === 0) {
       res.status(401).json({ error: "User not found" });
       return;
@@ -583,10 +579,11 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
     }
     const pharmacistId = pharmacistRows[0].id;
 
+    const idToUpdate = orderId as string;
     const orderRows = await getDb()
       .select()
       .from(pharmacyOrders)
-      .where(eq(pharmacyOrders.id, orderId))
+      .where(eq(pharmacyOrders.id, idToUpdate))
       .limit(1);
 
     if (orderRows.length === 0) {
@@ -604,7 +601,7 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
       // Update order status
       await tx.update(pharmacyOrders)
         .set({ status: "processing" })
-        .where(eq(pharmacyOrders.id, orderId));
+        .where(eq(pharmacyOrders.id, idToUpdate));
 
       // Log to dispense audit
       await tx.insert(pharmacyDispenseAudit)
