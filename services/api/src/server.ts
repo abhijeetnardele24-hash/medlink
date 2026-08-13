@@ -40,18 +40,11 @@ import patientsRouter from "./routes/patients.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
-import { RedisStore } from "rate-limit-redis";
-import Redis from "ioredis";
-
 export function createServer(): Express {
   const app = express();
 
   // ── Redis Setup (Optional) ──────────────────────────────────────────────────
-  let redisClient: Redis | undefined;
-  if (process.env.REDIS_URL) {
-    redisClient = new Redis(process.env.REDIS_URL);
-    redisClient.on("error", (err) => logger.warn({ err }, "Redis connection error (rate limit)"));
-  }
+  // Redis removed as per requirements
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(helmet({
@@ -95,7 +88,7 @@ export function createServer(): Express {
     })
   );
 
-  // ── Global rate limiter — 100 req/min per IP ────────────────────────────────
+  // ── Global rate limiter - 100 req/min per IP ──────────────────────────────
   app.use(
     rateLimit({
       windowMs: 60 * 1000,
@@ -103,18 +96,16 @@ export function createServer(): Express {
       standardHeaders: true,
       legacyHeaders: false,
       message: { error: "Too many requests. Please try again in a minute." },
-      ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any }) }),
     })
   );
 
-  // ── Stricter limiter on auth endpoints ─────────────────────────────────────
+  // ── Stricter limiter on auth endpoints ──────────────────────────────────────
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many authentication attempts. Please wait 15 minutes." },
-    ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(args[0], ...args.slice(1)) as any, prefix: "rl:auth:" }) }),
   });
 
   // ── Body parsing ────────────────────────────────────────────────────────────
