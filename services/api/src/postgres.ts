@@ -11,7 +11,17 @@ const getPool = (): Pool => {
   if (_pool) return _pool;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is required");
-  _pool = new Pool({ connectionString: url });
+  
+  const maxConnections = process.env.DB_MAX_CONNECTIONS 
+    ? parseInt(process.env.DB_MAX_CONNECTIONS, 10) 
+    : 20;
+
+  _pool = new Pool({ 
+    connectionString: url,
+    max: maxConnections,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
   return _pool;
 };
 

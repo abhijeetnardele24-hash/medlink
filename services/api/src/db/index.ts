@@ -19,7 +19,18 @@ export const getDb = (): NodePgDatabase<Schema> => {
   if (!databaseUrl || databaseUrl.trim().length === 0) {
     throw new Error("DATABASE_URL environment variable is required");
   }
-  const pool = new Pool({ connectionString: databaseUrl });
+  
+  const maxConnections = process.env.DB_MAX_CONNECTIONS 
+    ? parseInt(process.env.DB_MAX_CONNECTIONS, 10) 
+    : 20;
+
+  const pool = new Pool({ 
+    connectionString: databaseUrl,
+    max: maxConnections,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000,
+  });
+  
   _db = drizzle(pool, { schema });
   return _db;
 };
