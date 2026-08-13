@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://medlink.health/sitemap.xml
