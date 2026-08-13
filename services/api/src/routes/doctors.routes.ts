@@ -28,6 +28,7 @@ import {
 } from "../schemas/doctor.schema";
 import { logger } from "../logger";
 import { NotFoundError, ForbiddenError, ConflictError } from "../errors";
+import { withCache, invalidateCachePrefix } from "../redis";
 
 const router = Router();
 
@@ -43,32 +44,38 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   const { speciality, language, page, limit } = query.data;
   const offset = (page - 1) * limit;
 
-  // Build WHERE clause: only verified doctors
-  const conditions = [eq(doctors.verificationStatus, "verified")];
-  if (speciality) conditions.push(eq(doctors.speciality, speciality));
+  const cacheKey = `doctors:list:${speciality || "all"}:${language || "all"}:${page}:${limit}`;
 
-  const rows = await getDb()
-    .select({
-      id: doctors.id,
-      fullName: doctors.fullName,
-      speciality: doctors.speciality,
-      facilityName: doctors.facilityName,
-      languagesSpoken: doctors.languagesSpoken,
-      supportedModes: doctors.supportedModes,
-      consultationFee: doctors.consultationFee,
-      bio: doctors.bio,
-    })
-    .from(doctors)
-    .where(and(...conditions))
-    .limit(limit)
-    .offset(offset);
+  const data = await withCache(cacheKey, 300, async () => {
+    // Build WHERE clause: only verified doctors
+    const conditions = [eq(doctors.verificationStatus, "verified")];
+    if (speciality) conditions.push(eq(doctors.speciality, speciality));
 
-  // Filter by language in JS (array contains — simpler than pg array operator for now)
-  const filtered = language
-    ? rows.filter((d) => d.languagesSpoken.includes(language))
-    : rows;
+    const rows = await getDb()
+      .select({
+        id: doctors.id,
+        fullName: doctors.fullName,
+        speciality: doctors.speciality,
+        facilityName: doctors.facilityName,
+        languagesSpoken: doctors.languagesSpoken,
+        supportedModes: doctors.supportedModes,
+        consultationFee: doctors.consultationFee,
+        bio: doctors.bio,
+      })
+      .from(doctors)
+      .where(and(...conditions))
+      .limit(limit)
+      .offset(offset);
 
-  res.json({ data: filtered, page, limit });
+    // Filter by language in JS (array contains — simpler than pg array operator for now)
+    const filtered = language
+      ? rows.filter((d) => d.languagesSpoken.includes(language))
+      : rows;
+
+    return { data: filtered, page, limit };
+  });
+
+  res.json(data);
 });
 
 // ─── GET /doctors/me ──────────────────────────────────────────────────────────
@@ -110,21 +117,23 @@ router.get("/me", authenticate, requireRole("doctor"), async (req: Request, res:
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id as string;
 
-  const result = await getDb()
-    .select({
-      id: doctors.id,
-      fullName: doctors.fullName,
-      speciality: doctors.speciality,
-      facilityName: doctors.facilityName,
-      languagesSpoken: doctors.languagesSpoken,
-      supportedModes: doctors.supportedModes,
-      consultationFee: doctors.consultationFee,
-      verificationStatus: doctors.verificationStatus,
-      bio: doctors.bio,
-    })
-    .from(doctors)
-    .where(and(eq(doctors.id, id), eq(doctors.verificationStatus, "verified")))
-    .limit(1);
+  const result = await withCache(`doctors:profile:${id}`, 300, async () => {
+    return getDb()
+      .select({
+        id: doctors.id,
+        fullName: doctors.fullName,
+        speciality: doctors.speciality,
+        facilityName: doctors.facilityName,
+        languagesSpoken: doctors.languagesSpoken,
+        supportedModes: doctors.supportedModes,
+        consultationFee: doctors.consultationFee,
+        verificationStatus: doctors.verificationStatus,
+        bio: doctors.bio,
+      })
+      .from(doctors)
+      .where(and(eq(doctors.id, id), eq(doctors.verificationStatus, "verified")))
+      .limit(1);
+  });
 
   if (result.length === 0) {
     throw new NotFoundError("Doctor");
@@ -211,6 +220,8 @@ router.post(
     });
 
     logger.info({ doctorId: doctor.id }, "Doctor application submitted for verification");
+
+    await invalidateCachePrefix("doctors:");
 
     res.status(200).json({
       message: "Profile submitted. Awaiting coordinator verification.",

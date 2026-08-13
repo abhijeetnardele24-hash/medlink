@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  coturn:
+    image: coturn/coturn:latest
+    container_name: medlink-coturn
+    network_mode: "host"
+    environment:
+      - TURN_PORT=3478
+      - TURN_PORT_TLS=5349
+      - TURN_SERVER_NAME=coturn
+      - TURN_REALM=localhost
+      - TURN_STATIC_AUTH_SECRET=testpassword123
+    command:
+      - --log-file=stdout
+      - --listening-port=3478
+      - --min-port=49152
+      - --max-port=65535
+      - --use-auth-secret
+      - --static-auth-secret=testpassword123
+      - --realm=localhost
+      - --no-tls
+      - --no-dtls
+
+  redis:
+    image: redis:alpine
+    container_name: medlink-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning

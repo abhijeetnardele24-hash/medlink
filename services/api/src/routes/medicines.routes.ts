@@ -3,6 +3,7 @@ import { getDb } from "../db";
 import { medicines, pharmacists, users } from "../db/schema";
 import { ilike, eq, and, sql } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { withCache, invalidateCachePrefix } from "../redis";
 
 const router = Router();
 
@@ -11,60 +12,66 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const { search, category, prescriptionTier, pharmacistId } = req.query;
 
-    let conditions: any[] = [];
+    const cacheKey = `medicines:list:${search || ""}:${category || ""}:${prescriptionTier || ""}:${pharmacistId || ""}`;
 
-    if (typeof pharmacistId === "string" && pharmacistId.trim() !== "") {
-      conditions.push(eq(medicines.pharmacistId, pharmacistId.trim()));
-    }
+    const data = await withCache(cacheKey, 300, async () => {
+      let conditions: any[] = [];
 
-    if (typeof search === "string" && search.trim() !== "") {
-      conditions.push(ilike(medicines.name, `%${search.trim()}%`));
-    }
+      if (typeof pharmacistId === "string" && pharmacistId.trim() !== "") {
+        conditions.push(eq(medicines.pharmacistId, pharmacistId.trim()));
+      }
 
-    if (typeof category === "string" && category.trim() !== "") {
-      conditions.push(eq(medicines.category, category.trim()));
-    }
+      if (typeof search === "string" && search.trim() !== "") {
+        conditions.push(ilike(medicines.name, `%${search.trim()}%`));
+      }
 
-    if (prescriptionTier && typeof prescriptionTier === "string") {
-      conditions.push(eq(medicines.prescriptionTier, prescriptionTier as "otc" | "schedule_h" | "restricted"));
-    }
+      if (typeof category === "string" && category.trim() !== "") {
+        conditions.push(eq(medicines.category, category.trim()));
+      }
 
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      if (prescriptionTier && typeof prescriptionTier === "string") {
+        conditions.push(eq(medicines.prescriptionTier, prescriptionTier as "otc" | "schedule_h" | "restricted"));
+      }
 
-    // Join with pharmacists to get seller info
-    const results = await getDb()
-      .select({
-        id: medicines.id,
-        name: medicines.name,
-        genericName: medicines.genericName,
-        description: medicines.description,
-        imageUrl: medicines.imageUrl,
-        composition: medicines.composition,
-        dosageForm: medicines.dosageForm,
-        manufacturer: medicines.manufacturer,
-        price: medicines.price,
-        stockQuantity: medicines.stockQuantity,
-        prescriptionTier: medicines.prescriptionTier,
-        category: medicines.category,
-        listingStatus: medicines.listingStatus,
-        pharmacistId: medicines.pharmacistId,
-        // Seller info joined from pharmacists
-        sellerShopName: pharmacists.shopName,
-        sellerFullName: pharmacists.fullName,
-        sellerAddress: pharmacists.registeredAddress,
-      })
-      .from(medicines)
-      .leftJoin(pharmacists, eq(pharmacists.id, medicines.pharmacistId))
-      .where(whereClause)
-      .orderBy(medicines.name);
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    // Map to add a display sellerName
-    const mapped = results.map(m => ({
-      ...m,
-      sellerName: m.sellerShopName || "MedLink Marketplace",
-    }));
+      // Join with pharmacists to get seller info
+      const results = await getDb()
+        .select({
+          id: medicines.id,
+          name: medicines.name,
+          genericName: medicines.genericName,
+          description: medicines.description,
+          imageUrl: medicines.imageUrl,
+          composition: medicines.composition,
+          dosageForm: medicines.dosageForm,
+          manufacturer: medicines.manufacturer,
+          price: medicines.price,
+          stockQuantity: medicines.stockQuantity,
+          prescriptionTier: medicines.prescriptionTier,
+          category: medicines.category,
+          listingStatus: medicines.listingStatus,
+          pharmacistId: medicines.pharmacistId,
+          // Seller info joined from pharmacists
+          sellerShopName: pharmacists.shopName,
+          sellerFullName: pharmacists.fullName,
+          sellerAddress: pharmacists.registeredAddress,
+        })
+        .from(medicines)
+        .leftJoin(pharmacists, eq(pharmacists.id, medicines.pharmacistId))
+        .where(whereClause)
+        .orderBy(medicines.name);
 
-    res.json({ medicines: mapped });
+      // Map to add a display sellerName
+      const mapped = results.map(m => ({
+        ...m,
+        sellerName: m.sellerShopName || "MedLink Marketplace",
+      }));
+
+      return { medicines: mapped };
+    });
+
+    res.json(data);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch medicines" });
   }
@@ -75,18 +82,27 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {
   try {
     const id = req.params.id as string;
-    const results = await getDb()
-      .select()
-      .from(medicines)
-      .where(eq(medicines.id, id))
-      .limit(1);
+    
+    const data = await withCache(`medicines:profile:${id}`, 300, async () => {
+      const results = await getDb()
+        .select()
+        .from(medicines)
+        .where(eq(medicines.id, id))
+        .limit(1);
 
-    if (results.length === 0) {
+      if (results.length === 0) {
+        return null;
+      }
+
+      return { medicine: results[0] };
+    });
+
+    if (!data) {
       res.status(404).json({ error: "Medicine not found" });
       return;
     }
 
-    res.json({ medicine: results[0] });
+    res.json(data);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch medicine" });
   }
@@ -155,6 +171,8 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       prescriptionTier: prescriptionTier || "otc",
       category
     }).returning();
+
+    await invalidateCachePrefix("medicines:");
 
     res.status(201).json({ medicine: newMedicine });
   } catch (error) {

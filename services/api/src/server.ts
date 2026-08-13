@@ -39,8 +39,18 @@ import syncRouter from "./routes/sync.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
+import { RedisStore } from "rate-limit-redis";
+import Redis from "ioredis";
+
 export const createServer = (): Express => {
   const app = express();
+
+  // ── Redis Setup (Optional) ──────────────────────────────────────────────────
+  let redisClient: Redis | undefined;
+  if (process.env.REDIS_URL) {
+    redisClient = new Redis(process.env.REDIS_URL);
+    redisClient.on("error", (err) => logger.warn({ err }, "Redis connection error (rate limit)"));
+  }
 
   // ── Security headers ────────────────────────────────────────────────────────
   app.use(helmet({
@@ -92,6 +102,7 @@ export const createServer = (): Express => {
       standardHeaders: true,
       legacyHeaders: false,
       message: { error: "Too many requests. Please try again in a minute." },
+      ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(...args) }) }),
     })
   );
 
@@ -102,6 +113,7 @@ export const createServer = (): Express => {
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many authentication attempts. Please wait 15 minutes." },
+    ...(redisClient && { store: new RedisStore({ sendCommand: (...args: string[]) => redisClient!.call(...args), prefix: "rl:auth:" }) }),
   });
 
   // ── Body parsing ────────────────────────────────────────────────────────────

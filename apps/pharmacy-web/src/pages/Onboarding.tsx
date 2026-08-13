@@ -22,10 +22,10 @@ export function Onboarding() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); 1
     setLoading(true);
     setError('');
-    
+
     // Validate
     if (!formData.drugLicenseNumber || !formData.pharmacyCouncilRegistrationNumber) {
       setError('Please fill in all required fields');
@@ -52,9 +52,9 @@ export function Onboarding() {
           <ShieldCheck size={24} />
           <h2 className="text-xl font-bold m-0">MedLink Seller Portal</h2>
         </div>
-        <button 
-          aria-label="Log out" 
-          className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-red-50" 
+        <button
+          aria-label="Log out"
+          className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors font-medium px-4 py-2 rounded-lg hover:bg-red-50"
           onClick={() => auth.signOut()}
         >
           <LogOut size={18} /> Logout
@@ -93,37 +93,37 @@ export function Onboarding() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">State Pharmacy Council Reg No. *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="pharmacyCouncilRegistrationNumber"
-                      value={formData.pharmacyCouncilRegistrationNumber} 
-                      onChange={handleInputChange} 
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" 
-                      required 
-                      placeholder="e.g. SPC-987654" 
+                      value={formData.pharmacyCouncilRegistrationNumber}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                      required
+                      placeholder="e.g. SPC-987654"
                     />
                   </div>
 
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">State Drug License Number *</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="drugLicenseNumber"
-                      value={formData.drugLicenseNumber} 
-                      onChange={handleInputChange} 
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" 
-                      required 
-                      placeholder="e.g. DL-MH-12345" 
+                      value={formData.drugLicenseNumber}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                      required
+                      placeholder="e.g. DL-MH-12345"
                     />
                   </div>
 
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">License Issuing State *</label>
-                    <select 
+                    <select
                       name="licenseIssuingState"
-                      value={formData.licenseIssuingState} 
-                      onChange={handleInputChange} 
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all bg-white" 
+                      value={formData.licenseIssuingState}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all bg-white"
                       required
                     >
                       <option value="">Select State</option>
@@ -138,26 +138,26 @@ export function Onboarding() {
 
                   <div className="col-span-full md:col-span-1">
                     <label className="block text-sm font-medium text-gray-700 mb-1">License Expiry Date *</label>
-                    <input 
-                      type="date" 
+                    <input
+                      type="date"
                       name="licenseExpiryDate"
-                      value={formData.licenseExpiryDate} 
-                      onChange={handleInputChange} 
-                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" 
-                      required 
+                      value={formData.licenseExpiryDate}
+                      onChange={handleInputChange}
+                      className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                      required
                     />
                   </div>
 
                   <div className="col-span-full">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Drug License Document URL (Optional)</label>
                     <div className="flex gap-2">
-                      <input 
-                        type="url" 
+                      <input
+                        type="url"
                         name="drugLicenseDocumentUrl"
-                        value={formData.drugLicenseDocumentUrl} 
-                        onChange={handleInputChange} 
-                        className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all" 
-                        placeholder="https://storage.../license.pdf" 
+                        value={formData.drugLicenseDocumentUrl}
+                        onChange={handleInputChange}
+                        className="flex-1 p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                        placeholder="https://storage.../license.pdf"
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">In a production environment, this would be a file upload to cloud storage.</p>
@@ -165,9 +165,9 @@ export function Onboarding() {
                 </div>
 
                 <div className="bg-gray-50 -mx-8 -mb-8 p-6 px-8 border-t border-gray-100 flex justify-end">
-                  <button 
-                    type="submit" 
-                    className="bg-teal-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2" 
+                  <button
+                    type="submit"
+                    className="bg-teal-600 text-white px-8 py-3 rounded-xl font-medium hover:bg-teal-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     disabled={loading}
                   >
                     {loading ? (

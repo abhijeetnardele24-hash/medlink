@@ -263,7 +263,7 @@ router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Re
     for (const m of dbMedicines) medMap.set(m.id, m);
     
     let totalAmount = 0;
-    const orderItemsToInsert = [];
+    const orderItemsToInsert: { orderId: string, medicineId: string, quantity: number, unitPrice: number }[] = [];
     
     for (const item of items) {
       const med = medMap.get(item.medicineId);
@@ -418,8 +418,8 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
     }
 
     let totalAmount = 0;
-    const orderItemsToInsert = [];
-    const auditLogsToInsert = [];
+    const orderItemsToInsert: { medicineId: string, quantity: number, unitPrice: number }[] = [];
+    const auditLogsToInsert: { patientId: string, prescriptionId: string, medicineId: string, matched: boolean, reason: string }[] = [];
 
     // Validation & Reconciliation
     for (const item of items) {

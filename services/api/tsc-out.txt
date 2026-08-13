@@ -1,0 +1,33 @@
+ERROR
+src/index.ts(4,17): error TS2304: Cannot find name 'path'.
+src/index.ts(5,5): error TS2304: Cannot find name 'fs'.
+src/index.ts(6,22): error TS2304: Cannot find name 'fs'.
+src/index.ts(7,35): error TS7006: Parameter 'line' implicitly has an 'any' type.
+src/index.ts(37,19): error TS2307: Cannot find module 'ioredis' or its corresponding type declarations.
+src/index.ts(38,31): error TS2307: Cannot find module '@socket.io/redis-adapter' or its corresponding type declarations.
+src/index.ts(51,26): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/index.ts(52,26): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/redis.ts(1,19): error TS2307: Cannot find module 'ioredis' or its corresponding type declarations.
+src/redis.ts(10,19): error TS7006: Parameter 'times' implicitly has an 'any' type.
+src/redis.ts(25,28): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/routes/pharmacy.routes.ts(250,76): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "pharmacy_orders"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/routes/pharmacy.routes.ts(274,33): error TS2322: Type 'string | string[]' is not assignable to type 'string'.
+  Type 'string[]' is not assignable to type 'string'.
+src/routes/pharmacy.routes.ts(287,96): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "pharmacy_orders"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/routes/pharmacy.routes.ts(589,17): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "pharmacy_orders"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/routes/pharmacy.routes.ts(607,19): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Argument of type 'PgColumn<{ name: "id"; tableName: "pharmacy_orders"; dataType: "string"; columnType: "PgUUID"; data: string; driverParam: string; notNull: true; hasDefault: true; isPrimaryKey: true; isAutoincrement: false; ... 4 more ...; generated: undefined; }, {}, {}>' is not assignable to parameter of type 'never'.
+src/routes/pharmacy.routes.ts(612,11): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'orderId' does not exist in type '{ dispensedAt?: Date | Placeholder<string, any> | SQL<unknown> | undefined; id?: string | Placeholder<string, any> | SQL<unknown> | undefined; orderId: string | ... 1 more ... | SQL<...>; pharmacistId: string | ... 1 more ... | SQL<...>; }[]'.
+src/server.ts(42,28): error TS2307: Cannot find module 'rate-limit-redis' or its corresponding type declarations.
+src/server.ts(43,19): error TS2307: Cannot find module 'ioredis' or its corresponding type declarations.
+src/server.ts(52,30): error TS7006: Parameter 'err' implicitly has an 'any' type.
+
