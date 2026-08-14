@@ -216,8 +216,46 @@ router.get(
     if (status) conditions.push(eq(appointments.status, status));
 
     const rows = await getDb()
-      .select()
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId,
+        doctorId: appointments.doctorId,
+        slotId: appointments.slotId,
+        scheduledAt: appointments.scheduledAt,
+        status: appointments.status,
+        concernCategory: appointments.concernCategory,
+        preferredMode: appointments.preferredMode,
+        patientNotes: appointments.patientNotes,
+        version: appointments.version,
+        createdAt: appointments.createdAt,
+        updatedAt: appointments.updatedAt,
+        doctor: {
+          id: doctors.id,
+          fullName: doctors.fullName,
+          speciality: doctors.speciality,
+          facilityName: doctors.facilityName,
+          consultationFee: doctors.consultationFee,
+        },
+        patient: {
+          id: patients.id,
+          fullName: users.displayName,
+          email: users.email,
+          gender: patients.gender,
+          dateOfBirth: patients.dateOfBirth,
+          bloodGroup: patients.bloodGroup,
+          height: patients.height,
+          weight: patients.weight,
+          allergies: patients.allergies,
+          chronicConditions: patients.chronicConditions,
+          currentMedications: patients.currentMedications,
+          emergencyContactName: patients.emergencyContactName,
+          emergencyContactPhone: patients.emergencyContactPhone,
+        }
+      })
       .from(appointments)
+      .leftJoin(doctors, eq(appointments.doctorId, doctors.id))
+      .leftJoin(patients, eq(appointments.patientId, patients.id))
+      .leftJoin(users, eq(patients.userId, users.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .limit(limit)
       .offset(offset)

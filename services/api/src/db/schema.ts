@@ -257,6 +257,16 @@ export const patients = pgTable(
     weight: integer("weight"), // in kg
     allergies: text("allergies").array(),
     chronicConditions: text("chronic_conditions").array(),
+    emergencyContactName: text("emergency_contact_name"),
+    emergencyContactPhone: text("emergency_contact_phone"),
+    address: text("address"),
+    currentMedications: text("current_medications").array(),
+    pastSurgeries: text("past_surgeries").array(),
+    smokingStatus: text("smoking_status"),
+    alcoholStatus: text("alcohol_status"),
+    dietPreference: text("diet_preference"),
+    abhaId: text("abha_id"),
+    insurancePolicyNumber: text("insurance_policy_number"),
     locationDistrict: text("location_district"),
     consentTeleconsultation: boolean("consent_teleconsultation")
       .notNull()
