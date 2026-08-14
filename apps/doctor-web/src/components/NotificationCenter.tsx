@@ -1,55 +1,156 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 
 export const NotificationCenter: React.FC = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
-    <div className="relative">
+    <div ref={containerRef} style={{ position: 'relative' }}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded-full"
+        style={{
+          position: 'relative',
+          padding: '8px',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'var(--text-muted)',
+          transition: 'color 0.2s',
+          borderRadius: '50%'
+        }}
+        onMouseOver={(e) => e.currentTarget.style.color = 'var(--accent)'}
+        onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
       >
-        <span className="sr-only">View notifications</span>
-        <Bell className="h-6 w-6" aria-hidden="true" />
+        <Bell size={24} />
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/4 -translate-y-1/4 bg-red-600 rounded-full">
+          <span style={{
+            position: 'absolute',
+            top: '4px',
+            right: '4px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2px 6px',
+            fontSize: '0.75rem',
+            fontWeight: 'bold',
+            lineHeight: 1,
+            color: 'white',
+            background: 'var(--danger)',
+            borderRadius: '9999px',
+            transform: 'translate(25%, -25%)'
+          }}>
             {unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-20 border border-gray-200">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: '100%',
+          marginTop: '0.5rem',
+          width: '320px',
+          background: 'var(--bg-surface-elevated)',
+          borderRadius: '16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          border: '1px solid var(--border)',
+          overflow: 'hidden',
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column'
+        }} className="fade-in">
+          <div style={{
+            padding: '1rem',
+            borderBottom: '1px solid var(--border)',
+            background: 'var(--bg-surface)'
+          }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>Notifications</h3>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          
+          <div style={{
+            maxHeight: '350px',
+            overflowY: 'auto'
+          }}>
             {notifications.length === 0 ? (
-              <div className="px-4 py-6 text-center text-sm text-gray-500">
+              <div style={{
+                padding: '2rem 1rem',
+                textAlign: 'center',
+                fontSize: '0.875rem',
+                color: 'var(--text-muted)'
+              }}>
                 No notifications yet.
               </div>
             ) : (
               notifications.map((notification) => (
                 <div 
                   key={notification.id} 
-                  className={`px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${!notification.isRead ? 'bg-blue-50/50' : ''}`}
+                  style={{
+                    padding: '1rem',
+                    borderBottom: '1px solid var(--border)',
+                    background: notification.isRead ? 'transparent' : 'rgba(66, 63, 222, 0.05)',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onMouseOver={(e) => {
+                    if (notification.isRead) {
+                      e.currentTarget.style.background = 'var(--bg-surface)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (notification.isRead) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
                   onClick={() => {
                     if (!notification.isRead) markAsRead(notification.id);
                   }}
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <p className={`text-sm ${!notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                    <p style={{ 
+                      margin: 0, 
+                      fontSize: '0.9rem', 
+                      fontWeight: notification.isRead ? 600 : 700,
+                      color: 'var(--text-main)' 
+                    }}>
                       {notification.title}
                     </p>
                     {!notification.isRead && (
-                      <span className="h-2 w-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></span>
+                      <span style={{
+                        height: '8px',
+                        width: '8px',
+                        background: 'var(--accent)',
+                        borderRadius: '50%',
+                        marginTop: '6px',
+                        flexShrink: 0
+                      }}></span>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600">{notification.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    {notification.message}
+                  </p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#9ca3af' }}>
                     {new Date(notification.createdAt).toLocaleString()}
                   </p>
                 </div>

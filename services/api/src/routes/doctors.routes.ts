@@ -15,9 +15,10 @@
  */
 
 import { Router, type Request, type Response } from "express";
+import Razorpay from "razorpay";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctors, availabilitySlots, users } from "../db/schema";
+import { doctors, availabilitySlots, users, paymentRecords, payoutRecords, doctorPayoutMethods } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { validateBody } from "../middleware/validateBody";
@@ -313,10 +314,7 @@ router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Req
   const id = req.params.id as string;
   const { uid } = res.locals.user;
   
-  // Verify doctor id matches logged in user's doctor profile
   const db = getDb();
-  
-  // To avoid circular dependency on schema loading, we just check the id against their auth
   let authUserId = uid;
   if (process.env.TEST_BYPASS_AUTH !== "true") {
     const [u] = await db.select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
@@ -325,31 +323,25 @@ router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Req
   }
   
   const [doc] = await db.select().from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
-  if (!doc || doc.id !== id) {
-    throw new ForbiddenError("You can only view your own earnings");
-  }
+  if (!doc || doc.id !== id) throw new ForbiddenError("You can only view your own earnings");
 
-  // Calculate earnings (simplified: sum of successful appointment payments)
-  // Need to import paymentRecords, appointments
-  const { paymentRecords, appointments } = await import("../db/schema");
+
   
   const earningsData = await db
-    .select({
-      amount: paymentRecords.amount,
-      updatedAt: paymentRecords.updatedAt
-    })
+    .select({ amount: paymentRecords.amount, updatedAt: paymentRecords.updatedAt })
     .from(paymentRecords)
     .innerJoin(appointments, eq(paymentRecords.appointmentId, appointments.id))
-    .where(
-      and(
-        eq(appointments.doctorId, id),
-        eq(paymentRecords.state, "success")
-      )
-    )
+    .where(and(eq(appointments.doctorId, id), eq(paymentRecords.state, "success")))
     .orderBy(paymentRecords.updatedAt);
     
-  // Calculate total and this month
-  const total = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const payoutsData = await db
+    .select({ amount: payoutRecords.amount, status: payoutRecords.status })
+    .from(payoutRecords)
+    .where(and(eq(payoutRecords.doctorId, id), eq(payoutRecords.status, "processed")));
+
+  const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const availableBalance = totalEarnings - totalPayouts;
   
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -357,28 +349,170 @@ router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Req
     .filter(e => new Date(e.updatedAt) >= firstDayOfMonth)
     .reduce((acc, curr) => acc + (curr.amount || 0), 0);
     
-  // Monthly distribution for chart
   const monthlyData: Record<string, number> = {};
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStr = d.toLocaleString('default', { month: 'short' });
-    monthlyData[monthStr] = 0;
+    monthlyData[d.toLocaleString('default', { month: 'short' })] = 0;
   }
-  
   earningsData.forEach(e => {
-    const d = new Date(e.updatedAt);
-    const monthStr = d.toLocaleString('default', { month: 'short' });
-    if (monthlyData[monthStr] !== undefined) {
-      monthlyData[monthStr] += (e.amount || 0);
-    }
+    const monthStr = new Date(e.updatedAt).toLocaleString('default', { month: 'short' });
+    if (monthlyData[monthStr] !== undefined) monthlyData[monthStr] += (e.amount || 0);
   });
 
+  const recentPayouts = await db.select().from(payoutRecords).where(eq(payoutRecords.doctorId, id)).orderBy(payoutRecords.updatedAt).limit(5);
+
   res.json({ 
-    totalEarnings: total,
-    thisMonthEarnings: thisMonthEarnings,
-    recentTransactions: earningsData.slice(-10).reverse(), // last 10
+    totalEarnings,
+    availableBalance,
+    thisMonthEarnings,
+    recentTransactions: earningsData.slice(-10).reverse(),
+    recentPayouts: recentPayouts.reverse(),
     monthlyData: Object.entries(monthlyData).map(([name, amount]) => ({ name, amount }))
   });
+});
+
+// ─── GET /doctors/:id/payout-methods ──────────────────────────────────────────
+
+router.get("/:id/payout-methods", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id as string;
+  const db = getDb();
+  
+  
+  const methods = await db.select().from(doctorPayoutMethods).where(eq(doctorPayoutMethods.doctorId, id));
+  res.json({ data: methods });
+});
+
+// ─── POST /doctors/:id/payout-methods ─────────────────────────────────────────
+
+router.post("/:id/payout-methods", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id as string;
+  const db = getDb();
+  
+  
+  const { type, accountNumber, ifscCode, upiId, name } = req.body;
+  
+  // Create a Razorpay Contact and Fund Account
+  const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_demo",
+    key_secret: process.env.RAZORPAY_KEY_SECRET || "demo_secret"
+  });
+
+  let fundAccountId = "fake_fund_acc_" + Date.now();
+  
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID !== "rzp_test_demo") {
+    try {
+      const contact = await razorpay.contacts.create({
+        name: name || "Doctor " + id.substring(0, 5),
+        type: "employee",
+        reference_id: id
+      });
+      
+      const fundAccountPayload: any = {
+        contact_id: contact.id,
+        account_type: type === "bank_account" ? "bank_account" : "vpa"
+      };
+      
+      if (type === "bank_account") {
+        fundAccountPayload.bank_account = { name: name || "Doctor", ifsc: ifscCode, account_number: accountNumber };
+      } else if (type === "upi") {
+        fundAccountPayload.vpa = { address: upiId };
+      }
+      
+      const fundAccount = await razorpay.fundAccount.create(fundAccountPayload);
+      fundAccountId = fundAccount.id;
+    } catch (err: any) {
+      logger.error({ err }, "Razorpay Fund Account creation failed");
+      res.status(400).json({ error: "Failed to verify account with payment gateway", details: err.message });
+      return;
+    }
+  }
+
+  const [method] = await db.insert(doctorPayoutMethods).values({
+    doctorId: id,
+    type,
+    accountNumber,
+    ifscCode,
+    upiId,
+    razorpayFundAccountId: fundAccountId,
+    isDefault: true
+  }).returning();
+  
+  res.status(201).json({ message: "Payout method linked successfully", data: method });
+});
+
+// ─── POST /doctors/:id/withdraw ───────────────────────────────────────────────
+
+router.post("/:id/withdraw", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const id = req.params.id as string;
+  const db = getDb();
+  const { payoutRecords, paymentRecords, appointments, doctorPayoutMethods } = await import("../db/schema");
+  const { amount, payoutMethodId } = req.body;
+  
+  // Validate Balance
+  const earningsData = await db.select({ amount: paymentRecords.amount }).from(paymentRecords)
+    .innerJoin(appointments, eq(paymentRecords.appointmentId, appointments.id))
+    .where(and(eq(appointments.doctorId, id), eq(paymentRecords.state, "success")));
+    
+  const payoutsData = await db.select({ amount: payoutRecords.amount }).from(payoutRecords)
+    .where(and(eq(payoutRecords.doctorId, id), eq(payoutRecords.status, "processed")));
+
+  const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const availableBalance = totalEarnings - totalPayouts;
+  
+  if (amount > availableBalance) {
+    res.status(400).json({ error: "Insufficient available balance" });
+    return;
+  }
+  
+  const [method] = await db.select().from(doctorPayoutMethods).where(eq(doctorPayoutMethods.id, payoutMethodId)).limit(1);
+  if (!method) throw new NotFoundError("Payout method");
+
+  // Create Razorpay Payout (Transfer)
+  const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_demo",
+    key_secret: process.env.RAZORPAY_KEY_SECRET || "demo_secret"
+  });
+  
+  let payoutId = "fake_payout_" + Date.now();
+  let status: "processed" | "processing" | "rejected" = "processed"; // test mode auto-processes
+  let failureReason = null;
+  
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID !== "rzp_test_demo") {
+    try {
+      const payout = await razorpay.payouts.create({
+        account_number: "2323230040715367", // Platform's RazorpayX account (example from docs)
+        fund_account_id: method.razorpayFundAccountId as string,
+        amount: amount * 100, // in paise
+        currency: "INR",
+        mode: method.type === "upi" ? "UPI" : "IMPS",
+        purpose: "payout",
+        reference_id: "wd_" + Date.now()
+      });
+      payoutId = payout.id;
+      status = payout.status === "processed" ? "processed" : (payout.status === "rejected" ? "rejected" : "processing");
+    } catch (err: any) {
+      logger.error({ err }, "Razorpay Payout failed");
+      status = "rejected";
+      failureReason = err.message;
+    }
+  }
+
+  const [record] = await db.insert(payoutRecords).values({
+    doctorId: id,
+    payoutMethodId,
+    amount,
+    status,
+    razorpayPayoutId: payoutId,
+    failureReason
+  }).returning();
+  
+  if (status === "rejected") {
+    res.status(400).json({ error: "Payout failed at gateway", details: failureReason, record });
+    return;
+  }
+  
+  res.status(200).json({ message: "Withdrawal initiated successfully", data: record });
 });
 
 export default router;

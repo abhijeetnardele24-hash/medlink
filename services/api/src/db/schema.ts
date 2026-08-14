@@ -145,6 +145,21 @@ export const prescriptionStatusEnum = pgEnum("prescription_status", [
   "revoked",
 ]);
 
+
+export const payoutMethodTypeEnum = pgEnum("payout_method_type", [
+  "bank_account",
+  "upi",
+  "card"
+]);
+
+export const payoutStatusEnum = pgEnum("payout_status", [
+  "processing",
+  "processed",
+  "reversed",
+  "cancelled",
+  "rejected"
+]);
+
 export const paymentStateEnum = pgEnum("payment_state", [
   "free_demo",
   "pending",
@@ -900,3 +915,64 @@ export const notifications = pgTable("notifications", {
   isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+
+// ─────────────────────────────────────────────────────────────
+// PAYOUT METHODS
+// ─────────────────────────────────────────────────────────────
+
+export const doctorPayoutMethods = pgTable(
+  "doctor_payout_methods",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    type: payoutMethodTypeEnum("type").notNull(),
+    razorpayFundAccountId: text("razorpay_fund_account_id"),
+    accountNumber: text("account_number"),
+    ifscCode: text("ifsc_code"),
+    upiId: text("upi_id"),
+    isDefault: boolean("is_default").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("doctor_payout_methods_doctor_id_idx").on(t.doctorId),
+  ]
+);
+
+// ─────────────────────────────────────────────────────────────
+// PAYOUT RECORDS
+// ─────────────────────────────────────────────────────────────
+
+export const payoutRecords = pgTable(
+  "payout_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    payoutMethodId: uuid("payout_method_id")
+      .notNull()
+      .references(() => doctorPayoutMethods.id),
+    amount: integer("amount").notNull(), // Amount in INR
+    status: payoutStatusEnum("status").notNull().default("processing"),
+    razorpayPayoutId: text("razorpay_payout_id"),
+    failureReason: text("failure_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    index("payout_records_doctor_id_idx").on(t.doctorId),
+    index("payout_records_status_idx").on(t.status),
+  ]
+);
