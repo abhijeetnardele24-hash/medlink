@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle } from 'lucide-react';
@@ -31,6 +31,7 @@ interface Slot {
 
 export const DoctorProfile: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   
@@ -38,7 +39,7 @@ export const DoctorProfile: React.FC = () => {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   
-  const [selectedSlot, setSelectedSlot] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<string>(searchParams.get('slotId') || '');
   const [concern, setConcern] = useState('general_consultation');
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
@@ -50,7 +51,13 @@ export const DoctorProfile: React.FC = () => {
         setDoctor(docRes.data);
 
         const slotRes = await api.get(`/doctors/${id}/availability`);
-        setSlots(slotRes.data.data);
+        const availableSlots = slotRes.data.data || [];
+        setSlots(availableSlots);
+
+        const slotParam = searchParams.get('slotId');
+        if (slotParam && availableSlots.some((s: any) => s.id === slotParam)) {
+          setSelectedSlot(slotParam);
+        }
       } catch (err) {
         console.error("Failed to fetch doctor", err);
         setError('Failed to load doctor profile. They might not be verified yet.');
@@ -60,7 +67,7 @@ export const DoctorProfile: React.FC = () => {
     };
 
     if (id) fetchData();
-  }, [id]);
+  }, [id, searchParams]);
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +80,7 @@ export const DoctorProfile: React.FC = () => {
     setError('');
 
     try {
-      const slot = slots.find(s => s.id === selectedSlot);
+      const slot = slots.find((s: Slot) => s.id === selectedSlot);
       const apptRes = await api.post('/appointments', {
         doctorId: id,
         slotId: selectedSlot,
@@ -191,7 +198,7 @@ export const DoctorProfile: React.FC = () => {
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('booking.languagesSpoken')}</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {doctor.languagesSpoken.map(lang => (
+              {doctor.languagesSpoken?.map((lang: string) => (
                 <span key={lang} style={{ padding: '0.25rem 0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: '16px', fontSize: '0.875rem' }}>{lang}</span>
               ))}
             </div>
@@ -229,7 +236,7 @@ export const DoctorProfile: React.FC = () => {
                 </div>
               ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                  {slots.map(slot => {
+                  {slots.map((slot: Slot) => {
                     const isSelected = selectedSlot === slot.id;
                     const dateObj = new Date(slot.startsAt);
                     return (

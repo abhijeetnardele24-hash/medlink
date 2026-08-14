@@ -61,6 +61,8 @@ export const authenticate = async (
 
     let role: string | undefined = decoded["role"] as string | undefined;
 
+    console.log("FIREBASE UID INTERCEPT:", decoded.uid, decoded.email);
+
     // Fallback: If custom claims haven't propagated to the client JWT yet,
     // look up the role from the database.
     if (!role || role === "patient") {
