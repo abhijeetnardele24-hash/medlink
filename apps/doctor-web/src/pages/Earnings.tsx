@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { 
@@ -77,6 +78,10 @@ export const Earnings: React.FC = () => {
   const [withdrawing, setWithdrawing] = useState(false);
   const [withdrawalSuccessData, setWithdrawalSuccessData] = useState<any>(null);
 
+  const cleanDoctorName = profile?.fullName
+    ? (profile.fullName.trim().startsWith('Dr.') ? profile.fullName.trim() : `Dr. ${profile.fullName.trim()}`)
+    : 'Dr. Doctor';
+
   const fetchEarnings = async () => {
     if (!profile?.id) return;
     setLoading(true);
@@ -118,7 +123,7 @@ export const Earnings: React.FC = () => {
     try {
       await api.post(`/doctors/${profile?.id}/payout-methods`, {
         type: linkType === 'card' ? 'bank_account' : linkType,
-        name: linkData.name || 'Dr. ' + (profile?.fullName || 'Doctor'),
+        name: linkData.name || cleanDoctorName,
         accountNumber: linkType === 'card' ? linkData.cardNumber : linkData.accountNumber,
         ifscCode: linkData.ifscCode || 'HDFC0001234',
         upiId: linkData.upiId,
@@ -491,12 +496,14 @@ export const Earnings: React.FC = () => {
 
       </div>
 
-      {/* Link Account Modal (HIGH-CONTRAST, CLEAN ENTERPRISE THEME) */}
-      {showLinkModal && (
+      {/* Link Account Modal (RENDERED VIA PORTAL DIRECTLY TO BODY FOR 100% SCREEN COVERAGE) */}
+      {showLinkModal && createPortal(
         <div style={{ 
           position: 'fixed', 
           top: 0, 
           left: 0, 
+          right: 0,
+          bottom: 0,
           width: '100vw', 
           height: '100vh', 
           background: 'rgba(15, 23, 42, 0.65)', 
@@ -504,8 +511,9 @@ export const Earnings: React.FC = () => {
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          zIndex: 99999, 
-          padding: '1.5rem' 
+          zIndex: 999999, 
+          padding: '1.5rem',
+          boxSizing: 'border-box'
         }}>
           <div style={{ 
             width: '100%', 
@@ -514,8 +522,9 @@ export const Earnings: React.FC = () => {
             background: '#ffffff', 
             border: '1px solid #e5e7eb', 
             borderRadius: '20px', 
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            color: '#111827'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+            color: '#111827',
+            animation: 'fadeIn 0.2s ease-out'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
               <div>
@@ -524,7 +533,7 @@ export const Earnings: React.FC = () => {
               </div>
               <button 
                 onClick={() => setShowLinkModal(false)} 
-                style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
@@ -581,11 +590,12 @@ export const Earnings: React.FC = () => {
                     borderRadius: '10px',
                     fontSize: '0.95rem',
                     color: '#111827',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                   value={linkData.name} 
                   onChange={e => setLinkData({ ...linkData, name: e.target.value })} 
-                  placeholder={profile?.fullName ? `Dr. ${profile.fullName}` : "Dr. Full Name as in bank records"} 
+                  placeholder={cleanDoctorName} 
                   required 
                 />
               </div>
@@ -605,7 +615,8 @@ export const Earnings: React.FC = () => {
                       borderRadius: '10px',
                       fontSize: '0.95rem',
                       color: '#111827',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                     value={linkData.upiId} 
                     onChange={e => setLinkData({ ...linkData, upiId: e.target.value })} 
@@ -631,7 +642,8 @@ export const Earnings: React.FC = () => {
                         borderRadius: '10px',
                         fontSize: '0.95rem',
                         color: '#111827',
-                        outline: 'none'
+                        outline: 'none',
+                        boxSizing: 'border-box'
                       }}
                       value={linkData.accountNumber} 
                       onChange={e => setLinkData({ ...linkData, accountNumber: e.target.value })} 
@@ -653,7 +665,8 @@ export const Earnings: React.FC = () => {
                         borderRadius: '10px',
                         fontSize: '0.95rem',
                         color: '#111827',
-                        outline: 'none'
+                        outline: 'none',
+                        boxSizing: 'border-box'
                       }}
                       value={linkData.ifscCode} 
                       onChange={e => setLinkData({ ...linkData, ifscCode: e.target.value.toUpperCase() })} 
@@ -679,7 +692,8 @@ export const Earnings: React.FC = () => {
                       borderRadius: '10px',
                       fontSize: '0.95rem',
                       color: '#111827',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                     value={linkData.cardNumber} 
                     onChange={e => setLinkData({ ...linkData, cardNumber: e.target.value })} 
@@ -725,15 +739,18 @@ export const Earnings: React.FC = () => {
 
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Withdraw Modal (CLEAN HIGH-CONTRAST THEME) */}
-      {showWithdrawModal && (
+      {/* Withdraw Modal (RENDERED VIA PORTAL DIRECTLY TO BODY FOR 100% SCREEN COVERAGE) */}
+      {showWithdrawModal && createPortal(
         <div style={{ 
           position: 'fixed', 
           top: 0, 
           left: 0, 
+          right: 0,
+          bottom: 0,
           width: '100vw', 
           height: '100vh', 
           background: 'rgba(15, 23, 42, 0.65)', 
@@ -741,8 +758,9 @@ export const Earnings: React.FC = () => {
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          zIndex: 99999, 
-          padding: '1.5rem' 
+          zIndex: 999999, 
+          padding: '1.5rem',
+          boxSizing: 'border-box'
         }}>
           <div style={{ 
             width: '100%', 
@@ -751,8 +769,9 @@ export const Earnings: React.FC = () => {
             background: '#ffffff', 
             border: '1px solid #e5e7eb', 
             borderRadius: '20px', 
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-            color: '#111827'
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+            color: '#111827',
+            animation: 'fadeIn 0.2s ease-out'
           }}>
             
             {withdrawalSuccessData ? (
@@ -806,7 +825,7 @@ export const Earnings: React.FC = () => {
                   </div>
                   <button 
                     onClick={() => setShowWithdrawModal(false)} 
-                    style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
+                    style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
                   >
                     <X size={18} />
                   </button>
@@ -829,7 +848,8 @@ export const Earnings: React.FC = () => {
                         borderRadius: '10px',
                         fontSize: '0.95rem',
                         color: '#111827',
-                        outline: 'none'
+                        outline: 'none',
+                        boxSizing: 'border-box'
                       }}
                       value={withdrawAmount} 
                       onChange={e => setWithdrawAmount(e.target.value)} 
@@ -876,7 +896,8 @@ export const Earnings: React.FC = () => {
                         borderRadius: '10px',
                         fontSize: '0.95rem',
                         color: '#111827',
-                        outline: 'none'
+                        outline: 'none',
+                        boxSizing: 'border-box'
                       }}
                       value={selectedMethodId} 
                       onChange={e => setSelectedMethodId(e.target.value)}
@@ -927,7 +948,8 @@ export const Earnings: React.FC = () => {
             )}
 
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

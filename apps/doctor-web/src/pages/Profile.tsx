@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   User, BookOpen, Stethoscope, Briefcase, Phone, MapPin, 
   Edit3, Check, X, Award, Globe, DollarSign, ShieldCheck, 
@@ -336,22 +337,52 @@ export const Profile: React.FC = () => {
       </div>
 
       {/* Edit Profile Modal */}
-      {isEditing && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', padding: '2.5rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px', boxShadow: '0 20px 50px rgba(0,0,0,0.4)' }}>
+      {isEditing && createPortal(
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          background: 'rgba(15, 23, 42, 0.65)', 
+          backdropFilter: 'blur(8px)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          zIndex: 999999, 
+          padding: '1.5rem',
+          boxSizing: 'border-box'
+        }}>
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '780px', 
+            maxHeight: '90vh', 
+            overflowY: 'auto', 
+            padding: '2.5rem', 
+            background: '#ffffff', 
+            border: '1px solid #e5e7eb', 
+            borderRadius: '20px', 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+            color: '#111827'
+          }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(37, 99, 235, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Edit3 size={22} color="var(--accent)" />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Edit Professional Profile</h2>
-                  <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: '0.875rem' }}>Update your clinical info, consultation fees, and practice details.</p>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: '#111827' }}>Edit Professional Profile</h2>
+                  <p style={{ color: '#6b7280', margin: '0.2rem 0 0 0', fontSize: '0.875rem' }}>Update your clinical info, consultation fees, and practice details.</p>
                 </div>
               </div>
-              <button onClick={() => setIsEditing(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
-                <X size={22} />
+              <button 
+                onClick={() => setIsEditing(false)} 
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '34px', height: '34px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
+              >
+                <X size={18} />
               </button>
             </div>
 
@@ -367,13 +398,13 @@ export const Profile: React.FC = () => {
                     value={formData.fullName} 
                     onChange={e => setFormData({ ...formData, fullName: e.target.value })} 
                     placeholder="e.g. Dr. Aarav Sharma"
-                    required
+                    required 
                   />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Speciality</label>
                   <select 
-                    className="input-field" 
+                    className="input-field"
                     value={formData.speciality} 
                     onChange={e => setFormData({ ...formData, speciality: e.target.value })}
                   >
@@ -387,13 +418,13 @@ export const Profile: React.FC = () => {
               {/* Row 2: Phone & Facility */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
                 <div className="input-group">
-                  <label className="input-label">Contact Phone Number</label>
+                  <label className="input-label">Contact Number</label>
                   <input 
-                    type="tel" 
+                    type="text" 
                     className="input-field" 
                     value={formData.contactNumber} 
                     onChange={e => setFormData({ ...formData, contactNumber: e.target.value })} 
-                    placeholder="+91 98765 43210"
+                    placeholder="e.g. +91 98765 43210" 
                   />
                 </div>
                 <div className="input-group">
@@ -403,66 +434,75 @@ export const Profile: React.FC = () => {
                     className="input-field" 
                     value={formData.facilityName} 
                     onChange={e => setFormData({ ...formData, facilityName: e.target.value })} 
-                    placeholder="e.g. MedLink Health Center / Apex Clinic"
+                    placeholder="e.g. Apollo Telehealth Clinic" 
                   />
                 </div>
               </div>
 
-              {/* Row 3: Fee, Experience, License */}
+              {/* Row 3: Fee & Experience & Employment */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.25rem' }}>
                 <div className="input-group">
                   <label className="input-label">Consultation Fee (₹)</label>
                   <input 
                     type="number" 
-                    min="100" 
-                    max="10000" 
                     className="input-field" 
                     value={formData.consultationFee} 
                     onChange={e => setFormData({ ...formData, consultationFee: Number(e.target.value) })} 
-                    required
+                    placeholder="500" 
                   />
                 </div>
                 <div className="input-group">
                   <label className="input-label">Experience (Years)</label>
                   <input 
                     type="number" 
-                    min="1" 
-                    max="60" 
                     className="input-field" 
                     value={formData.experienceYears} 
                     onChange={e => setFormData({ ...formData, experienceYears: Number(e.target.value) })} 
-                    required
+                    placeholder="5" 
                   />
                 </div>
                 <div className="input-group">
-                  <label className="input-label">Registration / License No.</label>
+                  <label className="input-label">Practice Type</label>
+                  <select 
+                    className="input-field"
+                    value={formData.isPartTime ? 'part_time' : 'full_time'} 
+                    onChange={e => setFormData({ ...formData, isPartTime: e.target.value === 'part_time' })}
+                  >
+                    <option value="full_time">Full-Time Practice</option>
+                    <option value="part_time">Part-Time Practice</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Row 4: Registration Number & Education */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                <div className="input-group">
+                  <label className="input-label">Medical Registration / License No.</label>
                   <input 
                     type="text" 
                     className="input-field" 
                     value={formData.registrationNumber} 
                     onChange={e => setFormData({ ...formData, registrationNumber: e.target.value })} 
-                    placeholder="MCI-2024-XXXX"
+                    placeholder="e.g. MCI-2024-DOC998" 
+                  />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">Education Background / Degrees</label>
+                  <input 
+                    type="text" 
+                    className="input-field" 
+                    value={formData.educationBackground} 
+                    onChange={e => setFormData({ ...formData, educationBackground: e.target.value })} 
+                    placeholder="e.g. MBBS, MD - Internal Medicine" 
                   />
                 </div>
               </div>
 
-              {/* Education */}
-              <div className="input-group">
-                <label className="input-label">Education Background / Degrees</label>
-                <input 
-                  type="text" 
-                  className="input-field" 
-                  value={formData.educationBackground} 
-                  onChange={e => setFormData({ ...formData, educationBackground: e.target.value })} 
-                  placeholder="e.g. MBBS (AIIMS Delhi), MD (General Medicine)"
-                />
-              </div>
-
-              {/* Languages Spoken Chips */}
+              {/* Languages Spoken (Selectable Chips) */}
               <div>
                 <label className="input-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Languages Spoken</label>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                  {AVAILABLE_LANGUAGES.map(lang => {
+                  {AVAILABLE_LANGUAGES.map((lang: string) => {
                     const isSelected = formData.languagesSpoken.includes(lang);
                     return (
                       <button
@@ -472,18 +512,15 @@ export const Profile: React.FC = () => {
                         style={{
                           padding: '0.4rem 0.85rem',
                           borderRadius: '999px',
-                          border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
-                          background: isSelected ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-hover)',
-                          color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
-                          fontWeight: 600,
+                          border: `1.5px solid ${isSelected ? '#2563eb' : '#e5e7eb'}`,
+                          background: isSelected ? '#eff6ff' : '#f9fafb',
+                          color: isSelected ? '#2563eb' : '#4b5563',
                           fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.35rem'
+                          fontWeight: 600,
+                          cursor: 'pointer'
                         }}
                       >
-                        {isSelected && <Check size={14} />} {lang}
+                        {isSelected ? '✓ ' : '+ '}{lang}
                       </button>
                     );
                   })}
@@ -493,8 +530,8 @@ export const Profile: React.FC = () => {
               {/* Supported Consultation Modes */}
               <div>
                 <label className="input-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Supported Consultation Modes</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-                  {CONSULTATION_MODES.map(mode => {
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  {CONSULTATION_MODES.map((mode: { id: string; label: string }) => {
                     const isSelected = formData.supportedModes.includes(mode.id);
                     return (
                       <button
@@ -502,30 +539,26 @@ export const Profile: React.FC = () => {
                         key={mode.id}
                         onClick={() => handleToggleMode(mode.id)}
                         style={{
-                          padding: '0.75rem',
+                          padding: '0.5rem 1rem',
                           borderRadius: '10px',
-                          border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
-                          background: isSelected ? 'rgba(37, 99, 235, 0.12)' : 'var(--surface-hover)',
-                          color: isSelected ? 'var(--accent)' : 'var(--text-muted)',
-                          fontWeight: 600,
+                          border: `1.5px solid ${isSelected ? '#2563eb' : '#e5e7eb'}`,
+                          background: isSelected ? '#eff6ff' : '#f9fafb',
+                          color: isSelected ? '#2563eb' : '#4b5563',
                           fontSize: '0.85rem',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '0.4rem'
+                          fontWeight: 600,
+                          cursor: 'pointer'
                         }}
                       >
-                        {isSelected && <Check size={14} />} {mode.label}
+                        {isSelected ? '✓ ' : '+ '}{mode.label}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Bio */}
+              {/* Biography */}
               <div className="input-group">
-                <label className="input-label">Biography / About Practice</label>
+                <label className="input-label">Professional Bio / Clinical Summary</label>
                 <textarea 
                   className="input-field" 
                   rows={3}
@@ -537,7 +570,7 @@ export const Profile: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem', borderTop: '1px solid #f3f4f6', paddingTop: '1.5rem' }}>
                 <button 
                   type="button" 
                   onClick={() => setIsEditing(false)} 
@@ -562,7 +595,8 @@ export const Profile: React.FC = () => {
 
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>
