@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { 
   DollarSign, TrendingUp, CreditCard, Download, PlusCircle, 
   Building2, Smartphone, CheckCircle, Clock, AlertCircle, 
-  ArrowUpRight, RefreshCw, Shield, HelpCircle 
+  ArrowUpRight, RefreshCw, Shield, X 
 } from 'lucide-react';
 import {
   BarChart,
@@ -219,20 +219,21 @@ export const Earnings: React.FC = () => {
     );
   }
 
-  const earnings = data || {
-    totalEarnings: 28500,
-    availableBalance: 24000,
-    thisMonthEarnings: 8200,
-    pendingClearance: 1500,
+  // Pure real data defaults (0 when no consultation transactions have occurred yet)
+  const earnings: EarningsData = data || {
+    totalEarnings: 0,
+    availableBalance: 0,
+    thisMonthEarnings: 0,
+    pendingClearance: 0,
     recentTransactions: [],
     recentPayouts: [],
     monthlyData: [
-      { name: 'Mar', amount: 3200 },
-      { name: 'Apr', amount: 4500 },
-      { name: 'May', amount: 5800 },
-      { name: 'Jun', amount: 6200 },
-      { name: 'Jul', amount: 4800 },
-      { name: 'Aug', amount: 8200 }
+      { name: 'Mar', amount: 0 },
+      { name: 'Apr', amount: 0 },
+      { name: 'May', amount: 0 },
+      { name: 'Jun', amount: 0 },
+      { name: 'Jul', amount: 0 },
+      { name: 'Aug', amount: 0 }
     ]
   };
 
@@ -297,8 +298,8 @@ export const Earnings: React.FC = () => {
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
             ₹{earnings.availableBalance.toLocaleString()}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#10b981', fontSize: '0.875rem', fontWeight: 600 }}>
-            <CheckCircle size={15} /> Ready for instant withdrawal
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: earnings.availableBalance > 0 ? '#10b981' : 'var(--text-muted)', fontSize: '0.875rem', fontWeight: 600 }}>
+            <CheckCircle size={15} /> {earnings.availableBalance > 0 ? 'Ready for instant withdrawal' : 'Settlements appear as patients consult'}
           </div>
         </div>
 
@@ -327,7 +328,7 @@ export const Earnings: React.FC = () => {
             </div>
           </div>
           <div style={{ fontSize: '2.25rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-            {earnings.recentTransactions?.length || 14} Consults
+            {earnings.recentTransactions?.length || 0} Consults
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
             100% Patient payment protection
@@ -356,7 +357,7 @@ export const Earnings: React.FC = () => {
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--text-muted)', fontSize: 12 }} tickFormatter={(val) => `₹${val}`} />
                 <Tooltip 
                   cursor={{ fill: 'rgba(37, 99, 235, 0.05)' }}
-                  contentStyle={{ background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border)', boxShadow: '0 8px 24px rgba(0,0,0,0.25)' }}
+                  contentStyle={{ background: '#ffffff', color: '#111827', borderRadius: '12px', border: '1px solid #e5e7eb', boxShadow: '0 8px 24px rgba(0,0,0,0.1)' }}
                   formatter={(value: any) => [`₹${Number(value).toLocaleString()}`, 'Earnings']}
                 />
                 <Bar dataKey="amount" fill="var(--accent)" radius={[6, 6, 0, 0]} maxBarSize={48} />
@@ -439,7 +440,7 @@ export const Earnings: React.FC = () => {
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>{tx.patientName || 'Patient Consultation'}</div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {tx.type || 'Video Consultation'} · {tx.date ? new Date(tx.date).toLocaleDateString() : 'Recent'}
+                      {tx.type || 'Consultation Settlement'} · {tx.date ? new Date(tx.date).toLocaleDateString() : 'Recent'}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -449,7 +450,9 @@ export const Earnings: React.FC = () => {
                 </div>
               ))
             ) : (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>No recent consultation settlements.</p>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+                No consultation settlements yet. Earnings will appear here after patient visits.
+              </div>
             )}
           </div>
         </div>
@@ -479,7 +482,7 @@ export const Earnings: React.FC = () => {
                 </div>
               ))
             ) : (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              <div style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
                 No withdrawals requested yet.
               </div>
             )}
@@ -488,64 +491,122 @@ export const Earnings: React.FC = () => {
 
       </div>
 
-      {/* Link Account Modal */}
+      {/* Link Account Modal (HIGH-CONTRAST, CLEAN ENTERPRISE THEME) */}
       {showLinkModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '2rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px' }}>
-            <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '0.5rem' }}>Link Payout Account</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>Choose how you would like to receive your consultation earnings.</p>
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          background: 'rgba(15, 23, 42, 0.65)', 
+          backdropFilter: 'blur(8px)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          zIndex: 99999, 
+          padding: '1.5rem' 
+        }}>
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '520px', 
+            padding: '2.5rem', 
+            background: '#ffffff', 
+            border: '1px solid #e5e7eb', 
+            borderRadius: '20px', 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            color: '#111827'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: '#111827' }}>Link Payout Account</h2>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>Choose how you would like to receive your consultation earnings.</p>
+              </div>
+              <button 
+                onClick={() => setShowLinkModal(false)} 
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
 
-            <form onSubmit={handleLinkAccount} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <form onSubmit={handleLinkAccount} style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
               
               {/* Type Switcher */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
                 {[
-                  { id: 'upi', label: 'UPI ID', icon: <Smartphone size={16} /> },
-                  { id: 'bank_account', label: 'Bank A/C', icon: <Building2 size={16} /> },
-                  { id: 'card', label: 'Debit Card', icon: <CreditCard size={16} /> },
-                ].map(t => (
-                  <button
-                    type="button"
-                    key={t.id}
-                    onClick={() => setLinkType(t.id as any)}
-                    style={{
-                      padding: '0.75rem 0.5rem',
-                      borderRadius: '10px',
-                      border: `1px solid ${linkType === t.id ? 'var(--accent)' : 'var(--border)'}`,
-                      background: linkType === t.id ? 'rgba(37, 99, 235, 0.15)' : 'var(--surface-hover)',
-                      color: linkType === t.id ? 'var(--accent)' : 'var(--text-muted)',
-                      fontWeight: 600,
-                      fontSize: '0.85rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.35rem'
-                    }}
-                  >
-                    {t.icon} {t.label}
-                  </button>
-                ))}
+                  { id: 'upi', label: 'UPI ID', icon: <Smartphone size={17} /> },
+                  { id: 'bank_account', label: 'Bank A/C', icon: <Building2 size={17} /> },
+                  { id: 'card', label: 'Debit Card', icon: <CreditCard size={17} /> },
+                ].map(t => {
+                  const isActive = linkType === t.id;
+                  return (
+                    <button
+                      type="button"
+                      key={t.id}
+                      onClick={() => setLinkType(t.id as any)}
+                      style={{
+                        padding: '0.85rem 0.5rem',
+                        borderRadius: '12px',
+                        border: `1.5px solid ${isActive ? '#2563eb' : '#e5e7eb'}`,
+                        background: isActive ? '#eff6ff' : '#f9fafb',
+                        color: isActive ? '#2563eb' : '#4b5563',
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {t.icon} {t.label}
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="input-group">
-                <label className="input-label">Account Holder / Doctor Name</label>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                  Account Holder / Doctor Name
+                </label>
                 <input 
                   type="text" 
-                  className="input-field" 
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    background: '#f9fafb',
+                    border: '1.5px solid #d1d5db',
+                    borderRadius: '10px',
+                    fontSize: '0.95rem',
+                    color: '#111827',
+                    outline: 'none'
+                  }}
                   value={linkData.name} 
                   onChange={e => setLinkData({ ...linkData, name: e.target.value })} 
-                  placeholder={profile?.fullName || "Dr. Full Name as in bank records"} 
+                  placeholder={profile?.fullName ? `Dr. ${profile.fullName}` : "Dr. Full Name as in bank records"} 
                   required 
                 />
               </div>
 
               {linkType === 'upi' && (
-                <div className="input-group">
-                  <label className="input-label">UPI ID / VPA</label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                    UPI ID / Virtual Payment Address (VPA)
+                  </label>
                   <input 
                     type="text" 
-                    className="input-field" 
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      background: '#f9fafb',
+                      border: '1.5px solid #d1d5db',
+                      borderRadius: '10px',
+                      fontSize: '0.95rem',
+                      color: '#111827',
+                      outline: 'none'
+                    }}
                     value={linkData.upiId} 
                     onChange={e => setLinkData({ ...linkData, upiId: e.target.value })} 
                     placeholder="e.g. doctor@oksbi or 9876543210@paytm" 
@@ -556,22 +617,44 @@ export const Earnings: React.FC = () => {
 
               {linkType === 'bank_account' && (
                 <>
-                  <div className="input-group">
-                    <label className="input-label">Bank Account Number</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                      Bank Account Number
+                    </label>
                     <input 
                       type="text" 
-                      className="input-field" 
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: '#f9fafb',
+                        border: '1.5px solid #d1d5db',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        color: '#111827',
+                        outline: 'none'
+                      }}
                       value={linkData.accountNumber} 
                       onChange={e => setLinkData({ ...linkData, accountNumber: e.target.value })} 
                       placeholder="e.g. 50100239481234" 
                       required 
                     />
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">IFSC Code</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                      IFSC Code
+                    </label>
                     <input 
                       type="text" 
-                      className="input-field" 
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: '#f9fafb',
+                        border: '1.5px solid #d1d5db',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        color: '#111827',
+                        outline: 'none'
+                      }}
                       value={linkData.ifscCode} 
                       onChange={e => setLinkData({ ...linkData, ifscCode: e.target.value.toUpperCase() })} 
                       placeholder="e.g. HDFC0001234" 
@@ -582,11 +665,22 @@ export const Earnings: React.FC = () => {
               )}
 
               {linkType === 'card' && (
-                <div className="input-group">
-                  <label className="input-label">Debit Card / Card Number for Direct Transfer</label>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                    Debit Card Number for Direct Transfer
+                  </label>
                   <input 
                     type="text" 
-                    className="input-field" 
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      background: '#f9fafb',
+                      border: '1.5px solid #d1d5db',
+                      borderRadius: '10px',
+                      fontSize: '0.95rem',
+                      color: '#111827',
+                      outline: 'none'
+                    }}
                     value={linkData.cardNumber} 
                     onChange={e => setLinkData({ ...linkData, cardNumber: e.target.value })} 
                     placeholder="4111 2222 3333 4444" 
@@ -596,10 +690,35 @@ export const Earnings: React.FC = () => {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button type="button" onClick={() => setShowLinkModal(false)} className="btn btn-secondary">
+                <button 
+                  type="button" 
+                  onClick={() => setShowLinkModal(false)} 
+                  style={{
+                    padding: '0.75rem 1.4rem',
+                    background: '#f3f4f6',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '10px',
+                    color: '#374151',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={linking}>
+                <button 
+                  type="submit" 
+                  disabled={linking}
+                  style={{
+                    padding: '0.75rem 1.6rem',
+                    background: '#2563eb',
+                    border: 'none',
+                    borderRadius: '10px',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    opacity: linking ? 0.7 : 1
+                  }}
+                >
                   {linking ? 'Verifying...' : 'Link Payout Account'}
                 </button>
               </div>
@@ -609,29 +728,51 @@ export const Earnings: React.FC = () => {
         </div>
       )}
 
-      {/* Withdraw Modal */}
+      {/* Withdraw Modal (CLEAN HIGH-CONTRAST THEME) */}
       {showWithdrawModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.65)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1.5rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '480px', padding: '2rem', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px' }}>
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100vw', 
+          height: '100vh', 
+          background: 'rgba(15, 23, 42, 0.65)', 
+          backdropFilter: 'blur(8px)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          zIndex: 99999, 
+          padding: '1.5rem' 
+        }}>
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '520px', 
+            padding: '2.5rem', 
+            background: '#ffffff', 
+            border: '1px solid #e5e7eb', 
+            borderRadius: '20px', 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            color: '#111827'
+          }}>
             
             {withdrawalSuccessData ? (
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
                   <CheckCircle size={36} color="#10b981" />
                 </div>
-                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem' }}>Withdrawal Transfer Initiated!</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.4rem', fontWeight: 700, marginBottom: '0.5rem', color: '#111827' }}>Withdrawal Transfer Initiated!</h2>
+                <p style={{ color: '#4b5563', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                   ₹{withdrawalSuccessData.amount?.toLocaleString()} has been dispatched to your linked {withdrawalSuccessData.method?.type?.toUpperCase() || 'account'}.
                 </p>
 
-                <div style={{ background: 'var(--surface-hover)', padding: '1rem', borderRadius: '10px', marginBottom: '1.5rem', textAlign: 'left', fontSize: '0.85rem' }}>
+                <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', padding: '1.25rem', borderRadius: '12px', marginBottom: '1.5rem', textAlign: 'left', fontSize: '0.875rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Bank Reference / UTR</span>
-                    <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>{withdrawalSuccessData.referenceId}</span>
+                    <span style={{ color: '#6b7280' }}>Bank Reference / UTR</span>
+                    <span style={{ fontWeight: 700, fontFamily: 'monospace', color: '#111827' }}>{withdrawalSuccessData.referenceId}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'var(--text-muted)' }}>Transfer Mode</span>
-                    <span style={{ fontWeight: 600 }}>Instant IMPS / UPI Settlement</span>
+                    <span style={{ color: '#6b7280' }}>Transfer Mode</span>
+                    <span style={{ fontWeight: 600, color: '#111827' }}>Instant IMPS / UPI Settlement</span>
                   </div>
                 </div>
 
@@ -640,60 +781,103 @@ export const Earnings: React.FC = () => {
                     setWithdrawalSuccessData(null);
                     setShowWithdrawModal(false);
                   }}
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '0.75rem' }}
+                  style={{ 
+                    width: '100%', 
+                    padding: '0.85rem', 
+                    background: '#2563eb', 
+                    color: '#ffffff', 
+                    fontWeight: 700, 
+                    border: 'none', 
+                    borderRadius: '10px', 
+                    cursor: 'pointer' 
+                  }}
                 >
                   Done
                 </button>
               </div>
             ) : (
               <div>
-                <h2 style={{ fontSize: '1.35rem', fontWeight: 700, marginBottom: '0.5rem' }}>Request Fund Withdrawal</h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
-                  Available Balance: <strong style={{ color: 'var(--text-main)', fontSize: '1rem' }}>₹{earnings.availableBalance.toLocaleString()}</strong>
-                </p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '1rem' }}>
+                  <div>
+                    <h2 style={{ fontSize: '1.4rem', fontWeight: 700, margin: 0, color: '#111827' }}>Request Fund Withdrawal</h2>
+                    <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+                      Available Balance: <strong style={{ color: '#111827', fontSize: '1rem' }}>₹{earnings.availableBalance.toLocaleString()}</strong>
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowWithdrawModal(false)} 
+                    style={{ background: '#f3f4f6', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', cursor: 'pointer' }}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
 
-                <form onSubmit={handleWithdraw} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div className="input-group">
-                    <label className="input-label">Amount to Withdraw (₹)</label>
+                <form onSubmit={handleWithdraw} style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                      Amount to Withdraw (₹)
+                    </label>
                     <input 
                       type="number" 
                       min="100" 
                       max={earnings.availableBalance} 
-                      className="input-field" 
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: '#f9fafb',
+                        border: '1.5px solid #d1d5db',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        color: '#111827',
+                        outline: 'none'
+                      }}
                       value={withdrawAmount} 
                       onChange={e => setWithdrawAmount(e.target.value)} 
                       placeholder="e.g. 5000"
                       required 
                     />
-                    <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                      {[1000, 5000, 10000, earnings.availableBalance].map((preset, idx) => (
-                        preset <= earnings.availableBalance && (
-                          <button
-                            type="button"
-                            key={idx}
-                            onClick={() => setWithdrawAmount(preset.toString())}
-                            style={{
-                              padding: '0.25rem 0.65rem',
-                              borderRadius: '6px',
-                              border: '1px solid var(--border)',
-                              background: 'var(--surface-hover)',
-                              color: 'var(--text-muted)',
-                              fontSize: '0.75rem',
-                              cursor: 'pointer'
-                            }}
-                          >
-                            ₹{preset === earnings.availableBalance ? 'Max (₹' + preset.toLocaleString() + ')' : preset.toLocaleString()}
-                          </button>
-                        )
-                      ))}
-                    </div>
+                    {earnings.availableBalance > 0 && (
+                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                        {[1000, 5000, 10000, earnings.availableBalance].map((preset, idx) => (
+                          preset <= earnings.availableBalance && (
+                            <button
+                              type="button"
+                              key={idx}
+                              onClick={() => setWithdrawAmount(preset.toString())}
+                              style={{
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #d1d5db',
+                                background: '#f9fafb',
+                                color: '#374151',
+                                fontSize: '0.775rem',
+                                fontWeight: 600,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ₹{preset === earnings.availableBalance ? 'Max (₹' + preset.toLocaleString() + ')' : preset.toLocaleString()}
+                            </button>
+                          )
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="input-group">
-                    <label className="input-label">Transfer Destination</label>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, color: '#374151', marginBottom: '0.4rem' }}>
+                      Transfer Destination
+                    </label>
                     <select 
-                      className="input-field" 
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: '#f9fafb',
+                        border: '1.5px solid #d1d5db',
+                        borderRadius: '10px',
+                        fontSize: '0.95rem',
+                        color: '#111827',
+                        outline: 'none'
+                      }}
                       value={selectedMethodId} 
                       onChange={e => setSelectedMethodId(e.target.value)}
                     >
@@ -706,10 +890,35 @@ export const Earnings: React.FC = () => {
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                    <button type="button" onClick={() => setShowWithdrawModal(false)} className="btn btn-secondary">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowWithdrawModal(false)} 
+                      style={{
+                        padding: '0.75rem 1.4rem',
+                        background: '#f3f4f6',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '10px',
+                        color: '#374151',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
                       Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={withdrawing}>
+                    <button 
+                      type="submit" 
+                      disabled={withdrawing || earnings.availableBalance <= 0}
+                      style={{
+                        padding: '0.75rem 1.6rem',
+                        background: '#2563eb',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: '#ffffff',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        opacity: (withdrawing || earnings.availableBalance <= 0) ? 0.6 : 1
+                      }}
+                    >
                       {withdrawing ? 'Transferring...' : 'Transfer Now'}
                     </button>
                   </div>

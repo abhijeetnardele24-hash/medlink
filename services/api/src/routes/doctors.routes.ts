@@ -561,50 +561,15 @@ router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Req
     .from(payoutRecords)
     .where(and(eq(payoutRecords.doctorId, id), eq(payoutRecords.status, "processed")));
 
-  let totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-  
-  // If brand new doctor with no real transactions yet, seed a demo baseline so they can test payouts
-  let isDemoSeeded = false;
-  let finalTransactions: any[] = earningsData.map(e => ({
-    id: e.updatedAt?.toString() || Math.random().toString(),
-    amount: e.amount,
-    date: e.updatedAt,
-    patientName: "Patient Consultation",
-    type: "Video Consultation",
-    status: "settled"
-  }));
-
-  if (earningsData.length === 0) {
-    isDemoSeeded = true;
-    totalEarnings = 28500;
-    const sampleDates = [
-      new Date(Date.now() - 1 * 86400000),
-      new Date(Date.now() - 3 * 86400000),
-      new Date(Date.now() - 5 * 86400000),
-      new Date(Date.now() - 10 * 86400000),
-      new Date(Date.now() - 18 * 86400000),
-    ];
-    finalTransactions = [
-      { id: "tx_101", amount: 1500, date: sampleDates[0], patientName: "Rahul Sharma", type: "Video Consultation", status: "settled" },
-      { id: "tx_102", amount: 2000, date: sampleDates[1], patientName: "Priya Patel", type: "In-Person Clinic", status: "settled" },
-      { id: "tx_103", amount: 1200, date: sampleDates[2], patientName: "Amit Verma", type: "Audio Consultation", status: "settled" },
-      { id: "tx_104", amount: 3500, date: sampleDates[3], patientName: "Sneha Gupta", type: "Comprehensive Checkup", status: "settled" },
-      { id: "tx_105", amount: 1800, date: sampleDates[4], patientName: "Kiran Desai", type: "Video Follow-up", status: "settled" },
-    ];
-  }
-
   const availableBalance = Math.max(0, totalEarnings - totalPayouts);
   
   const now = new Date();
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  let thisMonthEarnings = earningsData
+  const thisMonthEarnings = earningsData
     .filter(e => new Date(e.updatedAt) >= firstDayOfMonth)
     .reduce((acc, curr) => acc + (curr.amount || 0), 0);
-  
-  if (isDemoSeeded) {
-    thisMonthEarnings = 8200;
-  }
     
   const monthlyData: Record<string, number> = {};
   for (let i = 5; i >= 0; i--) {
@@ -612,27 +577,28 @@ router.get("/:id/earnings", authenticate, requireRole("doctor"), async (req: Req
     monthlyData[d.toLocaleString('default', { month: 'short' })] = 0;
   }
 
-  if (isDemoSeeded) {
-    const months = Object.keys(monthlyData);
-    const mockAmounts = [3200, 4500, 5800, 6200, 4800, 8200];
-    months.forEach((m, idx) => {
-      monthlyData[m] = mockAmounts[idx % mockAmounts.length] || 4000;
-    });
-  } else {
-    earningsData.forEach(e => {
-      const monthStr = new Date(e.updatedAt).toLocaleString('default', { month: 'short' });
-      if (monthlyData[monthStr] !== undefined) monthlyData[monthStr] += (e.amount || 0);
-    });
-  }
+  earningsData.forEach(e => {
+    const monthStr = new Date(e.updatedAt).toLocaleString('default', { month: 'short' });
+    if (monthlyData[monthStr] !== undefined) monthlyData[monthStr] += (e.amount || 0);
+  });
 
   const recentPayouts = await db.select().from(payoutRecords).where(eq(payoutRecords.doctorId, id)).orderBy(payoutRecords.updatedAt).limit(10);
+
+  const finalTransactions = earningsData.map((e, idx) => ({
+    id: `settle_${idx + 1}`,
+    amount: e.amount,
+    date: e.updatedAt,
+    patientName: "Patient Consultation",
+    type: "Consultation Settlement",
+    status: "settled"
+  }));
 
   res.json({ 
     totalEarnings,
     availableBalance,
     thisMonthEarnings,
-    pendingClearance: isDemoSeeded ? 1500 : 0,
-    recentTransactions: finalTransactions.slice(0, 10),
+    pendingClearance: 0,
+    recentTransactions: finalTransactions.slice(0, 10).reverse(),
     recentPayouts: recentPayouts.reverse(),
     monthlyData: Object.entries(monthlyData).map(([name, amount]) => ({ name, amount }))
   });
@@ -722,10 +688,7 @@ router.post("/:id/withdraw", authenticate, requireRole("doctor"), async (req: Re
   const payoutsData = await db.select({ amount: payoutRecords.amount }).from(payoutRecords)
     .where(and(eq(payoutRecords.doctorId, id), eq(payoutRecords.status, "processed")));
 
-  let totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-  if (earningsData.length === 0) {
-    totalEarnings = 28500;
-  }
+  const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
   const availableBalance = Math.max(0, totalEarnings - totalPayouts);
   
