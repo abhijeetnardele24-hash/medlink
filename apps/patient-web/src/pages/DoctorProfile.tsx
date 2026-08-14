@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
-import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Doctor {
@@ -34,6 +35,7 @@ export const DoctorProfile: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
   
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -43,6 +45,7 @@ export const DoctorProfile: React.FC = () => {
   const [concern, setConcern] = useState('general_consultation');
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
+  const [bookingSuccess, setBookingSuccess] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,17 +94,18 @@ export const DoctorProfile: React.FC = () => {
 
       const appointmentId = apptRes.data.id;
 
-      // Create Payment Order
+      // Create Payment Order (₹1 Demo Order)
       const paymentRes = await api.post(`/appointments/${appointmentId}/create-payment`);
       const order = paymentRes.data.order;
+      const razorpayKey = paymentRes.data.keyId || "rzp_test_TO2oEBhVR4tpzl";
 
-      // Open Razorpay Checkout
+      // Open Razorpay Checkout with ₹1 live QR / UPI prompt
       const options = {
-        key: "rzp_test_demo", // Our backend falls back to this for demo
-        amount: order.amount,
-        currency: order.currency,
+        key: razorpayKey,
+        amount: order.amount || 100, // 100 paise = ₹1
+        currency: order.currency || "INR",
         name: "MedLink Telehealth",
-        description: `Consultation with Dr. ${doctor?.fullName}`,
+        description: `Consultation Booking (₹1 Demo QR) · Dr. ${doctor?.fullName || ''}`,
         order_id: order.id,
         handler: async function (response: any) {
           try {
@@ -110,7 +114,10 @@ export const DoctorProfile: React.FC = () => {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature
             });
-            navigate('/');
+            setBookingSuccess(true);
+            setTimeout(() => {
+              navigate('/');
+            }, 1800);
           } catch (verifyErr) {
             console.error(verifyErr);
             setError('Payment verification failed.');
@@ -118,9 +125,9 @@ export const DoctorProfile: React.FC = () => {
           }
         },
         prefill: {
-          name: "Patient",
-          email: "patient@example.com",
-          contact: "9999999999"
+          name: user?.displayName || "Patient",
+          email: user?.email || "patient@medlink.com",
+          contact: "9876543210"
         },
         theme: {
           color: "#2563eb"
@@ -132,12 +139,18 @@ export const DoctorProfile: React.FC = () => {
         }
       };
 
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response: any){
-        setError(`Payment Failed: ${response.error.description}`);
+      if (window.Razorpay) {
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response: any){
+          setError(`Payment Failed: ${response.error?.description || 'Transaction cancelled or failed.'}`);
+          setBooking(false);
+        });
+        rzp.open();
+      } else {
+        // Fallback if Razorpay script took time to load
+        alert('Razorpay payment gateway is loading. Please try again in 2 seconds.');
         setBooking(false);
-      });
-      rzp.open();
+      }
 
     } catch (err: any) {
       console.error(err);
@@ -148,7 +161,7 @@ export const DoctorProfile: React.FC = () => {
 
   if (loading) return <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}><div className="spinner"></div></div>;
 
-  if (error || !doctor) return (
+  if (error && !doctor) return (
     <div className="app-container" style={{ padding: '2rem', textAlign: 'center' }}>
       <button onClick={() => navigate(-1)} className="btn btn-secondary" style={{ marginBottom: '2rem' }}><ArrowLeft size={18} /> Back</button>
       <div className="glass-panel" style={{ padding: '3rem', maxWidth: '500px', margin: '0 auto', color: '#ef4444' }}>
@@ -159,46 +172,63 @@ export const DoctorProfile: React.FC = () => {
   );
 
   return (
-    <div className="app-container" style={{ background: 'var(--bg-base)', minHeight: '100vh', padding: '2rem 1rem' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <button onClick={() => navigate(-1)} className="btn btn-secondary" style={{ marginBottom: '1.5rem', border: 'none' }}>
-          <ArrowLeft size={18} /> Back to Dashboard
-        </button>
+    <div className="fade-in" style={{ padding: '2.5rem', maxWidth: '1000px', margin: '0 auto' }}>
+      <button onClick={() => navigate(-1)} className="btn btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
+        <ArrowLeft size={16} /> {t('common.back')}
+      </button>
 
+      {bookingSuccess && (
+        <div style={{ padding: '1.5rem', background: 'rgba(16, 185, 129, 0.12)', border: '1px solid #10b981', color: '#10b981', borderRadius: '16px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <CheckCircle2 size={28} />
+          <div>
+            <h4 style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>Payment Successful & Appointment Confirmed!</h4>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>Redirecting you to your patient dashboard...</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ padding: '1rem 1.5rem', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.25)', color: '#ef4444', borderRadius: '12px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <AlertCircle size={20} /> {error}
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="glass-panel" 
-          style={{ padding: '2.5rem', marginBottom: '2rem' }}
+          style={{ padding: '2.5rem' }}
         >
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem', marginBottom: '2rem' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '40px', background: 'var(--bg-surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <User size={40} color="var(--text-muted)" />
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1.5rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <User size={40} color="white" />
             </div>
             <div>
-              <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.25rem' }}>Dr. {doctor.fullName}</h1>
-              <p style={{ color: 'var(--accent)', fontWeight: 500, fontSize: '1.125rem', marginBottom: '0.75rem' }}>{doctor.speciality}</p>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.25rem' }}>Dr. {doctor?.fullName}</h1>
+              <p style={{ color: 'var(--accent)', fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem' }}>{doctor?.speciality}</p>
               
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={16} /> {doctor.facilityName || 'Independent Practice'}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={16} /> {doctor?.facilityName || 'Independent Practice'}</span>
               </div>
             </div>
             
             <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{t('booking.consultationFee')}</div>
-              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>₹{doctor.consultationFee}</div>
+              <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>₹{doctor?.consultationFee}</div>
+              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>Demo QR: ₹1 for testing</div>
             </div>
           </div>
 
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('booking.about')}</h3>
-            <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{doctor.bio || 'No bio provided.'}</p>
+            <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{doctor?.bio || 'Verified medical professional providing consultations on MedLink.'}</p>
           </div>
           
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>{t('booking.languagesSpoken')}</h3>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {doctor.languagesSpoken?.map((lang: string) => (
+              {doctor?.languagesSpoken?.map((lang: string) => (
                 <span key={lang} style={{ padding: '0.25rem 0.75rem', background: 'var(--bg-surface-elevated)', borderRadius: '16px', fontSize: '0.875rem' }}>{lang}</span>
               ))}
             </div>
@@ -228,7 +258,7 @@ export const DoctorProfile: React.FC = () => {
               </select>
             </div>
 
-            <div style={{ marginBottom: '2.5rem' }}>
+            <div style={{ marginBottom: '2rem' }}>
               <label className="input-label">{t('booking.availableTimeSlots')}</label>
               {slots.length === 0 ? (
                 <div style={{ padding: '1.5rem', background: 'var(--bg-surface-elevated)', borderRadius: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -245,11 +275,8 @@ export const DoctorProfile: React.FC = () => {
                         role="button"
                         tabIndex={0}
                         aria-pressed={isSelected}
-                        aria-label={`Select slot on ${dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} at ${dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`}
                         onClick={() => setSelectedSlot(slot.id)}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot.id); } }}
-                        onFocus={(e) => e.currentTarget.style.boxShadow = '0 0 0 2px var(--accent)'}
-                        onBlur={(e) => e.currentTarget.style.boxShadow = 'none'}
                         style={{ 
                           padding: '1rem', 
                           border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`, 
@@ -274,13 +301,20 @@ export const DoctorProfile: React.FC = () => {
               )}
             </div>
 
+            <div style={{ marginBottom: '1.5rem', padding: '0.85rem 1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '10px', border: '1px solid rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Sparkles size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Demo Verification: Clicking confirm will open Razorpay with a <strong>₹1 live UPI QR code</strong> for instant verification.
+              </span>
+            </div>
+
             <button 
               type="submit" 
               className="btn btn-primary" 
-              style={{ width: '100%', padding: '1rem' }}
+              style={{ width: '100%', padding: '1rem', fontSize: '1rem', fontWeight: 700 }}
               disabled={booking || !selectedSlot}
             >
-              {booking ? <div className="spinner"></div> : 'Confirm Booking'}
+              {booking ? <div className="spinner"></div> : 'Proceed to Pay ₹1 & Confirm Booking'}
             </button>
           </form>
         </motion.div>
@@ -288,3 +322,4 @@ export const DoctorProfile: React.FC = () => {
     </div>
   );
 };
+export default DoctorProfile;
