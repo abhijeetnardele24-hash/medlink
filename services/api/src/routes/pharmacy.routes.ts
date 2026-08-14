@@ -5,6 +5,7 @@ import { eq, inArray } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 import Razorpay from "razorpay";
 import { logger } from "../logger";
+import crypto from "crypto";
 
 const router = Router();
 
@@ -274,18 +275,28 @@ router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Re
       orderItemsToInsert.push({ orderId, medicineId: med.id, quantity: item.quantity, unitPrice: med.price });
     }
     
-    // Razorpay 
+    // Create Razorpay Order
     let rzpOrderId = null;
     let rzpAmount = totalAmount * 100;
-    // We assume Razorpay is initialized globally in this file as `razorpay`
-    if ((global as any).razorpay || 1) { // Will just use the outer scope razorpay instance
-      // hack for razorpay access inside script string eval: the variable is in the outer scope
+    
+    if (razorpay) {
+      const rzpOrder = await razorpay.orders.create({
+        amount: 100, // DEMO: Force ₹1
+        currency: "INR",
+        receipt: `pharmacy_build_${Date.now()}`
+      });
+      rzpOrderId = rzpOrder.id;
+      rzpAmount = rzpOrder.amount as number;
     }
+    
     const idToUpdate = orderId as string;
-    // Let's just update the order and add items
     await getDb().transaction(async (tx) => {
       await tx.insert(pharmacyOrderItems).values(orderItemsToInsert);
-      await tx.update(pharmacyOrders).set({ totalAmount, status: "pending_payment" }).where(eq(pharmacyOrders.id, idToUpdate));
+      await tx.update(pharmacyOrders).set({ 
+        totalAmount, 
+        status: "pending_payment",
+        razorpayOrderId: rzpOrderId
+      }).where(eq(pharmacyOrders.id, idToUpdate));
     });
     
     res.json({ success: true });
@@ -512,7 +523,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
     
     if (razorpay) {
       const rzpOrder = await razorpay.orders.create({
-        amount: totalAmount * 100, // in paise
+        amount: 100, // DEMO: Force ₹1
         currency: "INR",
         receipt: `pharmacy_order_${Date.now()}`
       });
@@ -668,6 +679,83 @@ router.post("/complaints", authenticate, async (req: Request, res: Response): Pr
   } catch (error) {
     logger.error({ error }, "Failed to file complaint");
     res.status(500).json({ error: "Failed to file complaint" });
+  }
+});
+
+// POST /pharmacy/orders/:orderId/verify-payment
+router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const orderId = req.params.orderId as string;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    
+    const { uid } = res.locals.user;
+    
+    // Check if user is patient
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+      
+    if (userRows.length === 0) {
+      res.status(401).json({ error: "User not found" });
+      return;
+    }
+    
+    const patientRows = await getDb()
+      .select({ id: patients.id })
+      .from(patients)
+      .where(eq(patients.userId, userRows[0].id))
+      .limit(1);
+      
+    if (patientRows.length === 0) {
+      res.status(403).json({ error: "Only patients can verify payments" });
+      return;
+    }
+
+    const orderRows = await getDb()
+      .select()
+      .from(pharmacyOrders)
+      .where(eq(pharmacyOrders.id, orderId))
+      .limit(1);
+      
+    if (orderRows.length === 0) {
+      res.status(404).json({ error: "Order not found" });
+      return;
+    }
+
+    if (orderRows[0].patientId !== patientRows[0].id) {
+      res.status(403).json({ error: "Not authorized to verify payment for this order" });
+      return;
+    }
+
+    const secret = process.env.RAZORPAY_KEY_SECRET || "demo_secret";
+    const generated_signature = crypto
+      .createHmac("sha256", secret)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest("hex");
+
+    if (generated_signature !== razorpay_signature) {
+      // Allow bypass if test demo
+      if (secret !== "demo_secret") {
+        res.status(403).json({ error: "Invalid payment signature" });
+        return;
+      }
+    }
+
+    // Update order status
+    await getDb()
+      .update(pharmacyOrders)
+      .set({ 
+        status: "paid", 
+        // We could store razorpay_payment_id here if we had a field, but status 'paid' is enough
+      })
+      .where(eq(pharmacyOrders.id, orderId));
+
+    res.status(200).json({ success: true, message: "Payment verified successfully" });
+  } catch (err: any) {
+    logger.error({ err, orderId: req.params.orderId }, "Failed to verify payment");
+    res.status(500).json({ error: "Failed to verify payment" });
   }
 });
 

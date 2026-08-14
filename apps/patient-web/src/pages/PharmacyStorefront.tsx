@@ -131,10 +131,20 @@ export function PharmacyStorefront() {
           name: 'MedLink Pharmacy',
           description: 'Medicine Order',
           order_id: res.data.razorpayOrderId,
-          handler: () => {
-            setOrderSuccess(true);
-            setCart([]);
-            setIsCartOpen(false);
+          handler: async (response: any) => {
+            try {
+              await api.post(`/pharmacy/orders/${res.data.order.id}/verify-payment`, {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              });
+              setOrderSuccess(true);
+              setCart([]);
+              setIsCartOpen(false);
+              setAddress('');
+            } catch (err) {
+              alert('Payment verification failed. Please contact support.');
+            }
           },
         };
         const rzp = new (window as any).Razorpay(options);

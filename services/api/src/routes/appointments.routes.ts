@@ -458,13 +458,13 @@ router.post(
       if (!process.env.RAZORPAY_KEY_ID || process.env.RAZORPAY_KEY_ID === "rzp_test_demo") {
         order = {
           id: `order_mock_${Date.now()}`,
-          amount: fee * 100,
+          amount: 100, // DEMO: Force ₹1
           currency: "INR",
           receipt: `receipt_${id}`,
         };
       } else {
         order = await razorpay.orders.create({
-          amount: fee * 100, // Razorpay amount is in paise
+          amount: 100, // DEMO: Force ₹1 (100 paise)
           currency: "INR",
           receipt: `receipt_${id}`,
         });

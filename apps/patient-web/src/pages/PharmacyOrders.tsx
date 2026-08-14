@@ -51,9 +51,18 @@ export const PharmacyOrders: React.FC = () => {
       name: "MedLink Pharmacy",
       description: "Order Payment",
       order_id: order.razorpayOrderId,
-      handler: function () {
-        alert("Payment successful! The pharmacy will prepare your order.");
-        fetchOrders(); // Refresh status
+      handler: async function (response: any) {
+        try {
+          await api.post(`/pharmacy/orders/${order.id}/verify-payment`, {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature
+          });
+          alert("Payment successful! The pharmacy will prepare your order.");
+          fetchOrders(); // Refresh status
+        } catch (err) {
+          alert("Payment verification failed. Please contact support.");
+        }
       },
       prefill: {
         name: "Patient",
