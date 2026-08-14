@@ -14,6 +14,7 @@
   "license": "MIT",
   "type": "commonjs",
   "dependencies": {
+    "@google/genai": "^2.17.1",
     "@opentelemetry/api": "^1.9.1",
     "@socket.io/redis-adapter": "^8.3.0",
     "cors": "^2.8.5",

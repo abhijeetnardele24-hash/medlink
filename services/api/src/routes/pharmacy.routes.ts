@@ -3,6 +3,10 @@ import { getDb } from "../db";
 import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications, pharmacyDispenseAudit, orderComplaints } from "../db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { validateBody } from "../middleware/validateBody";
+import { verifyPharmacistSchema, uploadPrescriptionSchema, buildOrderSchema, createOrderSchema, fileComplaintSchema, verifyPaymentSchema } from "../schemas/pharmacy.schema";
+import { AppError, ValidationError, UnauthorizedError, ForbiddenError, NotFoundError } from "../errors";
+
 import Razorpay from "razorpay";
 import { logger } from "../logger";
 import crypto from "crypto";
@@ -22,7 +26,7 @@ function normalizeText(text: string): string[] {
 }
 
 // POST /pharmacy/verify
-router.post("/verify", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/verify", authenticate, validateBody(verifyPharmacistSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { 
       drugLicenseNumber,
@@ -33,8 +37,7 @@ router.post("/verify", authenticate, async (req: Request, res: Response): Promis
     } = req.body;
 
     if (!drugLicenseNumber || !pharmacyCouncilRegistrationNumber) {
-      res.status(400).json({ error: "drugLicenseNumber and pharmacyCouncilRegistrationNumber are required" });
-      return;
+      throw new ValidationError("drugLicenseNumber and pharmacyCouncilRegistrationNumber are required");
     }
 
     const { uid } = res.locals.user;
@@ -47,8 +50,7 @@ router.post("/verify", authenticate, async (req: Request, res: Response): Promis
       .limit(1);
     
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
 
     const pharmacistRows = await getDb()
@@ -58,8 +60,7 @@ router.post("/verify", authenticate, async (req: Request, res: Response): Promis
       .limit(1);
 
     if (pharmacistRows.length === 0) {
-      res.status(403).json({ error: "Only pharmacists can submit verification" });
-      return;
+      throw new ForbiddenError("Only pharmacists can submit verification");
     }
 
     const pharmacistId = pharmacistRows[0].id;
@@ -124,8 +125,7 @@ router.get("/inventory", authenticate, async (req: Request, res: Response): Prom
       .limit(1);
     
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
 
     const pharmacistRows = await getDb()
@@ -135,8 +135,7 @@ router.get("/inventory", authenticate, async (req: Request, res: Response): Prom
       .limit(1);
 
     if (pharmacistRows.length === 0) {
-      res.status(403).json({ error: "Only pharmacists have inventory" });
-      return;
+      throw new ForbiddenError("Only pharmacists have inventory");
     }
 
     const pharmacistId = pharmacistRows[0].id;
@@ -159,10 +158,10 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
   try {
     const { uid } = res.locals.user;
     const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
-    if (!userRows.length) { res.status(401).json({ error: "User not found" }); return; }
+    if (!userRows.length) { throw new UnauthorizedError("User not found"); }
     
     const pharmacistRows = await getDb().select({ id: pharmacists.id }).from(pharmacists).where(eq(pharmacists.userId, userRows[0].id)).limit(1);
-    if (!pharmacistRows.length) { res.status(403).json({ error: "Only pharmacists can view incoming orders" }); return; }
+    if (!pharmacistRows.length) { throw new ForbiddenError("Only pharmacists can view incoming orders"); }
     
     const pharmacistId = pharmacistRows[0].id;
     
@@ -189,19 +188,19 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
 });
 
 // POST /pharmacy/orders/upload
-router.post("/orders/upload", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/orders/upload", authenticate, validateBody(uploadPrescriptionSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { pharmacistId: providedPharmacistId, attachmentUrl, deliveryAddress } = req.body;
     if (!attachmentUrl || !deliveryAddress) {
-      res.status(400).json({ error: "Missing required fields (attachmentUrl, deliveryAddress)" }); return;
+      throw new ValidationError("Missing required fields (attachmentUrl, deliveryAddress)");
     }
     
     const { uid } = res.locals.user;
     const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
-    if (!userRows.length) { res.status(401).json({ error: "User not found" }); return; }
+    if (!userRows.length) { throw new UnauthorizedError("User not found"); }
     
     const patientRows = await getDb().select({ id: patients.id }).from(patients).where(eq(patients.userId, userRows[0].id)).limit(1);
-    if (!patientRows.length) { res.status(403).json({ error: "Only patients can upload prescriptions" }); return; }
+    if (!patientRows.length) { throw new ForbiddenError("Only patients can upload prescriptions"); }
     
     // Auto-assign pharmacist if not provided
     let pharmacistId = providedPharmacistId;
@@ -211,7 +210,7 @@ router.post("/orders/upload", authenticate, async (req: Request, res: Response):
     }
 
     if (!pharmacistId) {
-      res.status(400).json({ error: "No verified pharmacist available to assign this prescription" }); return;
+      throw new ValidationError("No verified pharmacist available to assign this prescription");
     }
     
     const [order] = await getDb().insert(pharmacyOrders).values({
@@ -232,29 +231,29 @@ router.post("/orders/upload", authenticate, async (req: Request, res: Response):
 
 
 // POST /pharmacy/orders/:orderId/build
-router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/orders/:orderId/build", authenticate, validateBody(buildOrderSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const orderId = req.params.orderId as string;
     const { items } = req.body; // { medicineId, quantity }[]
-    if (!items || !items.length) { res.status(400).json({ error: "Items are required" }); return; }
+    if (!items || !items.length) { throw new ValidationError("Items are required"); }
     
     const { uid } = res.locals.user;
     const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
-    if (!userRows.length) { res.status(401).json({ error: "User not found" }); return; }
+    if (!userRows.length) { throw new UnauthorizedError("User not found"); }
     
     const pharmacistRows = await getDb().select({ id: pharmacists.id }).from(pharmacists).where(eq(pharmacists.userId, userRows[0].id)).limit(1);
-    if (!pharmacistRows.length) { res.status(403).json({ error: "Only pharmacists can build orders" }); return; }
+    if (!pharmacistRows.length) { throw new ForbiddenError("Only pharmacists can build orders"); }
     
     const pharmacistId = pharmacistRows[0].id;
     
     // Verify order
     const orderRows = await getDb().select().from(pharmacyOrders).where(eq(pharmacyOrders.id, orderId)).limit(1);
     if (!orderRows.length || orderRows[0].pharmacistId !== pharmacistId) {
-      res.status(404).json({ error: "Order not found" }); return;
+      throw new NotFoundError("Order not found");
     }
     
     if (orderRows[0].status !== "pending_pharmacist_review") {
-      res.status(400).json({ error: "Order is not pending review" }); return;
+      throw new ValidationError("Order is not pending review");
     }
     
     // Fetch medicines
@@ -269,7 +268,7 @@ router.post("/orders/:orderId/build", authenticate, async (req: Request, res: Re
     for (const item of items) {
       const med = medMap.get(item.medicineId);
       if (!med || med.pharmacistId !== pharmacistId) {
-        res.status(400).json({ error: "Invalid medicine" }); return;
+        throw new ValidationError("Invalid medicine");
       }
       totalAmount += med.price * item.quantity;
       orderItemsToInsert.push({ orderId, medicineId: med.id, quantity: item.quantity, unitPrice: med.price });
@@ -312,10 +311,10 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
   try {
     const { uid } = res.locals.user;
     const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
-    if (!userRows.length) { res.status(401).json({ error: "User not found" }); return; }
+    if (!userRows.length) { throw new UnauthorizedError("User not found"); }
     
     const patientRows = await getDb().select({ id: patients.id }).from(patients).where(eq(patients.userId, userRows[0].id)).limit(1);
-    if (!patientRows.length) { res.status(403).json({ error: "Only patients can view orders" }); return; }
+    if (!patientRows.length) { throw new ForbiddenError("Only patients can view orders"); }
     
     const orders = await getDb()
       .select({
@@ -340,17 +339,15 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
 });
 
 // POST /pharmacy/orders
-router.post("/", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/", authenticate, validateBody(createOrderSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { items, prescriptionId, deliveryAddress, pharmacistId: providedPharmacistId } = req.body;
     
     if (!items || !Array.isArray(items) || items.length === 0) {
-      res.status(400).json({ error: "Order must have items" });
-      return;
+      throw new ValidationError("Order must have items");
     }
     if (!deliveryAddress) {
-      res.status(400).json({ error: "Delivery address is required" });
-      return;
+      throw new ValidationError("Delivery address is required");
     }
 
     const { uid } = res.locals.user;
@@ -363,8 +360,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       .limit(1);
     
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
 
     const patientRows = await getDb()
@@ -374,8 +370,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       .limit(1);
 
     if (patientRows.length === 0) {
-      res.status(403).json({ error: "Only patients can place pharmacy orders" });
-      return;
+      throw new ForbiddenError("Only patients can place pharmacy orders");
     }
     const patientId = patientRows[0].id;
 
@@ -393,8 +388,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
     }
 
     if (!pharmacistId) {
-      res.status(400).json({ error: "No verified pharmacist available to assign this order" });
-      return;
+      throw new ValidationError("No verified pharmacist available to assign this order");
     }
 
     // Fetch the requested medicines
@@ -424,8 +418,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
           : JSON.stringify(rxRows[0].medicinesJson);
         rxTokenSet = new Set(normalizeText(rxJsonStr));
       } else {
-        res.status(404).json({ error: "Prescription not found" });
-        return;
+        throw new NotFoundError("Prescription not found");
       }
     }
 
@@ -437,25 +430,21 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
     for (const item of items) {
       const med = medMap.get(item.medicineId);
       if (!med) {
-        res.status(400).json({ error: `Medicine not found: ${item.medicineId}` });
-        return;
+        throw new ValidationError(`Medicine not found: ${item.medicineId}`);
       }
       
       const qty = parseInt(item.quantity, 10);
       if (qty <= 0) {
-        res.status(400).json({ error: "Invalid quantity" });
-        return;
+        throw new ValidationError("Invalid quantity");
       }
 
       if (med.prescriptionTier === "restricted") {
-        res.status(403).json({ error: `Medicine '${med.name}' is restricted and cannot be ordered online.` });
-        return;
+        throw new ForbiddenError(`Medicine '${med.name}' is restricted and cannot be ordered online.`);
       }
 
       if (med.prescriptionTier === "schedule_h") {
         if (!prescriptionId) {
-          res.status(403).json({ error: `Medicine '${med.name}' requires a prescription, but none was provided.` });
-          return;
+          throw new ForbiddenError(`Medicine '${med.name}' requires a prescription, but none was provided.`);
         }
 
         const medTokens = normalizeText(med.name);
@@ -503,17 +492,12 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       // If any failed, reject order
       const failed = auditLogsToInsert.filter(a => !a.matched);
       if (failed.length > 0) {
-        res.status(403).json({ 
-          error: "Reconciliation failed for some prescription medicines", 
-          details: failed 
-        });
-        return;
+        throw new ForbiddenError(`Reconciliation failed: ${JSON.stringify(failed)}`);
       }
     }
 
     if (!razorpay && process.env.TEST_BYPASS_AUTH !== "true") {
-      res.status(500).json({ error: "Payment gateway not configured" });
-      return;
+      throw new ValidationError("Payment gateway not configured");
     }
 
     // Create Razorpay Order
@@ -574,8 +558,7 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
     
     const userRows = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, uid)).limit(1);
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
 
     const pharmacistRows = await getDb()
@@ -585,8 +568,7 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
       .limit(1);
 
     if (pharmacistRows.length === 0) {
-      res.status(403).json({ error: "Only pharmacists can dispense orders" });
-      return;
+      throw new ForbiddenError("Only pharmacists can dispense orders");
     }
     const pharmacistId = pharmacistRows[0].id;
 
@@ -598,14 +580,12 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
       .limit(1);
 
     if (orderRows.length === 0) {
-      res.status(404).json({ error: "Order not found" });
-      return;
+      throw new NotFoundError("Order not found");
     }
 
     const order = orderRows[0];
     if (order.pharmacistId !== pharmacistId) {
-      res.status(403).json({ error: "Not authorized to dispense this order" });
-      return;
+      throw new ForbiddenError("Not authorized to dispense this order");
     }
 
     await getDb().transaction(async (tx) => {
@@ -630,14 +610,13 @@ router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Res
 });
 
 // POST /pharmacy/complaints
-router.post("/complaints", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/complaints", authenticate, validateBody(fileComplaintSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { orderId, issueDescription } = req.body;
     const { uid } = res.locals.user;
 
     if (!orderId || !issueDescription) {
-      res.status(400).json({ error: "orderId and issueDescription are required" });
-      return;
+      throw new ValidationError("orderId and issueDescription are required");
     }
 
     const userRows = await getDb()
@@ -647,8 +626,7 @@ router.post("/complaints", authenticate, async (req: Request, res: Response): Pr
       .limit(1);
 
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
     const patientId = userRows[0].id;
 
@@ -659,13 +637,11 @@ router.post("/complaints", authenticate, async (req: Request, res: Response): Pr
       .limit(1);
 
     if (orderRows.length === 0) {
-      res.status(404).json({ error: "Order not found" });
-      return;
+      throw new NotFoundError("Order not found");
     }
 
     if (orderRows[0].patientId !== patientId) {
-      res.status(403).json({ error: "Not authorized to file complaint for this order" });
-      return;
+      throw new ForbiddenError("Not authorized to file complaint for this order");
     }
 
     await getDb().insert(orderComplaints).values({
@@ -683,7 +659,7 @@ router.post("/complaints", authenticate, async (req: Request, res: Response): Pr
 });
 
 // POST /pharmacy/orders/:orderId/verify-payment
-router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/orders/:orderId/verify-payment", authenticate, validateBody(verifyPaymentSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const orderId = req.params.orderId as string;
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -698,8 +674,7 @@ router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request
       .limit(1);
       
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
     
     const patientRows = await getDb()
@@ -709,8 +684,7 @@ router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request
       .limit(1);
       
     if (patientRows.length === 0) {
-      res.status(403).json({ error: "Only patients can verify payments" });
-      return;
+      throw new ForbiddenError("Only patients can verify payments");
     }
 
     const orderRows = await getDb()
@@ -720,13 +694,11 @@ router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request
       .limit(1);
       
     if (orderRows.length === 0) {
-      res.status(404).json({ error: "Order not found" });
-      return;
+      throw new NotFoundError("Order not found");
     }
 
     if (orderRows[0].patientId !== patientRows[0].id) {
-      res.status(403).json({ error: "Not authorized to verify payment for this order" });
-      return;
+      throw new ForbiddenError("Not authorized to verify payment for this order");
     }
 
     const secret = process.env.RAZORPAY_KEY_SECRET || "demo_secret";
@@ -738,8 +710,7 @@ router.post("/orders/:orderId/verify-payment", authenticate, async (req: Request
     if (generated_signature !== razorpay_signature) {
       // Allow bypass if test demo
       if (secret !== "demo_secret") {
-        res.status(403).json({ error: "Invalid payment signature" });
-        return;
+        throw new ForbiddenError("Invalid payment signature");
       }
     }
 

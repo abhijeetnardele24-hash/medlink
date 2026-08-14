@@ -4,6 +4,14 @@ import { getDb } from "../db";
 import { doctors, recommendationEvents } from "../db/schema";
 import { z } from "zod";
 import { validateBody } from "../middleware/validateBody";
+import { GoogleGenAI } from '@google/genai';
+import { logger } from "../logger";
+
+let ai: GoogleGenAI | null = null;
+if (process.env.GEMINI_API_KEY) {
+  ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+}
+
 
 const router = Router();
 
@@ -33,18 +41,69 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     const { patientId, concernCategory, preferredLanguage, preferredMode } = req.body;
     
-    // 1. Map concern to speciality
+    // 1. AI Smart Triage (or dictionary fallback)
+
     const lowerConcern = (concernCategory as string).toLowerCase();
     let suggestedSpeciality = "General Medicine"; // Default fallback
-    
-    for (const [key, spec] of Object.entries(CONCERN_TO_SPECIALITY)) {
-      if (lowerConcern.includes(key)) {
-        suggestedSpeciality = spec;
-        break;
+    let explanation = `Suggested because you selected a ${concernCategory} concern${
+      preferredLanguage ? `, ${preferredLanguage} language` : ""
+    }${preferredMode ? `, and ${preferredMode} consultation` : ""}. This is not a medical diagnosis.`;
+
+    if (ai) {
+      try {
+        const prompt = `
+          You are an intelligent medical triage assistant. 
+          A patient has the following concern/symptoms: "${concernCategory}".
+          Map this to ONE of the following medical specialties exactly:
+          Dermatology, General Medicine, Cardiology, Neurology, Pediatrics, Orthopedics, Ophthalmology, Psychiatry, Gynecology.
+          If it does not fit perfectly, default to General Medicine.
+          
+          Respond in strict JSON format:
+          {
+            "speciality": "The exact specialty name",
+            "explanation": "A short, empathetic, patient-friendly explanation of why this specialty is recommended. Do not diagnose."
+          }
+        `;
+        
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: prompt,
+        });
+
+        if (response.text) {
+          // Attempt to parse JSON from the response text
+          const cleanText = response.text.replace(/\s*\x60\x60\x60json\s*/g, '').replace(/\s*\x60\x60\x60\s*/g, '').trim();
+          const parsed = JSON.parse(cleanText);
+          
+          if (parsed.speciality) {
+            suggestedSpeciality = parsed.speciality;
+          }
+          if (parsed.explanation) {
+            explanation = parsed.explanation;
+          }
+        }
+      } catch (err) {
+        logger.warn({ err }, "Gemini AI triage failed. Falling back to dictionary mapping.");
+        // Fallback dictionary mapping
+        for (const [key, spec] of Object.entries(CONCERN_TO_SPECIALITY)) {
+          if (lowerConcern.includes(key)) {
+            suggestedSpeciality = spec;
+            break;
+          }
+        }
+      }
+    } else {
+      // Fallback dictionary mapping
+      for (const [key, spec] of Object.entries(CONCERN_TO_SPECIALITY)) {
+        if (lowerConcern.includes(key)) {
+          suggestedSpeciality = spec;
+          break;
+        }
       }
     }
 
-    // 2. Query all verified doctors (In a real app, we would query available slots too)
+
+    // 2. Query all verified doctors
     const allDoctors = await getDb()
       .select({
         id: doctors.id,
@@ -57,23 +116,13 @@ router.post(
       .where(eq(doctors.verificationStatus, "verified"));
 
     // 3. Rank doctors
-    // Speciality match gets highest weight.
     const ranked = allDoctors.map((doc) => {
       let score = 0;
-      
       if (doc.speciality === suggestedSpeciality) score += 50;
-      
-      // Simulate availability/experience scoring
-      score += (doc.experienceYears || 0); // more experience gives slight edge
-      
-      // Add random fuzzing to simulate availability matching
+      score += (doc.experienceYears || 0);
       score += Math.floor(Math.random() * 10);
-      
-      // Language match & Mode match logic can be expanded here. 
-      // For Phase 2, we just boost score by 15 if language was requested (simulating a match).
       if (preferredLanguage) score += 15;
       if (preferredMode) score += 10;
-
       return { doctor: doc, score };
     });
 
@@ -85,12 +134,7 @@ router.post(
 
     const rankedDoctorIds = topRecommendations.map(r => r.doctor.id);
 
-    // 4. Generate plain-language explanation
-    const explanation = `Suggested because you selected a ${concernCategory} concern${
-      preferredLanguage ? `, ${preferredLanguage} language` : ""
-    }${preferredMode ? `, and ${preferredMode} consultation` : ""}. This is not a medical diagnosis.`;
-
-    // 5. Log event to database
+    // 4. Log event to database
     await getDb().insert(recommendationEvents).values({
       patientId: patientId || null,
       selectedCategory: concernCategory,
@@ -98,10 +142,10 @@ router.post(
       preferredMode: preferredMode || null,
       suggestedSpeciality,
       rankedDoctorIds,
-      explanationVersion: "v1"
+      explanationVersion: ai ? "v2_gemini" : "v1_heuristic"
     });
 
-    // 6. Return response
+    // 5. Return response
     res.json({
       success: true,
       concernCategory,
@@ -116,5 +160,6 @@ router.post(
     });
   }
 );
+
 
 export default router;

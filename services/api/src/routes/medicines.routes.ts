@@ -3,6 +3,10 @@ import { getDb } from "../db";
 import { medicines, pharmacists, users } from "../db/schema";
 import { ilike, eq, and, sql } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
+import { validateBody } from "../middleware/validateBody";
+import { addMedicineSchema } from "../schemas/medicines.schema";
+import { ValidationError, UnauthorizedError, ForbiddenError, NotFoundError } from "../errors";
+
 import { withCache, invalidateCachePrefix } from "../redis";
 
 const router = Router();
@@ -98,8 +102,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!data) {
-      res.status(404).json({ error: "Medicine not found" });
-      return;
+      throw new NotFoundError("Medicine not found");
     }
 
     res.json(data);
@@ -109,7 +112,7 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
 });
 
 // POST /medicines - Add new medicine to inventory
-router.post("/", authenticate, async (req: Request, res: Response): Promise<void> => {
+router.post("/", authenticate, validateBody(addMedicineSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { uid } = res.locals.user;
     
@@ -121,8 +124,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       .limit(1);
     
     if (userRows.length === 0) {
-      res.status(401).json({ error: "User not found" });
-      return;
+      throw new UnauthorizedError("User not found");
     }
 
     const pharmacistRows = await getDb()
@@ -132,8 +134,7 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
       .limit(1);
 
     if (pharmacistRows.length === 0) {
-      res.status(403).json({ error: "Only pharmacists can add medicines" });
-      return;
+      throw new ForbiddenError("Only pharmacists can add medicines");
     }
 
     const pharmacistId = pharmacistRows[0].id;
@@ -153,17 +154,52 @@ router.post("/", authenticate, async (req: Request, res: Response): Promise<void
     } = req.body;
 
     if (!name || price === undefined) {
-      res.status(400).json({ error: "Name and price are required" });
-      return;
+      throw new ValidationError("Name and price are required");
+    }
+
+    
+    let enhancedDescription = description || "";
+    let enhancedComposition = composition || "";
+    
+    // Attempt OpenFDA live lookup
+    if (process.env.OPENFDA_API_KEY && name) {
+      try {
+        const query = encodeURIComponent(`openfda.brand_name:"${name}" OR openfda.generic_name:"${name}"`);
+        const fdaUrl = `https://api.fda.gov/drug/label.json?api_key=${process.env.OPENFDA_API_KEY}&search=${query}&limit=1`;
+        const fdaRes = await fetch(fdaUrl);
+        if (fdaRes.ok) {
+          const fdaData = await fdaRes.json();
+          if (fdaData.results && fdaData.results.length > 0) {
+            const fdaResult = fdaData.results[0];
+            
+            // Append FDA Boxed Warning or Warnings
+            const warnings = fdaResult.boxed_warning || fdaResult.warnings;
+            if (warnings && warnings.length > 0) {
+              enhancedDescription = enhancedDescription 
+                ? `${enhancedDescription}\n\nFDA Warnings: ${warnings[0]}`
+                : `FDA Warnings: ${warnings[0]}`;
+            }
+            
+            // Append Active Ingredient if not provided
+            const activeIngredient = fdaResult.active_ingredient;
+            if (activeIngredient && activeIngredient.length > 0 && !enhancedComposition) {
+              enhancedComposition = activeIngredient[0];
+            }
+          }
+        }
+      } catch (fdaErr) {
+        // Silently swallow FDA errors to not block inventory creation
+        // logger is imported
+      }
     }
 
     const [newMedicine] = await getDb().insert(medicines).values({
       pharmacistId,
       name,
       genericName,
-      description,
+      description: enhancedDescription,
       imageUrl,
-      composition,
+      composition: enhancedComposition,
       dosageForm,
       manufacturer,
       price: Number(price),
