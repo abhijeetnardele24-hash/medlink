@@ -8,6 +8,12 @@ The platform governs the entire digital health encounter lifecycle: verified pra
 
 ---
 
+<div align="center">
+  <img src="docs/assets/architecture_live.svg" alt="MedLink Live Distributed Architecture & Media Topology" width="100%" />
+</div>
+
+---
+
 ## Repository Workspace Structure
 
 ```text

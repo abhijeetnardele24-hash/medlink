@@ -1,0 +1,290 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 680" width="100%" height="100%" style="background: #090d16; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="bgGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="100%" stop-color="#6d28d9" />
+    </linearGradient>
+
+    <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <linearGradient id="amberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+
+    <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#0891b2" />
+    </linearGradient>
+
+    <!-- Filters for Glows -->
+    <filter id="glowBlue" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="glowPurple" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <filter id="glowGreen" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Moving Signal Animation -->
+    <style>
+      .pulse-line {
+        stroke-dasharray: 8 16;
+        animation: dash 1.5s linear infinite;
+      }
+      .pulse-line-fast {
+        stroke-dasharray: 6 12;
+        animation: dash 0.9s linear infinite;
+      }
+      .pulse-line-reverse {
+        stroke-dasharray: 8 16;
+        animation: dash-reverse 1.5s linear infinite;
+      }
+      @keyframes dash {
+        to {
+          stroke-dashoffset: -48;
+        }
+      }
+      @keyframes dash-reverse {
+        to {
+          stroke-dashoffset: 48;
+        }
+      }
+
+      /* Radar pulse rings */
+      .radar-pulse {
+        animation: radar 2.5s ease-out infinite;
+        transform-origin: center;
+      }
+      @keyframes radar {
+        0% {
+          r: 6;
+          opacity: 1;
+        }
+        100% {
+          r: 28;
+          opacity: 0;
+        }
+      }
+
+      /* Subtle breathing glow */
+      .breathing-box {
+        animation: breath 4s ease-in-out infinite alternate;
+      }
+      @keyframes breath {
+        0% {
+          stroke-opacity: 0.3;
+          filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.2));
+        }
+        100% {
+          stroke-opacity: 0.8;
+          filter: drop-shadow(0 0 16px rgba(139, 92, 246, 0.4));
+        }
+      }
+
+      /* Floating particles */
+      .floating-particle-1 {
+        animation: float1 3s ease-in-out infinite alternate;
+      }
+      @keyframes float1 {
+        from { transform: translateY(0px); }
+        to { transform: translateY(-8px); }
+      }
+      .floating-particle-2 {
+        animation: float2 3.5s ease-in-out infinite alternate;
+      }
+      @keyframes float2 {
+        from { transform: translateY(0px); }
+        to { transform: translateY(8px); }
+      }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1200" height="680" fill="url(#bgGlow)" />
+
+  <!-- Subtle Ambient Grid -->
+  <g opacity="0.06" stroke="#ffffff" stroke-width="1">
+    <path d="M 0 80 L 1200 80 M 0 160 L 1200 160 M 0 240 L 1200 240 M 0 320 L 1200 320 M 0 400 L 1200 400 M 0 480 L 1200 480 M 0 560 L 1200 560 M 0 640 L 1200 640" />
+    <path d="M 120 0 L 120 680 M 240 0 L 240 680 M 360 0 L 360 680 M 480 0 L 480 680 M 600 0 L 600 680 M 720 0 L 720 680 M 840 0 L 840 680 M 960 0 L 960 680 M 1080 0 L 1080 680" />
+  </g>
+
+  <!-- Header Section -->
+  <g transform="translate(60, 45)">
+    <circle cx="12" cy="12" r="10" fill="#10b981" />
+    <circle cx="12" cy="12" r="12" fill="none" stroke="#10b981" stroke-width="2" class="radar-pulse" />
+    <text x="32" y="17" fill="#ffffff" font-size="18" font-weight="800" letter-spacing="0.5">MEDLINK DISTRIBUTED REAL-TIME TOPOLOGY</text>
+    <text x="500" y="17" fill="#94a3b8" font-size="13" font-weight="500">LIVE WEBRTC MEDIA PLANE &amp; CLINICAL INTELLIGENCE BUS</text>
+    <rect x="1000" y="2" width="80" height="22" rx="11" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="1" />
+    <text x="1040" y="17" fill="#10b981" font-size="10" font-weight="700" text-anchor="middle">ACTIVE 60 FPS</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- CONNECTION PATHS WITH MOVING PULSE SIGNALS -->
+  <!-- ========================================================================= -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Static Base Path Guides -->
+    <path d="M 230 180 L 440 330" stroke="#1e293b" stroke-width="3" />
+    <path d="M 230 500 L 440 350" stroke="#1e293b" stroke-width="3" />
+    <path d="M 230 180 C 290 280, 290 400, 230 500" stroke="#1e293b" stroke-width="4" />
+    <path d="M 590 340 L 730 200" stroke="#1e293b" stroke-width="3" />
+    <path d="M 590 340 L 730 480" stroke="#1e293b" stroke-width="3" />
+    <path d="M 880 200 L 990 300" stroke="#1e293b" stroke-width="3" />
+    <path d="M 880 480 L 990 380" stroke="#1e293b" stroke-width="3" />
+    <path d="M 515 280 L 515 150" stroke="#1e293b" stroke-width="3" />
+
+    <!-- Animated Moving Pulse Signals (Neon Lines) -->
+    <!-- Direct P2P WebRTC Audio/Video between Doctor and Patient -->
+    <path d="M 230 180 C 290 280, 290 400, 230 500" stroke="#06b6d4" stroke-width="3" class="pulse-line-fast" filter="url(#glowBlue)" />
+    <path d="M 230 500 C 290 400, 290 280, 230 180" stroke="#06b6d4" stroke-width="2" class="pulse-line-reverse" opacity="0.6" />
+
+    <!-- Patient to Gateway -->
+    <path d="M 230 500 L 440 350" stroke="#3b82f6" stroke-width="2.5" class="pulse-line" />
+    <!-- Doctor to Gateway -->
+    <path d="M 230 180 L 440 330" stroke="#8b5cf6" stroke-width="2.5" class="pulse-line" />
+
+    <!-- Gateway to STUN/TURN Media Relay -->
+    <path d="M 515 280 L 515 150" stroke="#06b6d4" stroke-width="2.5" class="pulse-line-reverse" />
+
+    <!-- Gateway to AI Clinical Scribe & CDSS -->
+    <path d="M 590 340 L 730 200" stroke="#a855f7" stroke-width="2.5" class="pulse-line-fast" filter="url(#glowPurple)" />
+
+    <!-- Gateway to Canonical PostgreSQL Store -->
+    <path d="M 590 340 L 730 480" stroke="#10b981" stroke-width="2.5" class="pulse-line-fast" filter="url(#glowGreen)" />
+
+    <!-- AI & DB to Pharmacy/Coordinator Ecosystem -->
+    <path d="M 880 200 L 990 300" stroke="#8b5cf6" stroke-width="2" class="pulse-line" />
+    <path d="M 880 480 L 990 380" stroke="#10b981" stroke-width="2" class="pulse-line" />
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- NODE BOXES & CLIENT CARDS -->
+  <!-- ========================================================================= -->
+
+  <!-- 1. DOCTOR WORKSPACE (Top Left) -->
+  <g transform="translate(80, 120)" class="floating-particle-1">
+    <rect width="180" height="120" rx="18" fill="#131b2e" stroke="#8b5cf6" stroke-width="2" class="breathing-box" />
+    <circle cx="36" cy="36" r="18" fill="url(#purpleGradient)" />
+    <!-- Stethoscope / Cross Icon -->
+    <path d="M 31 36 L 41 36 M 36 31 L 36 41" stroke="#ffffff" stroke-width="3" stroke-linecap="round" />
+    <text x="64" y="32" fill="#ffffff" font-size="14" font-weight="700">Doctor Portal</text>
+    <text x="64" y="48" fill="#a78bfa" font-size="11" font-weight="600">Tele-Clinic Suite</text>
+    <rect x="18" y="70" width="144" height="32" rx="8" fill="#1e293b" />
+    <text x="28" y="90" fill="#94a3b8" font-size="10">🎙️ Ambient Scribe &amp; CDSS</text>
+    <circle cx="162" cy="18" r="4" fill="#10b981" />
+  </g>
+
+  <!-- 2. PATIENT PORTAL (Bottom Left) -->
+  <g transform="translate(80, 440)" class="floating-particle-2">
+    <rect width="180" height="120" rx="18" fill="#131b2e" stroke="#3b82f6" stroke-width="2" class="breathing-box" />
+    <circle cx="36" cy="36" r="18" fill="url(#blueGradient)" />
+    <!-- User Icon -->
+    <circle cx="36" cy="32" r="5" fill="#ffffff" />
+    <path d="M 28 44 C 28 39, 44 39, 44 44" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <text x="64" y="32" fill="#ffffff" font-size="14" font-weight="700">Patient Portal</text>
+    <text x="64" y="48" fill="#60a5fa" font-size="11" font-weight="600">Offline PWA Client</text>
+    <rect x="18" y="70" width="144" height="32" rx="8" fill="#1e293b" />
+    <text x="28" y="90" fill="#94a3b8" font-size="10">🤖 Triage &amp; Lab OCR</text>
+    <circle cx="162" cy="18" r="4" fill="#10b981" />
+  </g>
+
+  <!-- 3. STUN / TURN MEDIA RELAY (Top Middle) -->
+  <g transform="translate(435, 75)">
+    <rect width="160" height="75" rx="14" fill="#0d1b2a" stroke="#06b6d4" stroke-width="1.5" />
+    <circle cx="28" cy="38" r="14" fill="url(#cyanGradient)" />
+    <path d="M 23 38 A 5 5 0 0 1 33 38 M 20 38 A 8 8 0 0 1 36 38" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
+    <text x="50" y="34" fill="#ffffff" font-size="12" font-weight="700">coturn Media Relay</text>
+    <text x="50" y="48" fill="#38bdf8" font-size="10">STUN / TURN (NAT)</text>
+    <text x="50" y="62" fill="#64748b" font-size="9">DTLS-SRTP 1080p</text>
+  </g>
+
+  <!-- 4. CORE API GATEWAY & MICROSERVICES (Center) -->
+  <g transform="translate(440, 280)">
+    <rect width="150" height="120" rx="20" fill="#111827" stroke="#6366f1" stroke-width="2.5" filter="url(#glowBlue)" />
+    <circle cx="75" cy="38" r="20" fill="url(#blueGradient)" />
+    <!-- Server Grid Icon -->
+    <rect x="66" y="29" width="18" height="6" rx="2" fill="#ffffff" />
+    <rect x="66" y="38" width="18" height="6" rx="2" fill="#ffffff" />
+    <rect x="66" y="47" width="18" height="6" rx="2" fill="#ffffff" />
+    <text x="75" y="76" fill="#ffffff" font-size="14" font-weight="800" text-anchor="middle">Core API Gateway</text>
+    <text x="75" y="92" fill="#818cf8" font-size="11" font-weight="600" text-anchor="middle">Node.js / Express 5</text>
+    <text x="75" y="106" fill="#64748b" font-size="9" text-anchor="middle">WebSocket + REST</text>
+  </g>
+
+  <!-- 5. ENTERPRISE CLINICAL AI SUITE (Top Right) -->
+  <g transform="translate(730, 140)" class="floating-particle-1">
+    <rect width="180" height="120" rx="18" fill="#18132a" stroke="#a855f7" stroke-width="2" class="breathing-box" />
+    <circle cx="36" cy="36" r="18" fill="url(#purpleGradient)" />
+    <!-- Sparkles AI Icon -->
+    <path d="M 36 26 L 38 33 L 45 36 L 38 39 L 36 46 L 34 39 L 27 36 L 34 33 Z" fill="#ffffff" />
+    <text x="64" y="32" fill="#ffffff" font-size="14" font-weight="700">Clinical AI Suite</text>
+    <text x="64" y="48" fill="#c084fc" font-size="11" font-weight="600">Gemini 2.0 Engine</text>
+    <rect x="18" y="70" width="144" height="32" rx="8" fill="#2e1065" />
+    <text x="28" y="90" fill="#e9d5ff" font-size="10">⚡ SOAP, DDI &amp; Triage</text>
+  </g>
+
+  <!-- 6. CANONICAL POSTGRESQL DATABASE (Bottom Right) -->
+  <g transform="translate(730, 420)" class="floating-particle-2">
+    <rect width="180" height="120" rx="18" fill="#0f2027" stroke="#10b981" stroke-width="2" class="breathing-box" />
+    <circle cx="36" cy="36" r="18" fill="url(#emeraldGradient)" />
+    <!-- Database Cylinder Icon -->
+    <ellipse cx="36" cy="30" rx="9" ry="3.5" fill="#ffffff" />
+    <path d="M 27 30 L 27 40 A 9 3.5 0 0 0 45 40 L 45 30" fill="none" stroke="#ffffff" stroke-width="2" />
+    <path d="M 27 35 A 9 3.5 0 0 0 45 35" fill="none" stroke="#ffffff" stroke-width="2" />
+    <text x="64" y="32" fill="#ffffff" font-size="14" font-weight="700">PostgreSQL Store</text>
+    <text x="64" y="48" fill="#34d399" font-size="11" font-weight="600">Neon Serverless</text>
+    <rect x="18" y="70" width="144" height="32" rx="8" fill="#064e3b" />
+    <text x="28" y="90" fill="#a7f3d0" font-size="10">🔒 Drizzle ORM + ACID</text>
+  </g>
+
+  <!-- 7. PHARMACY & COORDINATOR ECOSYSTEM (Far Right) -->
+  <g transform="translate(990, 290)">
+    <rect width="150" height="100" rx="16" fill="#131b2e" stroke="#f59e0b" stroke-width="1.5" />
+    <circle cx="30" cy="32" r="14" fill="url(#amberGradient)" />
+    <path d="M 25 32 L 35 32 M 30 27 L 30 37" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" />
+    <text x="52" y="28" fill="#ffffff" font-size="12" font-weight="700">Ecosystem</text>
+    <text x="52" y="42" fill="#fbbf24" font-size="10">Pharmacy &amp; Admin</text>
+    <text x="20" y="72" fill="#94a3b8" font-size="9">📦 Rx Dispensing Orders</text>
+    <text x="20" y="86" fill="#94a3b8" font-size="9">🛡️ Doctor Verification</text>
+  </g>
+
+  <!-- Live Pulse Beacon Dots on Flow Lines -->
+  <circle cx="280" cy="340" r="4" fill="#06b6d4">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.2s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="660" cy="270" r="4" fill="#a855f7">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="660" cy="410" r="4" fill="#10b981">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.4s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- Footer Stats Label -->
+  <g transform="translate(60, 640)">
+    <text x="0" y="0" fill="#475569" font-size="11">
+      LATENCY: &lt; 85ms (Mesh P2P) | AUDIO CODEC: OPUS 48kHz | VIDEO CODEC: VP8/H.264 | ENCRYPTION: DTLS-SRTP (E2EE) | ENCOUNTER REPLICATION: ACTIVE
+    </text>
+  </g>
+</svg>
