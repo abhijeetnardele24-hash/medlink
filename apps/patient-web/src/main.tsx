@@ -7,8 +7,18 @@ import './i18n';
 import { registerSW } from 'virtual:pwa-register';
 import React from 'react';
 
-// Auto-register service worker
-registerSW({ immediate: true });
+// Unregister service worker in dev to avoid offline loop, auto-register in prod
+if (import.meta.env.DEV) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      for (let registration of registrations) {
+        registration.unregister();
+      }
+    });
+  }
+} else {
+  registerSW({ immediate: true });
+}
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
   constructor(props: {children: React.ReactNode}) {
