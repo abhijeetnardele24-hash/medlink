@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { AIScribeService } from '../services/aiScribe.service';
 import { AILabReportService } from '../services/aiLabReport.service';
+import { AISafetyService } from '../services/aiSafety.service';
 
 const router = Router();
 
@@ -44,6 +45,27 @@ router.post('/lab-report/analyze', authenticate, async (req: Request, res: Respo
   } catch (err: any) {
     console.error('Error analyzing lab report:', err);
     res.status(500).json({ error: 'Failed to analyze lab report with AI' });
+  }
+});
+
+/**
+ * POST /ai/safety/ddi-check
+ * Real-time Clinical Decision Support System (CDSS) for Drug-Drug Interactions & Allergy Warnings
+ */
+router.post('/safety/ddi-check', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { medicines, patientAllergies, patientContext } = req.body;
+
+    if (!medicines || !Array.isArray(medicines)) {
+      res.status(400).json({ error: 'Medicines array is required' });
+      return;
+    }
+
+    const result = await AISafetyService.checkPrescriptionSafety(medicines, patientAllergies || [], patientContext);
+    res.json(result);
+  } catch (err: any) {
+    console.error('Error checking prescription safety:', err);
+    res.status(500).json({ error: 'Failed to check prescription safety with AI' });
   }
 });
 
