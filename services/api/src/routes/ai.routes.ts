@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { authenticate } from '../middleware/auth';
 import { AIScribeService } from '../services/aiScribe.service';
+import { AILabReportService } from '../services/aiLabReport.service';
 
 const router = Router();
 
@@ -22,6 +23,27 @@ router.post('/scribe/generate-soap', authenticate, async (req: Request, res: Res
   } catch (err: any) {
     console.error('Error generating SOAP notes:', err);
     res.status(500).json({ error: 'Failed to generate clinical notes with AI' });
+  }
+});
+
+/**
+ * POST /ai/lab-report/analyze
+ * Analyzes patient diagnostic blood tests/lab reports and returns structured biomarker intelligence
+ */
+router.post('/lab-report/analyze', authenticate, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { reportText } = req.body;
+
+    if (!reportText || typeof reportText !== 'string' || reportText.trim().length === 0) {
+      res.status(400).json({ error: 'Report content text is required' });
+      return;
+    }
+
+    const result = await AILabReportService.analyzeLabReport(reportText);
+    res.json(result);
+  } catch (err: any) {
+    console.error('Error analyzing lab report:', err);
+    res.status(500).json({ error: 'Failed to analyze lab report with AI' });
   }
 });
 
