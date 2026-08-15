@@ -21,12 +21,21 @@ interface PrescribedMedicine {
 interface PrescribeModalProps {
   encounterId: string;
   doctorId: string;
+  initialMedicines?: PrescribedMedicine[];
+  initialDiagnosis?: { code: string; name: string } | null;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doctorId, onClose, onSuccess }) => {
-  const [medicines, setMedicines] = useState<PrescribedMedicine[]>([]);
+export const PrescribeModal: React.FC<PrescribeModalProps> = ({
+  encounterId,
+  doctorId,
+  initialMedicines,
+  initialDiagnosis,
+  onClose,
+  onSuccess
+}) => {
+  const [medicines, setMedicines] = useState<PrescribedMedicine[]>(initialMedicines || []);
   const [instructions, setInstructions] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Medicine[]>([]);
@@ -36,7 +45,7 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({ encounterId, doc
   // Diagnosis State (ICD-10)
   const [diagnosisQuery, setDiagnosisQuery] = useState('');
   const [diagnosisResults, setDiagnosisResults] = useState<any[]>([]);
-  const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(null);
+  const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(initialDiagnosis || null);
   const [isSearchingDiagnosis, setIsSearchingDiagnosis] = useState(false);
 
   // Debounced search

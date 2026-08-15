@@ -37,6 +37,7 @@ import pharmacyRouter from "./routes/pharmacy.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
 import syncRouter from "./routes/sync.routes";
 import patientsRouter from "./routes/patients.routes";
+import aiRouter from "./routes/ai.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 
@@ -144,10 +145,12 @@ export function createServer(): Express {
   v1Router.use("/pharmacy/orders", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
+  v1Router.use("/ai", aiRouter);
 
   // Mount unversioned external webhooks and health probes
   app.use("/", healthRouter);
   app.use("/webhooks", webhooksRouter);
+  app.use("/ai", aiRouter);
 
   // Mount v1 API
   app.use("/v1", v1Router);

@@ -17,6 +17,7 @@ import {
   Pause,
   Play,
   Download,
+  Sparkles,
   MoreVertical
 } from 'lucide-react';
 
@@ -56,6 +57,8 @@ interface MeetingControlsProps {
   isChatOpen: boolean;
   onToggleChat: () => void;
   onOpenPrescribe?: () => void;
+  onToggleAIScribe?: () => void;
+  isAIScribeOpen?: boolean;
   onEndCall: () => void;
   onEndMeetingForAll?: () => void;
   isDoctor?: boolean;
@@ -90,6 +93,8 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
   isChatOpen,
   onToggleChat,
   onOpenPrescribe,
+  onToggleAIScribe,
+  isAIScribeOpen,
   onEndCall,
   onEndMeetingForAll,
   isDoctor = false
@@ -304,7 +309,23 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
           <MessageSquare size={20} />
         </button>
 
-        {/* 10. Issue Prescription (Doctor Only) */}
+        {/* 10. AI Clinical Scribe (Doctor Only) */}
+        {isDoctor && onToggleAIScribe && (
+          <button
+            onClick={onToggleAIScribe}
+            title="Open Ambient AI Clinical Scribe (Nuance DAX / Abridge Copilot)"
+            className={`h-12 px-4 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all border ${
+              isAIScribeOpen
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/40 border-purple-400'
+                : 'bg-purple-900/40 hover:bg-purple-900/60 text-purple-200 border-purple-500/30'
+            }`}
+          >
+            <Sparkles size={18} className="text-purple-300 animate-pulse" />
+            <span>AI Scribe</span>
+          </button>
+        )}
+
+        {/* 11. Issue Prescription (Doctor Only) */}
         {isDoctor && onOpenPrescribe && (
           <button
             onClick={onOpenPrescribe}
