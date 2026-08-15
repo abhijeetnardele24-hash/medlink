@@ -204,6 +204,40 @@ router.post(
   }
 );
 
+// ─── POST /encounters/:id/end ────────────────────────────────────────────────
+router.post(
+  "/:id/end",
+  authenticate,
+  requireRole("doctor"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    const { summaryNotes } = _req.body;
+
+    const [updatedEncounter] = await getDb()
+      .update(encounters)
+      .set({
+        status: "ended",
+        endedAt: new Date(),
+        networkEventSummary: summaryNotes ? { notes: summaryNotes } : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(encounters.id, id))
+      .returning();
+
+    if (!updatedEncounter) {
+      throw new NotFoundError("Encounter");
+    }
+
+    // Mark appointment as completed
+    await getDb()
+      .update(appointments)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(appointments.id, updatedEncounter.appointmentId));
+
+    res.json({ message: "Encounter ended successfully", encounter: updatedEncounter });
+  }
+);
+
 // ─── POST /encounters/:id/recording ─────────────────────────────────────────
 router.post(
   "/:id/recording",

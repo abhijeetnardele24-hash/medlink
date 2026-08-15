@@ -95,6 +95,32 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("ring-patient", async ({ encounterId }) => {
+    try {
+      if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+      
+      const db = getDb();
+      const encounterResult = await db.select().from(encounters).where(eq(encounters.id, encounterId)).limit(1);
+      if (!encounterResult.length) return;
+      
+      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterResult[0].appointmentId)).limit(1);
+      if (!apptResult.length) return;
+      
+      const appt = apptResult[0];
+      const patientId = appt.patientId;
+      
+      const docResult = await db.select().from(users).where(eq(users.id, appt.doctorId)).limit(1);
+      const doctorName = docResult.length && docResult[0].displayName ? docResult[0].displayName : 'Your Doctor';
+
+      io.to(`user_${patientId}`).emit("incoming-call", {
+        encounterId,
+        doctorName
+      });
+    } catch (e) {
+      console.error("Error ringing patient:", e);
+    }
+  });
+
   socket.on("webrtc-offer", ({ encounterId, offer }) => {
     if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("webrtc-offer", { offer });
@@ -123,6 +149,62 @@ io.on("connection", (socket) => {
   socket.on("read-receipt", ({ encounterId, messageId, readerId }) => {
     if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("read-receipt", { messageId, readerId });
+  });
+
+  // ─── Google Meet / Zoom In-Meeting Signaling Events ──────────────────────────
+
+  // Recording Status Broadcast (Local / Cloud)
+  socket.on("recording-status", ({ encounterId, isRecording, startedBy, type }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("recording-status", { isRecording, startedBy, type, timestamp: new Date().toISOString() });
+  });
+
+  // Screen Share Notification
+  socket.on("screen-share-toggle", ({ encounterId, isSharing, participantId, participantName }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("screen-share-toggle", { isSharing, participantId, participantName });
+  });
+
+  // Raise / Lower Hand
+  socket.on("raise-hand", ({ encounterId, isRaised, participantId, participantName }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("raise-hand", { isRaised, participantId, participantName, timestamp: new Date().toISOString() });
+  });
+
+  // Floating Emoji Reactions (👍, ❤️, 👏, 🎉, 💡, 😂, etc.)
+  socket.on("emoji-reaction", ({ encounterId, emoji, participantName }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    io.to(encounterId).emit("emoji-reaction", { emoji, participantName, id: Math.random().toString(36).substring(7) });
+  });
+
+  // Collaborative Whiteboard - Draw Stroke
+  socket.on("whiteboard-draw", ({ encounterId, stroke }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("whiteboard-draw", { stroke });
+  });
+
+  // Collaborative Whiteboard - Clear Canvas
+  socket.on("whiteboard-clear", ({ encounterId }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("whiteboard-clear");
+  });
+
+  // Host Control - Mute Remote Participant
+  socket.on("mute-participant", ({ encounterId, targetParticipantId, muteType }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("mute-participant", { targetParticipantId, muteType });
+  });
+
+  // Host Control - End Meeting For All
+  socket.on("end-meeting-all", ({ encounterId, reason }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    io.to(encounterId).emit("end-meeting-all", { reason: reason || "Doctor ended the consultation session" });
+  });
+
+  // Participant Audio/Video State Broadcast
+  socket.on("media-state-change", ({ encounterId, isAudioMuted, isVideoOff, participantId }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("media-state-change", { isAudioMuted, isVideoOff, participantId });
   });
 
   socket.on("disconnect", () => {

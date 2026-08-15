@@ -13,12 +13,14 @@ import { PharmacyOrders } from './pages/PharmacyOrders';
 import { HealthProfile } from './pages/HealthProfile';
 import { MedicalRecords } from './pages/MedicalRecords';
 import { Layout } from './components/Layout';
+import { IncomingCallModal } from './components/IncomingCallModal';
 import './index.css';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <IncomingCallModal />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
