@@ -1,220 +1,177 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 560" width="100%" height="100%" style="background: #0d1117; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 480" width="100%" height="100%" style="background-color: #0d1117; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
   <defs>
-    <!-- Line Flow Animation -->
     <style>
-      .flow-line {
-        stroke-dasharray: 6 10;
-        animation: flow 2s linear infinite;
+      .packet-flow {
+        stroke-dasharray: 4 8;
+        animation: flow 1.5s linear infinite;
       }
-      .flow-line-fast {
-        stroke-dasharray: 6 10;
-        animation: flow 1.2s linear infinite;
-      }
-      .flow-line-reverse {
-        stroke-dasharray: 6 10;
-        animation: flow-rev 2s linear infinite;
+      .packet-flow-reverse {
+        stroke-dasharray: 4 8;
+        animation: flow-rev 1.5s linear infinite;
       }
       @keyframes flow {
-        from { stroke-dashoffset: 32; }
+        from { stroke-dashoffset: 24; }
         to { stroke-dashoffset: 0; }
       }
       @keyframes flow-rev {
         from { stroke-dashoffset: 0; }
-        to { stroke-dashoffset: 32; }
+        to { stroke-dashoffset: 24; }
       }
-      .live-dot {
-        animation: pulse 2s ease-in-out infinite;
+      
+      .box {
+        fill: #161b22;
+        stroke: #30363d;
+        stroke-width: 1.5;
+        rx: 6;
       }
-      @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.4; transform: scale(0.85); }
+      .box-header {
+        font-size: 13px;
+        font-weight: 600;
+        fill: #c9d1d9;
+      }
+      .box-sub {
+        font-size: 11px;
+        fill: #8b949e;
+      }
+      .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        fill: #8b949e;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      .line {
+        fill: none;
+        stroke: #30363d;
+        stroke-width: 2;
+      }
+      .line-active {
+        fill: none;
+        stroke: #58a6ff;
+        stroke-width: 2;
+      }
+      .line-media {
+        fill: none;
+        stroke: #3fb950;
+        stroke-width: 2;
       }
     </style>
-
-    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#161b22" />
-      <stop offset="100%" stop-color="#0d1117" />
-    </linearGradient>
-
-    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#1f293d" />
-      <stop offset="100%" stop-color="#111827" />
-    </linearGradient>
   </defs>
 
-  <!-- Background Canvas Grid -->
-  <g opacity="0.15" stroke="#30363d" stroke-width="0.5">
-    <path d="M 0 70 L 1100 70 M 0 140 L 1100 140 M 0 210 L 1100 210 M 0 280 L 1100 280 M 0 350 L 1100 350 M 0 420 L 1100 420 M 0 490 L 1100 490" />
-    <path d="M 110 0 L 110 560 M 220 0 L 220 560 M 330 0 L 330 560 M 440 0 L 440 560 M 550 0 L 550 560 M 660 0 L 660 560 M 770 0 L 770 560 M 880 0 L 880 560 M 990 0 L 990 560" />
+  <!-- Titles -->
+  <text x="50" y="40" class="section-title">Client Layer</text>
+  <text x="300" y="40" class="section-title">Edge Gateway</text>
+  <text x="550" y="40" class="section-title">Application Services</text>
+  <text x="800" y="40" class="section-title">Data &amp; Media Plane</text>
+
+  <!-- Connecting Lines (Base) -->
+  <path d="M 230 115 L 300 235" class="line" />
+  <path d="M 230 235 L 300 235" class="line" />
+  <path d="M 230 355 L 300 235" class="line" />
+  
+  <path d="M 480 235 L 550 115" class="line" />
+  <path d="M 480 235 L 550 235" class="line" />
+  <path d="M 480 235 L 550 355" class="line" />
+
+  <path d="M 730 115 L 800 115" class="line" />
+  <path d="M 730 235 L 800 235" class="line" />
+  <path d="M 730 355 L 800 355" class="line" />
+  
+  <!-- Direct WebRTC Media Line -->
+  <path d="M 140 150 C 140 180, 140 180, 140 200" class="line" stroke-dasharray="2 4" />
+
+  <!-- Animated Data Flow Overlays -->
+  <path d="M 230 115 L 300 235" class="line-active packet-flow" />
+  <path d="M 230 235 L 300 235" class="line-active packet-flow" />
+  <path d="M 230 355 L 300 235" class="line-active packet-flow" />
+
+  <path d="M 480 235 L 550 115" class="line-active packet-flow" />
+  <path d="M 480 235 L 550 235" class="line-active packet-flow" />
+  <path d="M 480 235 L 550 355" class="line-active packet-flow" />
+
+  <path d="M 730 115 L 800 115" class="line-active packet-flow" />
+  <path d="M 730 235 L 800 235" class="line-media packet-flow" />
+  <path d="M 730 355 L 800 355" class="line-active packet-flow" />
+
+  <!-- Column 1: Clients -->
+  <g transform="translate(50, 80)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Doctor Workspace</text>
+    <text x="15" y="46" class="box-sub">React / Vite</text>
+    <text x="15" y="60" class="box-sub">WebRTC Tele-Clinic</text>
   </g>
 
-  <!-- Top System Header -->
-  <rect x="30" y="20" width="1040" height="42" rx="8" fill="url(#headerGrad)" stroke="#30363d" stroke-width="1" />
-  <circle cx="50" cy="41" r="5" fill="#238636" class="live-dot" style="transform-origin: 50px 41px;" />
-  <text x="65" y="46" fill="#e6edf3" font-size="13" font-weight="700" letter-spacing="0.5">MEDLINK DISTRIBUTED ARCHITECTURE</text>
-  <text x="360" y="46" fill="#7d8590" font-size="11">TIERED CLIENT, APPLICATION RUNTIME, MEDIA PLANE &amp; DATA ENGINE</text>
-  <rect x="960" y="30" width="95" height="22" rx="4" fill="#238636" opacity="0.15" />
-  <text x="1007" y="45" fill="#3fb950" font-size="10" font-weight="600" text-anchor="middle">STATUS: HEALTHY</text>
-
-  <!-- ========================================================================= -->
-  <!-- CONNECTION PATHWAYS & FLOW SIGNALS -->
-  <!-- ========================================================================= -->
-  <g fill="none" stroke-linecap="round">
-    <!-- Static Guide Tracks -->
-    <path d="M 190 145 L 360 270" stroke="#21262d" stroke-width="2" />
-    <path d="M 190 230 L 360 270" stroke="#21262d" stroke-width="2" />
-    <path d="M 190 315 L 360 270" stroke="#21262d" stroke-width="2" />
-    <path d="M 190 400 L 360 270" stroke="#21262d" stroke-width="2" />
-
-    <!-- Direct WebRTC P2P Bridge between Doctor and Patient -->
-    <path d="M 190 145 C 260 145, 260 230, 190 230" stroke="#21262d" stroke-width="2.5" />
-    <path d="M 190 145 C 260 145, 260 230, 190 230" stroke="#38bdf8" stroke-width="2" class="flow-line-fast" />
-
-    <!-- Clients to Gateway -->
-    <path d="M 190 145 L 360 270" stroke="#58a6ff" stroke-width="1.5" class="flow-line" />
-    <path d="M 190 230 L 360 270" stroke="#58a6ff" stroke-width="1.5" class="flow-line" />
-    <path d="M 190 315 L 360 270" stroke="#58a6ff" stroke-width="1.5" class="flow-line" />
-    <path d="M 190 400 L 360 270" stroke="#58a6ff" stroke-width="1.5" class="flow-line" />
-
-    <!-- Gateway to Application Services -->
-    <path d="M 500 270 L 610 180" stroke="#21262d" stroke-width="2" />
-    <path d="M 500 270 L 610 270" stroke="#21262d" stroke-width="2" />
-    <path d="M 500 270 L 610 360" stroke="#21262d" stroke-width="2" />
-
-    <path d="M 500 270 L 610 180" stroke="#a371f7" stroke-width="1.5" class="flow-line" />
-    <path d="M 500 270 L 610 270" stroke="#38bdf8" stroke-width="1.5" class="flow-line" />
-    <path d="M 500 270 L 610 360" stroke="#a371f7" stroke-width="1.5" class="flow-line" />
-
-    <!-- Services to Data Tier -->
-    <path d="M 760 180 L 890 220" stroke="#21262d" stroke-width="2" />
-    <path d="M 760 270 L 890 320" stroke="#21262d" stroke-width="2" />
-    <path d="M 760 360 L 890 220" stroke="#21262d" stroke-width="2" />
-    <path d="M 760 360 L 890 420" stroke="#21262d" stroke-width="2" />
-
-    <path d="M 760 180 L 890 220" stroke="#3fb950" stroke-width="1.5" class="flow-line" />
-    <path d="M 760 270 L 890 320" stroke="#3fb950" stroke-width="1.5" class="flow-line" />
-    <path d="M 760 360 L 890 220" stroke="#3fb950" stroke-width="1.5" class="flow-line" />
-    <path d="M 760 360 L 890 420" stroke="#3fb950" stroke-width="1.5" class="flow-line" />
+  <g transform="translate(50, 200)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Patient Portal</text>
+    <text x="15" y="46" class="box-sub">React / PWA</text>
+    <text x="15" y="60" class="box-sub">Offline Sync Outbox</text>
   </g>
 
-  <!-- ========================================================================= -->
-  <!-- COLUMN 1: CLIENT ACCESS LAYER -->
-  <!-- ========================================================================= -->
-  <text x="40" y="98" fill="#7d8590" font-size="10" font-weight="700" letter-spacing="1">CLIENT APPLICATION LAYER</text>
-
-  <!-- Doctor Web Workspace -->
-  <g transform="translate(40, 115)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <rect x="0" y="0" width="4" height="60" rx="2" fill="#a371f7" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Doctor Workspace</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">React + TypeScript</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">Tele-Clinic / Scribe</text>
+  <g transform="translate(50, 320)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Pharmacy &amp; Admin</text>
+    <text x="15" y="46" class="box-sub">React / Vite</text>
+    <text x="15" y="60" class="box-sub">Verification &amp; Dispensing</text>
   </g>
 
-  <!-- Patient Portal -->
-  <g transform="translate(40, 200)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <rect x="0" y="0" width="4" height="60" rx="2" fill="#58a6ff" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Patient Portal</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">PWA / Offline Outbox</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">Triage / Lab Scanner</text>
+  <!-- Column 2: Edge -->
+  <g transform="translate(300, 200)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">API Gateway</text>
+    <text x="15" y="46" class="box-sub">HTTPS / WSS Termination</text>
+    <text x="15" y="60" class="box-sub">OIDC &amp; Rate Limiting</text>
   </g>
 
-  <!-- Pharmacy Marketplace -->
-  <g transform="translate(40, 285)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <rect x="0" y="0" width="4" height="60" rx="2" fill="#d29922" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Pharmacy Portal</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Catalog &amp; Dispensing</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">Order Lifecycle</text>
+  <!-- Column 3: Services -->
+  <g transform="translate(550, 80)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Core API Service</text>
+    <text x="15" y="46" class="box-sub">Node.js / Express</text>
+    <text x="15" y="60" class="box-sub">REST Endpoints</text>
   </g>
 
-  <!-- Coordinator Console -->
-  <g transform="translate(40, 370)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <rect x="0" y="0" width="4" height="60" rx="2" fill="#7d8590" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Coordinator Console</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Verification &amp; Audit</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">Operational Ops</text>
+  <g transform="translate(550, 200)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">WebRTC Signalling</text>
+    <text x="15" y="46" class="box-sub">Socket.IO Server</text>
+    <text x="15" y="60" class="box-sub">Peer Connection Negotiation</text>
   </g>
 
-  <!-- ========================================================================= -->
-  <!-- COLUMN 2: EDGE & SECURITY GATEWAY -->
-  <!-- ========================================================================= -->
-  <text x="360" y="98" fill="#7d8590" font-size="10" font-weight="700" letter-spacing="1">EDGE &amp; SECURITY</text>
-
-  <g transform="translate(360, 220)">
-    <rect width="140" height="100" rx="8" fill="url(#boxGrad)" stroke="#58a6ff" stroke-width="1.5" />
-    <text x="14" y="28" fill="#58a6ff" font-size="12" font-weight="700">API Gateway</text>
-    <text x="14" y="45" fill="#e6edf3" font-size="11">Express 5 Proxy</text>
-    <line x1="14" y1="55" x2="126" y2="55" stroke="#30363d" stroke-width="1" />
-    <text x="14" y="70" fill="#7d8590" font-size="9">• TLS Termination</text>
-    <text x="14" y="82" fill="#7d8590" font-size="9">• Rate Limiter (Redis)</text>
-    <text x="14" y="94" fill="#7d8590" font-size="9">• OIDC Token Guard</text>
+  <g transform="translate(550, 320)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Clinical AI Engine</text>
+    <text x="15" y="46" class="box-sub">Gemini 2.0 Integration</text>
+    <text x="15" y="60" class="box-sub">SOAP Scribe / CDSS</text>
   </g>
 
-  <!-- ========================================================================= -->
-  <!-- COLUMN 3: PRIVATE APPLICATION RUNTIME & MEDIA PLANE -->
-  <!-- ========================================================================= -->
-  <text x="610" y="98" fill="#7d8590" font-size="10" font-weight="700" letter-spacing="1">APPLICATION RUNTIME &amp; MEDIA PLANE</text>
-
-  <!-- Core API Service -->
-  <g transform="translate(610, 150)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Core API Service</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Node.js + Express 5</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">REST / Port 3005</text>
+  <!-- Column 4: Data & Media -->
+  <g transform="translate(800, 80)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">PostgreSQL Store</text>
+    <text x="15" y="46" class="box-sub">Neon Serverless</text>
+    <text x="15" y="60" class="box-sub">Drizzle ORM</text>
   </g>
 
-  <!-- WebRTC Signalling & TURN Relay -->
-  <g transform="translate(610, 240)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#38bdf8" stroke-width="1" />
-    <text x="14" y="24" fill="#38bdf8" font-size="12" font-weight="600">WebRTC Signalling</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Socket.IO &amp; coturn</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">STUN/TURN NAT Relay</text>
+  <g transform="translate(800, 200)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">TURN Media Relay</text>
+    <text x="15" y="46" class="box-sub">coturn Server</text>
+    <text x="15" y="60" class="box-sub">NAT Traversal (UDP/TCP)</text>
   </g>
 
-  <!-- Clinical Decision Support & Scribe Engine -->
-  <g transform="translate(610, 330)">
-    <rect width="150" height="60" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Clinical AI &amp; CDSS</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">SOAP Scribe / DDI Check</text>
-    <text x="14" y="52" fill="#8b949e" font-size="9">Gemini 2.0 / Rule Engine</text>
+  <g transform="translate(800, 320)">
+    <rect width="180" height="70" class="box" />
+    <text x="15" y="28" class="box-header">Object Storage</text>
+    <text x="15" y="46" class="box-sub">Encrypted Bucket</text>
+    <text x="15" y="60" class="box-sub">Prescriptions &amp; Labs</text>
   </g>
 
-  <!-- ========================================================================= -->
-  <!-- COLUMN 4: DATA & STORAGE TIER -->
-  <!-- ========================================================================= -->
-  <text x="890" y="98" fill="#7d8590" font-size="10" font-weight="700" letter-spacing="1">CANONICAL DATA BOUNDARY</text>
-
-  <!-- PostgreSQL Primary Store -->
-  <g transform="translate(890, 190)">
-    <rect width="170" height="65" rx="6" fill="url(#boxGrad)" stroke="#3fb950" stroke-width="1" />
-    <text x="14" y="24" fill="#3fb950" font-size="12" font-weight="700">PostgreSQL (Neon)</text>
-    <text x="14" y="40" fill="#e6edf3" font-size="10">Drizzle ORM / Schema</text>
-    <text x="14" y="54" fill="#7d8590" font-size="9">ACID Encounters &amp; Audits</text>
+  <!-- Legend -->
+  <g transform="translate(50, 420)">
+    <rect width="930" height="30" rx="4" fill="#161b22" stroke="#30363d" stroke-width="1" />
+    <text x="15" y="20" class="box-sub" fill="#c9d1d9">
+      LEGEND: <tspan fill="#58a6ff">──</tspan> SECURE DATA FLOW (HTTPS/WSS) &nbsp;&nbsp;&nbsp; <tspan fill="#3fb950">──</tspan> MEDIA PACKET ROUTING &nbsp;&nbsp;&nbsp; <tspan fill="#8b949e">--</tspan> DIRECT P2P MESH
+    </text>
   </g>
-
-  <!-- Redis Cache -->
-  <g transform="translate(890, 290)">
-    <rect width="170" height="65" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Redis Cache</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Presence &amp; Rate Limits</text>
-    <text x="14" y="54" fill="#7d8590" font-size="9">Ephemeral Room State</text>
-  </g>
-
-  <!-- Object Storage -->
-  <g transform="translate(890, 390)">
-    <rect width="170" height="65" rx="6" fill="url(#boxGrad)" stroke="#30363d" stroke-width="1" />
-    <text x="14" y="24" fill="#e6edf3" font-size="12" font-weight="600">Object Storage</text>
-    <text x="14" y="40" fill="#7d8590" font-size="10">Encrypted Cloud Store</text>
-    <text x="14" y="54" fill="#7d8590" font-size="9">Lab PDFs / Recordings</text>
-  </g>
-
-  <!-- Bottom Spec Bar -->
-  <rect x="30" y="500" width="1040" height="35" rx="6" fill="#161b22" stroke="#21262d" stroke-width="1" />
-  <text x="45" y="522" fill="#8b949e" font-size="10">
-    PROTOCOLS: HTTPS (REST/JSON) | WSS (SOCKET.IO) | WEBRTC (DTLS-SRTP P2P/TURN) | POSTGRESQL (TLS) | IDEMPOTENT SYNC OUTBOX (UUIDv4)
-  </text>
-  <text x="960" y="522" fill="#38bdf8" font-size="10" font-weight="600">E2E ENCRYPTED</text>
 </svg>
