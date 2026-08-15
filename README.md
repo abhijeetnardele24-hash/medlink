@@ -1,279 +1,291 @@
-# 🏥 MedLink — Enterprise Adaptive Telehealth & Clinical AI Platform
+# MedLink
 
-<div align="center">
+> **An adaptive, offline-first enterprise telemedicine and clinical intelligence platform for reliable consultations in low-connectivity and rural environments.**
 
-[![Build Status](https://img.shields.io/badge/Build-Passing-10b981?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/abhijeetnardele24-hash/medlink)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2%20Strict-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon%20DB-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
-[![Google Gemini](https://img.shields.io/badge/AI%20Engine-Gemini%202.0%20Flash-8E75B2?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
-[![WebRTC](https://img.shields.io/badge/Telehealth-WebRTC%20Mesh%20%2B%20SFU-333333?style=for-the-badge&logo=webrtc&logoColor=white)](https://webrtc.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
+MedLink connects patients with verified medical practitioners through a resilient, multi-portal architecture. Designed around a foundational principle: network instability or total connection loss must never disrupt clinical care continuity or compromise patient consultation data.
 
-**An enterprise-grade, offline-first telehealth ecosystem featuring ambient AI clinical documentation, multimodal biomarker diagnostics, real-time drug interaction CDSS, and adaptive WebRTC video consultations.**
-
-[Explore Architecture](#-system-architecture) • [Enterprise AI Suite](#-enterprise-ai-intelligence-suite) • [Video Consultation Suite](#-enterprise-video-consultation-suite) • [Monorepo Workspace](#-monorepo-structure) • [Quick Start](#-quick-start--local-development)
-
-</div>
+The platform governs the entire digital health encounter lifecycle: verified practitioner discovery, explainable specialty routing, appointment scheduling, WebRTC video/audio consultation with local composite recording, real-time clinical decision support (CDSS), ambient clinical note documentation, offline-first data capture, secure outbox synchronization, e-prescriptions, and operational follow-up.
 
 ---
 
-## 🌟 Executive Overview
-
-**MedLink** is a production-grade digital health ecosystem designed to deliver high-quality clinical consultations across challenging connectivity environments. The platform integrates four client web applications, a resilient Node.js / TypeScript micro-service layer, and an autonomous **Clinical AI Suite** inspired by healthcare technology pioneers (**Epic Systems Nuance DAX Copilot, Abridge, Infermedica, and Teladoc**).
-
-### Core Architectural Pillars:
-1. **🎙️ Ambient AI Clinical Scribing**: Real-time ambient dialogue transcription generating structured **SOAP Notes**, ICD-10 diagnostic coding, and 1-click prescription drafts.
-2. **🔬 Multimodal Diagnostic Lab Report Analyzer**: Optical biomarker extraction from blood tests / pathology reports with reference interval validation and metabolic risk scoring.
-3. **🛡️ Autonomous Drug-Drug Interaction (DDI) CDSS**: Real-time Clinical Decision Support System cross-referencing pharmacopeia contraindications and allergy profiles.
-4. **🤖 Conversational Pre-Consultation AI Triage**: Bayesian symptom assessment with emergency red-flag (108/911) screening and medical specialty routing.
-5. **📹 Google Meet & Zoom-Grade Video Suite**: HD WebRTC video with local `.webm` composite recording, real-time whiteboard collaboration, screen sharing, floating reactions, and background blur.
-6. **📶 Adaptive Network Degradation Engine**: Automatic graceful transition from **HD Video ⇄ Clear Audio ⇄ Encrypted Async Chat ⇄ Offline Capture with Queued Sync**.
-
----
-
-## 📐 System Architecture
-
-```mermaid
-flowchart TB
-    subgraph Clients["🌐 Client Applications (React + TypeScript + Tailwind)"]
-        PA["🧑‍💼 Patient Web Portal<br/>(Appointments, AI Triage, Lab OCR, Vitals)"]
-        DW["🩺 Doctor Clinical Workspace<br/>(Ambient Scribe, CDSS Prescribing, Calendar)"]
-        CW["🛡️ Coordinator Administration<br/>(Verification, Queue Escalation, Audit)"]
-        PW["💊 Pharmacy Marketplace<br/>(Catalog, Rx Dispensing, Order Lifecycle)"]
-        LW["🚀 Landing & Product Showcase<br/>(Public Gateway, SEO, Portal Switcher)"]
-    end
-
-    subgraph Edge["🛡️ Edge & Security Layer"]
-        GW["API Gateway & Reverse Proxy<br/>Rate Limiter + Helmet + CORS"]
-        AUTH["Identity Provider<br/>Firebase Auth OIDC / JWT Token Verification"]
-    end
-
-    subgraph Backend["⚡ Core Backend Services (services/api)"]
-        API["Node.js + Express 5 Core API<br/>(REST & JSON Schemas)"]
-        WSS["Socket.IO Signalling Engine<br/>(WebRTC, Reactions, Chat Sync)"]
-        
-        subgraph AISuite["🧠 Enterprise Clinical AI Engines"]
-            SCRIBE["🎙️ AIScribeService<br/>(SOAP Notes & ICD-10 Coding)"]
-            LAB["🔬 AILabReportService<br/>(Biomarker Parser & Health Graph)"]
-            SAFETY["🛡️ AISafetyService<br/>(Drug-Drug Interaction CDSS)"]
-            TRIAGE["🤖 AITriageService<br/>(Bayesian Triage & Red-Flag Escalation)"]
-        end
-    end
-
-    subgraph Data["💾 Canonical Data Layer"]
-        PG[("PostgreSQL Database (Neon)<br/>Drizzle ORM, Schema Migrations, Transactions")]
-        OBJ[("Protected Cloud Object Storage<br/>(Prescriptions, Lab PDFs, Cloud Backups)")]
-    end
-
-    PA & DW & CW & PW & LW -->|HTTPS / WSS| GW
-    GW --> API & WSS
-    API --> AUTH
-    API --> AISuite
-    API --> PG & OBJ
-    DW <-->|P2P WebRTC HD Audio/Video| PA
-```
-
----
-
-## 🧠 Enterprise AI Intelligence Suite
-
-MedLink comes with 4 specialized, production-ready AI engines powered by **Google Gemini 2.0 Flash** and high-fidelity deterministic clinical fallback parsers:
-
-```mermaid
-flowchart LR
-    subgraph AI1["1. Ambient Scribe"]
-        A1[Live Speech Stream] --> B1[Ambient Transcription] --> C1[Structured SOAP Note<br/>+ ICD-10 Codes]
-    end
-
-    subgraph AI2["2. Lab Analyzer"]
-        A2[Blood Test / Lab Report] --> B2[Multimodal OCR] --> C2[Biomarkers & Risk Score]
-    end
-
-    subgraph AI3["3. Safety CDSS"]
-        A3[Prescription Pad] --> B3[DDI & Allergy Cross-Check] --> C3[Safety Alert Banner]
-    end
-
-    subgraph AI4["4. Triage Navigator"]
-        A4[Patient Symptoms] --> B4[Bayesian Triage Engine] --> C4[Specialist Recommendation<br/>+ ER Red Flag]
-    end
-```
-
-### 1. 🎙️ Ambient AI Clinical Scribe (`POST /v1/ai/scribe/generate-soap`)
-- Listens to the doctor-patient dialogue during live video consultations via native Web Speech API.
-- Generates structured **SOAP Notes**:
-  - **S (Subjective)**: Patient history of present illness, onset, and chronological symptom review.
-  - **O (Objective)**: Vitals mentioned and clinical video observations.
-  - **A (Assessment)**: Differential diagnosis synthesis.
-  - **P (Plan)**: Management plan, diagnostic investigations, lifestyle advice, and follow-up timeline.
-- Assigns official **ICD-10 clinical coding badges** (e.g. `J06.9 Acute URI`, `R05 Cough`, `R51 Headache`).
-- **1-Click Prescription Auto-Fill**: Auto-extracts medicines (*name, dosage, frequency, duration*) directly into the prescription pad for instant doctor review and signing.
-
-### 2. 🔬 Multimodal Lab Report & Biomarker Diagnostic Analyzer (`POST /v1/ai/lab-report/analyze`)
-- Extracts over 30+ diagnostic biomarkers from blood panels, metabolic profiles, and lipid tests.
-- Categorizes each marker into 🟢 **NORMAL**, 🟡 **BORDERLINE / ELEVATED**, or 🔴 **CRITICAL ANOMALY** against standard physiological reference intervals.
-- Generates a holistic **Metabolic Risk Level** (*Optimal / Moderate / High Attention*), lifestyle recommendations, and questions for doctor discussion.
-
-### 3. 🛡️ Autonomous Drug-Drug Interaction (DDI) & Allergy Safety CDSS (`POST /v1/ai/safety/ddi-check`)
-- Real-time Clinical Decision Support System protecting against medical malpractice.
-- As doctors write prescriptions, the engine cross-references combinations to detect:
-  - 🔴 **Severe Contraindications**: E.g., Warfarin + NSAIDs internal bleeding risk, Statins + Macrolides rhabdomyolysis risk.
-  - 🟡 **Moderate Drug Interactions**: E.g., ACE Inhibitors + Potassium-sparing diuretics hyperkalemia risk.
-  - ⚠️ **Patient Allergy Cross-Reactivity**: E.g., Penicillin allergy contraindications with Amoxicillin / Ampicillin.
-
-### 4. 🤖 Conversational Pre-Consultation AI Triage Navigator (`POST /v1/ai/triage/chat`)
-- Dynamic pre-consultation chat asking targeted follow-up questions with quick-suggestion chips.
-- **Emergency Red-Flag Interceptor**: Detects acute chest pain, stroke symptoms, or severe respiratory distress and immediately triggers a **1-Click Call Emergency Services (108 / 911)** overlay.
-- Recommends the exact right medical specialist and prepares a 30-second **Clinical Intake Brief** for the physician.
-
----
-
-## 📹 Enterprise Video Consultation Suite
-
-MedLink delivers an enterprise-grade tele-clinic workspace inspired by Google Meet and Zoom:
-
-| Feature | Description |
-| :--- | :--- |
-| **Local Composite HD Recording** | Records local mic + remote peer audio & video composite, automatically downloading a timestamped `.webm` file directly to the user's PC with cloud backup sync. |
-| **Real-Time Whiteboard** | Interactive multi-color canvas whiteboard synchronized live across peers via WebSocket. |
-| **Floating & In-Call Reactions** | Floating animated emoji reactions (`👍`, `❤️`, `👏`, `🎉`, `🔥`, `🙏`) and in-call message bubble reactions. |
-| **Independent Hardware Controls** | Separate camera on/off, microphone mute/unmute, background blur filter, and active speaker audio visualizers. |
-| **Instant Sandbox Rooms** | 1-Click test sandbox room generator on both Doctor and Patient dashboards for instant trial consultations. |
-| **Adaptive ICE Self-Healing** | Automatic ICE restart upon network blip and live connection quality monitoring (Good / Poor / Audio-Only). |
-
----
-
-## 📂 Monorepo Structure
+## Repository Workspace Structure
 
 ```text
 medlink/
 ├── apps/
-│   ├── doctor-web/         # Doctor Clinical Workspace (React, Vite, Tailwind, WebRTC)
-│   ├── patient-web/        # Patient Telehealth Portal (React, Vite, PWA, AI Triage, Lab OCR)
-│   ├── pharmacy-web/       # Pharmacy Marketplace & Rx Dispensing (React, Vite)
-│   ├── coordinator-web/    # Administrative & Verification Console (React, Vite)
-│   └── landing-web/        # Public Landing Page & Architecture Showcase (React, Vite)
+│   ├── patient-web/         React + TypeScript + PWA Patient Telehealth Portal
+│   ├── doctor-web/          React + TypeScript Clinical Workspace & Tele-Clinic
+│   ├── coordinator-web/     React + TypeScript Verification & Administration Console
+│   ├── pharmacy-web/        React + TypeScript Pharmacy & Medicine Marketplace
+│   └── landing-web/         React + TypeScript Public Landing & Architecture Gateway
 ├── services/
-│   └── api/                # Core Node.js / Express 5 API (TypeScript, Drizzle ORM, Socket.IO)
-│       ├── src/
-│       │   ├── routes/     # REST Endpoints (ai.routes.ts, encounters, doctors, prescriptions)
-│       │   ├── services/   # AI Engines (aiScribe, aiLabReport, aiSafety, aiTriage)
-│       │   ├── socket/     # WebRTC Signalling & Real-Time Event Handlers
-│       │   ├── db/         # PostgreSQL Schema & Neon Database Connection
-│       │   └── test-ai-services.ts # Automated 16-Assertion AI Test Suite
-├── docs/                   # System Design & Architecture Specifications
-└── README.md
+│   └── api/                 Node.js + Express 5 + TypeScript Backend Service
+├── infra/                   Docker, TURN, and infrastructure deployment files
+└── docs/                    Architecture decision records (ADRs) & system specifications
 ```
 
 ---
 
-## 🧪 Automated Testing & Verification
+## 1. Product Architecture
 
-MedLink includes a dedicated end-to-end integration test runner validating all 4 AI engines:
+MedLink operates as a unified, multi-application distributed system. Every portal interfaces with a centralized, canonical PostgreSQL data store, common authorization model, and real-time encounter lifecycle.
 
-```bash
-cd services/api
-npx tsx src/test-ai-services.ts
+```mermaid
+flowchart TB
+    subgraph Clients["Client Application Layer"]
+        PA["Patient Web Portal<br/>(React / PWA)<br/>Offline Cache & Sync Outbox"]
+        DW["Doctor Web Dashboard<br/>(React + TypeScript)<br/>Clinical Workspace & Tele-Clinic"]
+        CW["Coordinator Console<br/>(React + TypeScript)<br/>Verification & Scheduling Operations"]
+        PW["Pharmacy Portal<br/>(React + TypeScript)<br/>Medicine Marketplace & Orders"]
+    end
+
+    subgraph CoreServices["Application & Services Boundary"]
+        API["MedLink Core API<br/>(Node.js + Express 5 + TypeScript)<br/>REST API & Schema Validation"]
+        WSS["Realtime Signalling & Event Bus<br/>(Socket.IO)<br/>WebRTC Signalling & State Sync"]
+        CDSS["Clinical Intelligence Engine<br/>Ambient Documentation & Safety CDSS"]
+    end
+
+    subgraph Infrastructure["Data & Communication Infrastructure"]
+        AUTH["Identity Provider<br/>(Firebase Auth OIDC / JWT Verification)"]
+        DB[("PostgreSQL Primary Database<br/>Canonical Data Store (Neon)")]
+        STORE[("Protected Object Storage<br/>Encrypted Attachments & Reports")]
+        RTC["WebRTC Media Plane<br/>STUN / TURN Relays"]
+    end
+
+    PA -->|HTTPS REST, WSS| API
+    DW -->|HTTPS REST, WSS| API
+    CW -->|HTTPS REST, WSS| API
+    PW -->|HTTPS REST, WSS| API
+
+    API <--> WSS
+    API --> CDSS
+    API --> AUTH
+    API --> DB
+    API --> STORE
+
+    PA <-->|Encrypted Real-Time Audio/Video/Data| RTC
+    DW <-->|Encrypted Real-Time Audio/Video/Data| RTC
+    WSS <-->|Signalling Negotiation| RTC
 ```
 
-### 📊 Verification Output:
-```text
-====================================================
-🧪 RUNNING MEDLINK ENTERPRISE AI INTEGRATION TESTS
-====================================================
+### Application Technical Responsibilities
 
---- 1. Testing AIScribeService (SOAP Notes & ICD-10) ---
-✅ [PASS] SOAP 4-component structure generated
-✅ [PASS] ICD-10 clinical diagnostic codes mapped (J06.9, R05.9)
-✅ [PASS] Medicines auto-extracted for prescription pad (Paracetamol 650mg, Levocetirizine 5mg)
-✅ [PASS] Patient-facing layman discharge summary generated
+| Application / Service | Technical Responsibility |
+|---|---|
+| **Patient Web Portal** | Responsive appointment booking, local offline outbox, diagnostic lab report visualization, real-time triage, WebRTC video/audio/chat controls, prescription history, and pharmacy ordering. |
+| **Doctor Web Dashboard** | Operational appointment queue, availability slot management, authorized EHR review, WebRTC consultation room with composite recording and whiteboard, ambient clinical note drafting, CDSS safety-checked e-prescriptions. |
+| **Coordinator Console** | Doctor and pharmacist profile verification, availability administration, appointment operations, reminder task queue, booking exceptions, and audit visibility. |
+| **Pharmacy Web Portal** | Pharmacist onboarding, inventory catalog management, prescription-based dispensing, and order fulfillment tracking. |
+| **Core API Service** | Token verification, role-based access control (RBAC), consent enforcement, request validation, transaction-safe booking, sync processing, WebRTC signaling, and audit logging. |
+| **PostgreSQL Canonical Store** | Single source of truth for users, credentials, appointments, encounters, records, tasks, verification decisions, and audit metadata. |
+| **WebRTC Media Plane** | Low-latency audio/video media transport, STUN/TURN NAT traversal, screen share streams, and collaborative data channels. |
 
---- 2. Testing AILabReportService (Lab Report & Biomarker OCR) ---
-✅ [PASS] Lab report header & clinical health summary synthesized
-✅ [PASS] Biomarkers parsed with units and reference ranges (5 biomarkers)
-✅ [PASS] Abnormal biomarker successfully flagged as HIGH (Glucose, Cholesterol)
-✅ [PASS] Clinical dietary/lifestyle recommendations generated
-✅ [PASS] Doctor discussion questions generated
+---
 
---- 3. Testing AISafetyService (Drug-Drug Interactions & Allergy CDSS) ---
-✅ [PASS] Severe DDI Contraindication Detected (Warfarin + NSAID)
-✅ [PASS] Detailed interaction mechanism & alternative drug provided
-✅ [PASS] Documented Allergy Conflict Detected (Penicillin + Amoxicillin)
-✅ [PASS] Safe Prescription Validation Passed (Paracetamol + Pantoprazole)
+## 2. Technical Reference Production Architecture
 
---- 4. Testing AITriageService (Conversational Triage & Red Flags) ---
-✅ [PASS] Emergency Red-Flag Interceptor Triggered (Level 1 Emergency Care)
-✅ [PASS] Specialty Navigation accurately mapped to Dermatology
-✅ [PASS] Dynamic Quick-Reply Chips generated for patient
+The diagram below represents the production-target deployment topology incorporating network zones, edge security, private application runtimes, and isolated data tiers.
 
-====================================================
-📊 AI TEST SUITE SUMMARY: 16/16 TESTS PASSED (100%)
-====================================================
-🚀 All 4 MedLink Enterprise AI Engines are 100% OPERATIONAL & PRODUCTION-READY!
+```mermaid
+flowchart TB
+    subgraph ClientLayer["Client Layer"]
+        PA["Patient App"]
+        DW["Doctor Dashboard"]
+        CW["Coordinator Console"]
+        PW["Pharmacy Portal"]
+    end
+
+    subgraph EdgeBoundary["Public Edge & Trust Boundary"]
+        DNS["DNS & TLS Termination"]
+        WAF["WAF & Rate Limiting"]
+        CDN["Static Asset CDN"]
+        GW["API Gateway & Reverse Proxy<br/>(HTTPS + WSS Termination)"]
+    end
+
+    subgraph SecurityBoundary["Identity & Access Boundary"]
+        IDP["Identity Provider<br/>(OIDC / Firebase Auth)"]
+        RBAC["Authorisation Engine<br/>(RBAC + Ownership + Consent Scope)"]
+        VAULT["Secrets Management<br/>(TURN Credentials, Database Keys)"]
+    end
+
+    subgraph PrivateRuntime["Private Application Network"]
+        API["Core API Service<br/>(Node.js / Express 5)"]
+        SIG["Signalling Service<br/>(Socket.IO Engine)"]
+        SYNC["Sync Worker<br/>(Idempotency & Outbox Reconciliation)"]
+        CDSS_SRV["Clinical Decision Support Engine<br/>(DDI & Allergy Analysis)"]
+        SCHED["Scheduler & Reminder Worker"]
+    end
+
+    subgraph DataBoundary["Private Data Boundary"]
+        PG[("PostgreSQL Primary Store<br/>(Encrypted at Rest)")]
+        REPLICA[("PostgreSQL Read Replica")]
+        REDIS[("Redis Cache<br/>(Presence, Rate Limits, State)")]
+        STORE[("Encrypted Object Storage<br/>(Clinical Attachments & Reports)")]
+    end
+
+    subgraph MediaPlane["Real-Time Media Plane"]
+        STUN["STUN Service"]
+        TURN["TURN Relay Server<br/>(coturn)"]
+    end
+
+    ClientLayer --> DNS --> WAF --> GW
+    CDN -.-> ClientLayer
+    GW --> API
+    GW --> SIG
+
+    ClientLayer -->|OIDC Token Request| IDP
+    API -->|Verify ID Token| IDP
+    API --> RBAC
+    API --> VAULT
+    SIG --> VAULT
+
+    API --> PG
+    API --> REDIS
+    API --> STORE
+    SIG --> REDIS
+    SYNC --> PG
+    CDSS_SRV --> PG
+    SCHED --> PG
+
+    PG -. Replication .-> REPLICA
+
+    PA <-->|Direct P2P Media| STUN
+    DW <-->|Direct P2P Media| STUN
+    PA <-->|Relayed Media When NAT Blocked| TURN
+    DW <-->|Relayed Media When NAT Blocked| TURN
+    SIG -->|SDP Offers, Answers, ICE Candidates| PA
+    SIG -->|SDP Offers, Answers, ICE Candidates| DW
 ```
 
 ---
 
-## 🚀 Quick Start / Local Development
+## 3. Adaptive Consultation & Network Degradation Engine
 
-### 1. Prerequisites
-- **Node.js**: v18.0.0 or higher
-- **Package Manager**: `npm` or `pnpm`
-- **PostgreSQL Database**: Neon Serverless Postgres or local instance
+The consultation engine continuously monitors connection reachability, WebRTC round-trip time (RTT), packet loss, jitter, and bandwidth availability. The system dynamically negotiates communication modes to maintain consultation continuity without loss of encounter context.
 
-### 2. Clone and Install Dependencies
-```bash
-git clone https://github.com/abhijeetnardele24-hash/medlink.git
-cd medlink
-
-# Install API dependencies
-cd services/api && npm install
-
-# Install Frontend dependencies
-cd ../../apps/doctor-web && npm install
-cd ../patient-web && npm install
-cd ../pharmacy-web && npm install
-cd ../coordinator-web && npm install
-cd ../landing-web && npm install
+```mermaid
+stateDiagram-v2
+    [*] --> PreCall : Device Setup & ICE Negotiation
+    
+    PreCall --> VideoConsultation : High Bandwidth (< 150ms RTT, < 2% Loss)
+    
+    state VideoConsultation {
+        [*] --> HD_Video : Stable Connection
+        HD_Video --> LowRes_Video : Minor Packet Loss
+    }
+    
+    VideoConsultation --> AudioConsultation : Sustained Jitter / Packet Loss > 5%
+    AudioConsultation --> VideoConsultation : Stable Network Restored (User Confirmed)
+    
+    AudioConsultation --> AsyncChat : Severe Packet Loss > 15% / Media Dropped
+    AsyncChat --> AudioConsultation : Reachability Restored
+    
+    AsyncChat --> OfflineCapture : Total Reachability Loss
+    OfflineCapture --> AsyncChat : Connectivity Re-established (Outbox Flushed)
 ```
 
-### 3. Environment Configuration (`services/api/.env`)
-```env
-PORT=3005
-DATABASE_URL=postgresql://<user>:<password>@<host>/<database>?sslmode=require
-CORS_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177
-GEMINI_API_KEY=<your-google-gemini-api-key> # Optional (Built-in clinical fallback engine included)
-```
+### Network Adaptation Policy Matrix
 
-### 4. Running the Ecosystem
-```bash
-# Start Backend API (Port 3005)
-cd services/api && npm run dev
+| Transition | Trigger Condition | System Behavior |
+|---|---|---|
+| **Video → Audio** | Sustained packet loss > 5%, RTT > 300ms, or video bitrate failure | Drops video tracks, renegotiates audio-only profile, and notifies both participants with a plain-language banner. |
+| **Audio → Async Chat** | Media connection timeout or recurring disconnects | Preserves encounter context, transitions UI to encrypted real-time chat, and supports text/image exchange. |
+| **Chat → Offline** | Total reachability failure after exponential backoff retries | Stores messages and clinical notes in local encrypted SQLite outbox with pending-sync status. |
+| **Offline → Online** | Network reachability detected | Authenticates connection, replays outbox queue with idempotency keys, and pulls server updates. |
+| **Audio → Video** | Sustained network stability for > 15 seconds | Displays non-intrusive prompt allowing participants to restore video stream without sudden bandwidth spikes. |
 
-# Start Doctor Web Workspace (Port 5174)
-cd apps/doctor-web && npm run dev
+---
 
-# Start Patient Web Portal (Port 5173)
-cd apps/patient-web && npm run dev
+## 4. Clinical Encounter, Ambient Documentation & CDSS Lifecycle
 
-# Start Pharmacy Web Marketplace (Port 5175)
-cd apps/pharmacy-web && npm run dev
+MedLink separates raw consultation dialogue, clinical notes, decision support checks, and issued prescriptions into discrete, audited phases.
 
-# Start Landing Web (Port 5177)
-cd apps/landing-web && npm run dev
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Patient
+    actor Doctor
+    participant DW as Doctor Workspace
+    participant API as Core API
+    participant CDSS as Safety & Scribe Engine
+    participant DB as PostgreSQL Store
+
+    Patient->>Doctor: Live WebRTC Telehealth Consultation
+    Doctor->>DW: Enable Ambient Clinical Scribe
+    DW->>CDSS: Stream Consultation Audio / Dialogue
+    CDSS-->>DW: Structured SOAP Notes (Subjective, Objective, Assessment, Plan) + ICD-10 Codes
+    Doctor->>DW: Review & Refine SOAP Notes
+    Doctor->>DW: Add Medications to Prescription Pad
+    DW->>CDSS: Evaluate Drug-Drug Interactions & Allergy Conflicts
+    CDSS-->>DW: Real-Time CDSS Safety Status (Safe / Caution / Contraindication Alert)
+    Doctor->>DW: Sign & Finalize Prescription
+    DW->>API: Submit Encrypted Clinical Encounter Summary & Rx
+    API->>DB: Persist Immutable Encounter Record & Audit Trail
+    API-->>Patient: Deliver Authorized Clinical Summary & Downloadable PDF Prescription
 ```
 
 ---
 
-## 🛡️ Security, Privacy & Compliance (HIPAA / ABDM)
+## 5. Offline-First Synchronization Protocol
 
-- **Token-Based Authentication**: Strict server-side verification of Firebase Auth ID tokens / JWT signatures on every protected route.
-- **Role-Based Access Control (RBAC)**: Enforces boundaries between Patient, Doctor, Pharmacist, and Coordinator.
-- **Zero Raw Payment Credentials**: PCI-DSS compliance by never storing raw credit card, CVV, or banking PIN information.
-- **E2E WebRTC Encryption**: DTLS-SRTP encryption for peer-to-peer audio, video, and data channels.
-- **Immutable Audit Trail**: All clinical notes, prescription signing, and emergency triage escalations produce audit logs with actor ID and timestamp.
+The patient client employs a local-first write pattern. Data mutations are committed locally inside an encrypted store before network dispatch is attempted.
+
+```mermaid
+flowchart TD
+    A[User Action / Record Creation] --> B[Local Input Validation]
+    B --> C[Write to Local Encrypted SQLite Database]
+    C --> D[Append to Persistent Sync Outbox Queue<br/>UUID Idempotency Key + Version Timestamp]
+    D --> E[Immediate UI Update: 'Saved Locally / Pending Sync']
+    E --> F{Network Online?}
+    F -- No --> G[Wait for Connectivity Broadcast]
+    G --> F
+    F -- Yes --> H[Dispatch Authenticated Batch Sync Request]
+    H --> I{Server Validation & Idempotency Check}
+    I -- Conflict Detected --> J[Apply Deterministic Version / Amendment Rule]
+    I -- Success --> K[Database Transaction Committed]
+    K --> L[Server Acknowledges Operation UUIDs]
+    L --> M[Client Purges Outbox Queue & Updates Sync Cursor]
+```
+
+---
+
+## 6. Access Control & Domain Boundaries
+
+MedLink strictly separates clinical care, platform operations, and pharmacy distribution. Every API request is verified at the controller level; interface visibility is never used as an authorization boundary.
+
+| Domain Entity | Patient | Assigned Doctor | Clinic Coordinator | Pharmacist | Privacy & Governance Rule |
+|---|---|---|---|---|---|
+| **Appointment Operations** | View / Request | View / Manage | View / Manage | No Access | Coordinator views operational metadata only. |
+| **Draft Clinical Notes** | No Access | Create / Edit (Pre-final) | No Access | No Access | Doctor working document; never exposed before finalization. |
+| **Final Clinical Summary** | View / Download | Author / View | No Access | No Access | Immutable once finalized; corrections require an explicit amendment. |
+| **Prescription Records** | View / Download | Author / Amend | No Access | View (If Assigned) | Pharmacist accesses only prescriptions directed to their dispensing queue. |
+| **Diagnostic Lab Reports** | View / Upload | View (With Consent) | No Access | No Access | Access is time- and encounter-scoped under patient consent. |
+| **Audit Logs** | No Access | No Access | View Operational Logs | No Access | Append-only audit events capturing actor ID, timestamp, and IP hash. |
+
+---
+
+## 7. DevSecOps, Continuous Delivery & Observability
+
+```mermaid
+flowchart LR
+    DEV[Developer Workstation] -->|Git Push| GH[GitHub Repository]
+    GH -->|Trigger Webhook| CI[CI Pipeline<br/>Lint, Typecheck, Test Suite]
+    CI -->|Quality Gate Passed| BUILD[Build Artifacts<br/>Vite Production Bundles + Docker Images]
+    BUILD --> REG[Container & Package Registry]
+    REG --> CD[Deployment Pipeline<br/>Staging → Verification → Production]
+    CD --> RUNTIME[Production Runtime Network]
+    RUNTIME --> OBS[Observability Stack<br/>Pino Structured Logging + Metrics]
+    OBS --> AUDIT[Security Audit & Compliance Review]
+```
+
+### Security & Release Governance Standards
+- **Zero Raw Credentials**: No storage of raw card numbers, CVVs, banking credentials, or payment secrets.
+- **DTLS-SRTP Encryption**: Direct peer-to-peer encryption for audio, video, and data channels.
+- **Immutable Clinical Audit**: All prescription authorizations, doctor verifications, and diagnostic record views generate auditable event records.
+- **Automated Verification**: Release pipelines enforce static type safety, route schema validation, and test suite execution prior to deployment.
 
 ---
 
 ## 📜 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
