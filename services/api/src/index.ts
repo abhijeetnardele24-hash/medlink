@@ -151,6 +151,11 @@ io.on("connection", (socket) => {
     socket.to(encounterId).emit("read-receipt", { messageId, readerId });
   });
 
+  socket.on("message-reaction", ({ encounterId, messageId, emoji, userId }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    io.to(encounterId).emit("message-reaction", { messageId, emoji, userId });
+  });
+
   // ─── Google Meet / Zoom In-Meeting Signaling Events ──────────────────────────
 
   // Recording Status Broadcast (Local / Cloud)

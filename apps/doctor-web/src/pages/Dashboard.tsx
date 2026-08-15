@@ -84,7 +84,7 @@ export const Dashboard: React.FC = () => {
       )}
 
       {/* Stats Strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
         {[
           { label: 'Pending Requests', value: requests.length, icon: <AlertCircle size={20} />, color: '#f59e0b' },
           { label: 'Upcoming Today', value: upcomingAppointments.length, icon: <Clock size={20} />, color: 'var(--accent)' },
@@ -101,6 +101,31 @@ export const Dashboard: React.FC = () => {
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>{stat.label}</div>
           </div>
         ))}
+      </div>
+
+      {/* Instant Video Consultation Sandbox Card (Google Meet & Zoom Suite) */}
+      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '3rem', background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(168,85,247,0.08))', border: '1px solid rgba(37,99,235,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(37,99,235,0.3)', flexShrink: 0 }}>
+            <Video size={28} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Google Meet & Zoom Enterprise Video Suite
+              <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#10b981', color: 'white', fontWeight: 600 }}>LIVE</span>
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              Equipped with Local Recording (auto-downloads to PC), Screen Sharing, Real-Time Whiteboard, Floating Emoji Reactions, and In-Call Message Reactions.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
+          className="btn btn-primary"
+          style={{ padding: '0.85rem 1.75rem', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #2563eb, #4f46e5)' }}
+        >
+          <Video size={18} /> Launch Instant Consultation Room
+        </button>
       </div>
 
       {error && (

@@ -88,7 +88,7 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Stats Strip */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
         {[
           { label: 'Total Appointments', value: appointments.length, icon: <Calendar size={22} color="var(--accent)" />, accent: 'var(--accent)' },
           { label: 'Upcoming', value: upcomingAppts.length, icon: <Clock size={22} color="#10b981" />, accent: '#10b981' },
@@ -105,6 +105,31 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Instant Video Consultation Sandbox Card */}
+      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '3rem', background: 'linear-gradient(135deg, rgba(66,63,222,0.08), rgba(16,185,129,0.08))', border: '1px solid rgba(66,63,222,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #423FDE, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(66,63,222,0.3)', flexShrink: 0 }}>
+            <Video size={28} />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              Telehealth Video Consultation Room
+              <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#10b981', color: 'white', fontWeight: 600 }}>READY</span>
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
+              High-definition video with local recording, whiteboard sharing, live message reactions, and background blur.
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
+          className="btn btn-primary"
+          style={{ padding: '0.85rem 1.75rem', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #423FDE, #6366f1)' }}
+        >
+          <Video size={18} /> Test & Join Sandbox Room
+        </button>
       </div>
 
       {/* Available Doctor Slots Section (NEW) */}
