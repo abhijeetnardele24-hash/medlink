@@ -7,6 +7,7 @@ import {
   DollarSign, Zap 
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AITriageModal } from '../components/AITriageModal';
 
 interface Doctor {
   id: string;
@@ -46,6 +47,7 @@ export const Dashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [openSlots, setOpenSlots] = useState<OpenSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTriageOpen, setIsTriageOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -107,29 +109,57 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* Instant Video Consultation Sandbox Card */}
-      <div className="glass-panel" style={{ padding: '2rem', marginBottom: '3rem', background: 'linear-gradient(135deg, rgba(66,63,222,0.08), rgba(16,185,129,0.08))', border: '1px solid rgba(66,63,222,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'linear-gradient(135deg, #423FDE, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(66,63,222,0.3)', flexShrink: 0 }}>
-            <Video size={28} />
+      {/* AI Clinical Triage & Video Suite Cards Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '3rem' }}>
+        {/* Card 1: AI Clinical Symptom Triage */}
+        <div className="glass-panel" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))', border: '1px solid rgba(37,99,235,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(37,99,235,0.3)', flexShrink: 0 }}>
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                AI Clinical Symptom Triage
+                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#3b82f6', color: 'white', fontWeight: 600 }}>AI 2.0</span>
+              </h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+                Interactive pre-consultation triage. Evaluates emergency red flags and finds the exact right specialist for your condition.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              Telehealth Video Consultation Room
-              <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#10b981', color: 'white', fontWeight: 600 }}>READY</span>
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>
-              High-definition video with local recording, whiteboard sharing, live message reactions, and background blur.
-            </p>
-          </div>
+          <button
+            onClick={() => setIsTriageOpen(true)}
+            className="btn btn-primary"
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+          >
+            <Sparkles size={16} /> Start AI Symptom Assessment
+          </button>
         </div>
-        <button
-          onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
-          className="btn btn-primary"
-          style={{ padding: '0.85rem 1.75rem', fontSize: '0.95rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #423FDE, #6366f1)' }}
-        >
-          <Video size={18} /> Test & Join Sandbox Room
-        </button>
+
+        {/* Card 2: Instant Video Consultation Sandbox Card */}
+        <div className="glass-panel" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(66,63,222,0.08), rgba(16,185,129,0.08))', border: '1px solid rgba(66,63,222,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #423FDE, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(66,63,222,0.3)', flexShrink: 0 }}>
+              <Video size={24} />
+            </div>
+            <div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                Telehealth Video Suite
+                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#10b981', color: 'white', fontWeight: 600 }}>READY</span>
+              </h3>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
+                Local HD recording, whiteboard sharing, live message reactions, and background blur settings.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
+            className="btn btn-secondary"
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <Video size={16} /> Test & Join Sandbox Room
+          </button>
+        </div>
       </div>
 
       {/* Available Doctor Slots Section (NEW) */}
@@ -340,6 +370,12 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Conversational AI Clinical Triage Modal */}
+      <AITriageModal
+        isOpen={isTriageOpen}
+        onClose={() => setIsTriageOpen(false)}
+      />
     </div>
   );
 };

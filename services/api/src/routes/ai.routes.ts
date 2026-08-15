@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth';
 import { AIScribeService } from '../services/aiScribe.service';
 import { AILabReportService } from '../services/aiLabReport.service';
 import { AISafetyService } from '../services/aiSafety.service';
+import { AITriageService } from '../services/aiTriage.service';
 
 const router = Router();
 
@@ -66,6 +67,27 @@ router.post('/safety/ddi-check', authenticate, async (req: Request, res: Respons
   } catch (err: any) {
     console.error('Error checking prescription safety:', err);
     res.status(500).json({ error: 'Failed to check prescription safety with AI' });
+  }
+});
+
+/**
+ * POST /ai/triage/chat
+ * Conversational Pre-Consultation AI Triage, Red-Flag Emergency Screening & Specialty Routing
+ */
+router.post('/triage/chat', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { messages, patientContext } = req.body;
+
+    if (!messages || !Array.isArray(messages)) {
+      res.status(400).json({ error: 'Messages array is required' });
+      return;
+    }
+
+    const result = await AITriageService.processTriageTurn(messages, patientContext);
+    res.json(result);
+  } catch (err: any) {
+    console.error('Error in AI triage conversation:', err);
+    res.status(500).json({ error: 'Failed to process AI triage turn' });
   }
 });
 
