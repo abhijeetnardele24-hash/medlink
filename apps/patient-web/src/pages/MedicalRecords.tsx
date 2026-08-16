@@ -5,7 +5,6 @@ import {
   Download,
   Calendar,
   Stethoscope,
-  Sparkles,
   Activity,
   Upload,
   CheckCircle,
@@ -146,7 +145,7 @@ Serum Uric Acid: 5.4 mg/dL (Ref: 3.5 - 7.2 mg/dL) [NORMAL]`;
       {/* Header */}
       <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, var(--accent), #6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(66,63,222,0.25)' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
             <FileText size={24} />
           </div>
           <div>
@@ -188,12 +187,12 @@ Serum Uric Acid: 5.4 mg/dL (Ref: 3.5 - 7.2 mg/dL) [NORMAL]`;
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              background: activeTab === 'labAnalyzer' ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : 'transparent',
+              background: activeTab === 'labAnalyzer' ? 'var(--accent)' : 'transparent',
               color: activeTab === 'labAnalyzer' ? 'white' : 'var(--text-muted)',
               transition: 'all 0.2s'
             }}
           >
-            <Sparkles size={16} /> Smart Lab Report AI Analyzer
+            <Activity size={16} /> Lab Report Analyzer
           </button>
         </div>
       </div>
@@ -252,11 +251,11 @@ Serum Uric Acid: 5.4 mg/dL (Ref: 3.5 - 7.2 mg/dL) [NORMAL]`;
       {activeTab === 'labAnalyzer' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           {/* Input Panel */}
-          <div className="glass-panel" style={{ padding: '2rem', background: 'linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.04))' }}>
+          <div className="glass-panel" style={{ padding: '2rem', background: 'var(--bg-surface)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Sparkles size={20} color="#7c3aed" /> Instant Diagnostic Blood Test & Lab Report Scanner
+                  <Activity size={20} color="var(--accent)" /> Lab Report Scanner
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', margin: 0 }}>
                   Paste raw laboratory results or test with our clinically validated sample reports below.
@@ -312,11 +311,11 @@ Serum Uric Acid: 5.4 mg/dL (Ref: 3.5 - 7.2 mg/dL) [NORMAL]`;
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                background: 'linear-gradient(135deg, #2563eb, #7c3aed)'
+                background: 'var(--accent)'
               }}
             >
               {isAnalyzing ? <Loader2 size={18} className="spinner" /> : <Activity size={18} />}
-              <span>{isAnalyzing ? 'Extracting Biomarkers with AI...' : 'Analyze Diagnostic Biomarkers'}</span>
+              <span>{isAnalyzing ? 'Extracting Biomarkers...' : 'Analyze Lab Report'}</span>
             </button>
           </div>
 

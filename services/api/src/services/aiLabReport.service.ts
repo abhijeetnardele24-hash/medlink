@@ -20,6 +20,7 @@ export interface LabAnalysisResult {
   suggestedQuestionsForDoctor: string[];
 }
 
+
 export class AILabReportService {
   private static getClient(): GoogleGenAI | null {
     const apiKey = process.env.GEMINI_API_KEY;

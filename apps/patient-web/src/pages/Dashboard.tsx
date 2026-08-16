@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { 
   HeartPulse, Calendar, Clock, MapPin, User, Stethoscope, 
-  ArrowRight, Video, CheckCircle, AlertCircle, Sparkles, 
+  ArrowRight, Video, CheckCircle, AlertCircle, 
   DollarSign, Zap 
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -111,16 +111,15 @@ export const Dashboard: React.FC = () => {
 
       {/* AI Clinical Triage & Video Suite Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '3rem' }}>
-        {/* Card 1: AI Clinical Symptom Triage */}
-        <div className="glass-panel" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(37,99,235,0.08), rgba(124,58,237,0.08))', border: '1px solid rgba(37,99,235,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+        {/* Card 1: Clinical Symptom Triage */}
+        <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(37,99,235,0.3)', flexShrink: 0 }}>
-              <Sparkles size={24} />
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', flexShrink: 0 }}>
+              <Activity size={24} />
             </div>
             <div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                AI Clinical Symptom Triage
-                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#3b82f6', color: 'white', fontWeight: 600 }}>AI 2.0</span>
+                Clinical Symptom Triage
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
                 Interactive pre-consultation triage. Evaluates emergency red flags and finds the exact right specialist for your condition.
@@ -130,22 +129,21 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={() => setIsTriageOpen(true)}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}
+            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
-            <Sparkles size={16} /> Start AI Symptom Assessment
+            <Activity size={16} /> Start Symptom Assessment
           </button>
         </div>
 
         {/* Card 2: Instant Video Consultation Sandbox Card */}
-        <div className="glass-panel" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(66,63,222,0.08), rgba(16,185,129,0.08))', border: '1px solid rgba(66,63,222,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+        <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #423FDE, #10b981)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', boxShadow: '0 8px 16px rgba(66,63,222,0.3)', flexShrink: 0 }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', flexShrink: 0 }}>
               <Video size={24} />
             </div>
             <div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 Telehealth Video Suite
-                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '999px', background: '#10b981', color: 'white', fontWeight: 600 }}>READY</span>
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
                 Local HD recording, whiteboard sharing, live message reactions, and background blur settings.
@@ -191,15 +189,15 @@ export const Dashboard: React.FC = () => {
               const isToday = startDate.toDateString() === new Date().toDateString();
 
               return (
-                <div 
+                  <div 
                   key={slot.id} 
                   className="glass-panel" 
                   style={{ 
                     padding: '1.5rem', 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    border: '1px solid rgba(245, 158, 11, 0.25)', 
-                    background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.03), rgba(37, 99, 235, 0.03))' 
+                    border: '1px solid var(--border-color)', 
+                    background: 'var(--bg-surface)' 
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.85rem' }}>
@@ -248,10 +246,10 @@ export const Dashboard: React.FC = () => {
 
       {/* Quick Actions Strip */}
       <div style={{ marginBottom: '3rem' }}>
-        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(37,99,235,0.05), rgba(99,102,241,0.05))', border: '1px solid var(--border)' }}>
+        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 12px rgba(16,185,129,0.2)' }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 20.5L3 13l7.5-7.5"/><path d="M14 3v8h8"/><path d="M3 13h18l-7.5 7.5"/><path d="M3 13v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/></svg>
+            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 20.5L3 13l7.5-7.5"/><path d="M14 3v8h8"/><path d="M3 13h18l-7.5 7.5"/><path d="M3 13v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/></svg>
             </div>
             <div>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Pharmacy Storefront</h2>
