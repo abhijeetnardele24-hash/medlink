@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../lib/api';
 import { 
   HeartPulse, Calendar, Clock, MapPin, User, Stethoscope, 
-  ArrowRight, Video, CheckCircle, AlertCircle, 
+  ArrowRight, Video, CheckCircle, AlertCircle, Activity,
   DollarSign, Zap 
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
