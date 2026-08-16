@@ -29,7 +29,10 @@ function Layout({ user, profile, children }: { user: User, profile: UserProfile,
     <div className="flex h-screen bg-gray-50">
       <aside className="w-64 bg-white border-r flex flex-col">
         <div className="p-6 border-b">
-          <h1 className="text-xl font-bold text-teal-700">MedLink Pharmacy</h1>
+          <h1 className="text-2xl font-black tracking-[0.12em] uppercase text-gray-900" style={{ fontFamily: '"Inter", sans-serif', margin: 0, lineHeight: 1 }}>
+            Med<span className="font-light">Link</span>
+          </h1>
+          <p className="text-xs text-teal-600 font-medium tracking-wider uppercase mt-1 mb-0">Pharmacy</p>
         </div>
         <nav className="flex-1 p-4 space-y-2">
           <Link to="/orders" className={`flex items-center gap-2 p-3 rounded-lg ${location.pathname.includes('/orders') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}>

@@ -24,13 +24,12 @@ export const Layout: React.FC = () => {
       <aside style={{ width: '280px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column' }}>
         
         {/* Logo Area */}
-        <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldCheck color="white" size={24} />
-          </div>
+        <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0, color: 'var(--text-main)' }}>MedLink</h2>
-            <p style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 500, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Admin Console</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-main)', fontFamily: '"Inter", sans-serif' }}>
+              Med<span style={{ fontWeight: 300 }}>Link</span>
+            </h2>
+            <p style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 500, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '0.25rem' }}>Admin Console</p>
           </div>
         </div>
 

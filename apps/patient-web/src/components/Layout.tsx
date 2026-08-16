@@ -12,11 +12,10 @@ export const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside style={{ width: '280px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}>
         
-        <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--border)' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <HeartPulse color="white" size={24} />
-          </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>MedLink</h2>
+        <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
+          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-main)', fontFamily: '"Inter", sans-serif' }}>
+            Med<span style={{ fontWeight: 300 }}>Link</span>
+          </h2>
         </div>
 
         <nav style={{ padding: '2rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
