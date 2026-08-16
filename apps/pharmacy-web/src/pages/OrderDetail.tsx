@@ -34,6 +34,13 @@ export const OrderDetail: React.FC = () => {
   useEffect(() => {
     fetchOrder();
     fetchMedicines();
+    
+    // Real-time API Polling for Rx Order Status changes
+    const interval = setInterval(() => {
+      fetchOrder();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, [id]);
 
   const fetchOrder = async () => {
@@ -50,7 +57,7 @@ export const OrderDetail: React.FC = () => {
 
   const fetchMedicines = async () => {
     try {
-      const res = await api.get('/inventory');
+      const res = await api.get('/pharmacy/inventory');
       setMedicines(res.data);
     } catch (err) {
       console.error(err);

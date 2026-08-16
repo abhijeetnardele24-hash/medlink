@@ -31,6 +31,13 @@ export const IncomingOrders: React.FC = () => {
   useEffect(() => {
     fetchOrders();
     fetchMedicines();
+    
+    // Real-time API Polling for new Rx Alerts
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchOrders = async () => {
@@ -46,12 +53,8 @@ export const IncomingOrders: React.FC = () => {
 
   const fetchMedicines = async () => {
     try {
-      const res = await api.get('/medicines'); // This needs pharmacistId in query? The API endpoint for GET /medicines allows it but doesn't require it. For pharmacy web, it's better to fetch ALL inventory or their own. Since this is pharmacy web, we want their inventory.
-      // We will filter on client for now or pass pharmacistId
-      // Actually, we can just use the global list for hackathon if no auth filtering is active, but we should probably fetch the auth user's meds
-      // Let's assume the pharmacy-web's inventory page uses GET /inventory
-      const res2 = await api.get('/inventory');
-      setMedicines(res2.data);
+      const res = await api.get('/pharmacy/inventory');
+      setMedicines(res.data);
     } catch (err) {
       console.error(err);
     }
