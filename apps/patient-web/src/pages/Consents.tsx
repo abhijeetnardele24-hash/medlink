@@ -101,45 +101,48 @@ export const Consents: React.FC = () => {
         </div>
       )}
 
-      <div className="card">
+      <div className="glass-panel" style={{ overflow: 'hidden' }}>
         {consents.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            You haven't granted data access to any doctors yet.
+          <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-muted)' }}>
+            <ShieldCheck size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
+            <p style={{ margin: 0, fontSize: '1.1rem' }}>You haven't granted data access to any doctors yet.</p>
           </div>
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>Doctor ID</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>Purpose</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>Scope</th>
-                <th style={{ padding: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>Status</th>
-                <th style={{ padding: '1rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: 500 }}>Actions</th>
+              <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', background: 'var(--bg-base)' }}>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Doctor ID</th>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Purpose</th>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Scope</th>
+                <th style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
+                <th style={{ padding: '1.25rem 1.5rem', textAlign: 'right', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {consents.map(c => (
                 <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1rem', fontFamily: 'monospace' }}>{c.granteeId.split('-')[0]}...</td>
-                  <td style={{ padding: '1rem' }}>{c.purpose}</td>
-                  <td style={{ padding: '1rem' }}>{c.scope}</td>
-                  <td style={{ padding: '1rem' }}>
+                  <td style={{ padding: '1.25rem 1.5rem', fontFamily: 'monospace', fontWeight: 500 }}>{c.granteeId.split('-')[0]}...</td>
+                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>{c.purpose.replace(/_/g, ' ')}</td>
+                  <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>{c.scope.replace(/_/g, ' ')}</td>
+                  <td style={{ padding: '1.25rem 1.5rem' }}>
                     <span style={{ 
-                      padding: '0.25rem 0.75rem', 
+                      padding: '0.35rem 0.85rem', 
                       borderRadius: '999px', 
-                      fontSize: '0.875rem', 
-                      fontWeight: 500,
-                      background: c.status === 'active' ? '#dcfce7' : '#f1f5f9',
-                      color: c.status === 'active' ? '#166534' : '#475569'
+                      fontSize: '0.75rem', 
+                      fontWeight: 700,
+                      background: c.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : '#f1f5f9',
+                      color: c.status === 'active' ? '#10b981' : '#475569',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
                     }}>
-                      {c.status.toUpperCase()}
+                      {c.status}
                     </span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>
+                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                     {c.status === 'active' && (
                       <button 
                         onClick={() => handleRevoke(c.id)}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 600, fontSize: '0.9rem' }}
                       >
                         <Trash2 size={16} /> Revoke
                       </button>
@@ -153,12 +156,12 @@ export const Consents: React.FC = () => {
       </div>
 
       {isModalOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
-          <div className="card" style={{ width: '100%', maxWidth: '500px', padding: '2rem' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2rem', background: 'var(--bg-surface-elevated)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 600 }}>Grant Access</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                <X size={24} />
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em' }}>Grant Access</h2>
+              <button onClick={() => setIsModalOpen(false)} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                <X size={16} />
               </button>
             </div>
             
