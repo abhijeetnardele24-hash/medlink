@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Forma.ai Color Palette */
@@ -24,7 +24,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-main);
   line-height: 1.5;
@@ -33,7 +33,7 @@ body {
 
 /* Typography Overrides */
 h1, h2, h3, h4, h5, h6 {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-main);
@@ -47,7 +47,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.5rem;
   padding: 12px 24px;
   border-radius: 320px;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
@@ -98,7 +98,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text-main);
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   transition: all 0.2s ease;
 }
 
@@ -122,7 +122,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero-title {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: clamp(3rem, 6vw, 5.5rem);
   font-weight: 800;
   letter-spacing: -0.04em;
@@ -172,7 +172,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 12px;
   color: var(--text-muted);
   text-decoration: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 700;
   font-size: 0.95rem;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
