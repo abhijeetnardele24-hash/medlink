@@ -12,10 +12,13 @@ export const Layout: React.FC = () => {
       {/* Sidebar */}
       <aside style={{ width: '280px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)' }}>
         
-        <div style={{ padding: '2rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
-          <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-main)', fontFamily: '"Inter", sans-serif' }}>
-            Med<span style={{ fontWeight: 300 }}>Link</span>
-          </h2>
+        <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--border)' }}>
+          <div>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 900, margin: 0, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-main)', fontFamily: '"Inter", sans-serif' }}>
+              Med<span style={{ fontWeight: 300 }}>Link</span>
+            </h2>
+            <p style={{ fontSize: '0.75rem', color: 'var(--accent)', fontWeight: 500, margin: 0, letterSpacing: '0.05em', textTransform: 'uppercase', marginTop: '0.25rem' }}>Patient Portal</p>
+          </div>
         </div>
 
         <nav style={{ padding: '2rem 1rem', flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
