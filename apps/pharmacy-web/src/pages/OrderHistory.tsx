@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { History, Search, Filter, Download, PackageCheck, XCircle } from 'lucide-react';
+import { InvoiceModal } from '../components/InvoiceModal';
 
 // Mock historical data
 const mockHistory = [
@@ -12,6 +13,7 @@ const mockHistory = [
 
 export const OrderHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<typeof mockHistory[0] | null>(null);
   
   const filtered = mockHistory.filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -83,7 +85,12 @@ export const OrderHistory: React.FC = () => {
                     )}
                   </td>
                   <td className="p-4 text-right">
-                    <button className="text-teal-600 font-medium hover:text-teal-800 text-sm">View Invoice</button>
+                    <button 
+                      onClick={() => setSelectedInvoiceOrder(order)}
+                      className="text-teal-600 font-medium hover:text-teal-800 text-sm"
+                    >
+                      View Invoice
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -98,6 +105,16 @@ export const OrderHistory: React.FC = () => {
           </table>
         </div>
       </div>
+      
+      {selectedInvoiceOrder && (
+        <InvoiceModal
+          orderId={selectedInvoiceOrder.id}
+          patientName={selectedInvoiceOrder.patient}
+          total={selectedInvoiceOrder.total}
+          date={selectedInvoiceOrder.date}
+          onClose={() => setSelectedInvoiceOrder(null)}
+        />
+      )}
     </div>
   );
 };

@@ -1,6 +1,7 @@
-import React from 'react';
-import { DollarSign, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { TransactionDetailModal } from '../components/TransactionDetailModal';
 
 const data = [
   { name: 'Mon', earnings: 4000 },
@@ -12,7 +13,17 @@ const data = [
   { name: 'Sun', earnings: 3490 },
 ];
 
+const mockLedger = [
+  { id: 'TXN-90214', date: '2026-08-16T14:30:00Z', grossAmount: 1250, status: 'settled', type: 'Payout' },
+  { id: 'TXN-90213', date: '2026-08-15T09:15:00Z', grossAmount: 850, status: 'settled', type: 'Payout' },
+  { id: 'TXN-90212', date: '2026-08-14T11:20:00Z', grossAmount: 450, status: 'settled', type: 'Payout' },
+  { id: 'TXN-90211', date: '2026-08-13T18:05:00Z', grossAmount: 1800, status: 'settled', type: 'Payout' },
+  { id: 'TXN-90210', date: '2026-08-12T10:10:00Z', grossAmount: 3200, status: 'settled', type: 'Payout' },
+];
+
 export const Earnings: React.FC = () => {
+  const [selectedTransaction, setSelectedTransaction] = useState<typeof mockLedger[0] | null>(null);
+
   return (
     <div className="p-8 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -80,6 +91,57 @@ export const Earnings: React.FC = () => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-lg font-bold text-gray-900">Detailed Settlement Ledger</h3>
+          <p className="text-sm text-gray-500">Click on any gross amount to view platform deductions and final settlement.</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gray-50 text-gray-500 text-sm border-b border-gray-100">
+                <th className="p-4 font-medium">Transaction ID</th>
+                <th className="p-4 font-medium">Date & Time</th>
+                <th className="p-4 font-medium">Type</th>
+                <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium text-right">Gross Amount</th>
+                <th className="p-4 font-medium text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {mockLedger.map(txn => (
+                <tr key={txn.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="p-4 font-medium text-gray-900">{txn.id}</td>
+                  <td className="p-4 text-gray-600">{new Date(txn.date).toLocaleString()}</td>
+                  <td className="p-4 text-gray-600">{txn.type}</td>
+                  <td className="p-4">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Settled
+                    </span>
+                  </td>
+                  <td className="p-4 font-bold text-gray-900 text-right">₹{txn.grossAmount.toFixed(2)}</td>
+                  <td className="p-4 text-right">
+                    <button 
+                      onClick={() => setSelectedTransaction(txn)}
+                      className="inline-flex items-center gap-1 text-teal-600 font-medium hover:text-teal-800 text-sm bg-teal-50 px-3 py-1.5 rounded-lg transition-colors"
+                    >
+                      View Breakdown <ArrowRight size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {selectedTransaction && (
+        <TransactionDetailModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+        />
+      )}
     </div>
   );
 };
