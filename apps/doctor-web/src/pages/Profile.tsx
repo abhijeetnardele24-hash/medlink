@@ -98,7 +98,12 @@ export const Profile: React.FC = () => {
         isPartTime: Boolean(data.isPartTime),
       });
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load profile');
+      if (err.response?.status === 404) {
+        // No profile yet, force edit mode so they can create it
+        setIsEditing(true);
+      } else {
+        setError(err.response?.data?.error || 'Failed to load profile');
+      }
     } finally {
       setLoading(false);
     }

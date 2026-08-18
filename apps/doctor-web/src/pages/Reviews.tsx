@@ -31,8 +31,10 @@ export function Reviews() {
   useEffect(() => {
     if (profile?.id) {
       fetchReviews();
+    } else if (profile === null) {
+      setLoading(false);
     }
-  }, [profile?.id]);
+  }, [profile]);
 
   const fetchReviews = async () => {
     try {
