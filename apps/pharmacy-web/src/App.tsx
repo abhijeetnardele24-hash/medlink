@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { api } from './lib/api';
@@ -25,9 +25,45 @@ export interface UserProfile {
 
 function Layout({ user, profile, children }: { user: User, profile: UserProfile, children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<any[]>([]);
+
   const handleLogout = () => {
     auth.signOut();
   };
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/notifications');
+      setNotifications(res.data);
+    } catch (err) {
+      console.error('Failed to fetch notifications', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // Poll every 10s
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleNotificationClick = async (notif: any) => {
+    if (!notif.isRead) {
+      try {
+        await api.patch(`/notifications/${notif.id}/read`);
+        fetchNotifications();
+      } catch (err) {
+        console.error('Failed to mark read', err);
+      }
+    }
+    if (notif.metadataJson?.orderId) {
+      navigate(`/orders/${notif.metadataJson.orderId}`);
+    } else {
+      navigate('/orders');
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -42,23 +78,33 @@ function Layout({ user, profile, children }: { user: User, profile: UserProfile,
           
           <button className="relative p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-full transition-colors group">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
             
-            <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-              <div className="p-3 border-b text-sm font-bold text-gray-900 text-left">Notifications</div>
-              <div className="p-3 text-sm text-gray-600 text-left hover:bg-gray-50 border-b">
-                <span className="block font-medium text-gray-900">New Order Received</span>
-                Patient Rahul Sharma uploaded a prescription.
-                <span className="block text-xs text-gray-400 mt-1">2 mins ago</span>
+            <div className="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="p-3 border-b text-sm font-bold text-gray-900 text-left flex justify-between items-center">
+                Notifications
+                {unreadCount > 0 && <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs">{unreadCount} new</span>}
               </div>
-              <div className="p-3 text-sm text-gray-600 text-left hover:bg-gray-50 border-b">
-                <span className="block font-medium text-emerald-600">Payment Completed</span>
-                Order #ORD-7291 was paid. Ready to parcel.
-                <span className="block text-xs text-gray-400 mt-1">15 mins ago</span>
+              <div className="max-h-64 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500 text-sm">No notifications</div>
+                ) : (
+                  notifications.map(notif => (
+                    <div 
+                      key={notif.id}
+                      onClick={() => handleNotificationClick(notif)}
+                      className={`p-3 text-sm text-left border-b cursor-pointer transition-colors ${notif.isRead ? 'text-gray-500 hover:bg-gray-50' : 'bg-teal-50/30 text-gray-800 hover:bg-teal-50/60'}`}
+                    >
+                      <span className={`block font-medium ${notif.isRead ? 'text-gray-700' : 'text-teal-700'}`}>{notif.title}</span>
+                      {notif.message}
+                      <span className="block text-xs text-gray-400 mt-1">{new Date(notif.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                  ))
+                )}
               </div>
-              <div className="p-3 text-center text-xs text-teal-600 font-medium hover:bg-gray-50 rounded-b-xl">
-                View All
-              </div>
+              <Link to="/orders" className="block p-3 text-center text-xs text-teal-600 font-medium hover:bg-gray-50 rounded-b-xl">
+                View Orders
+              </Link>
             </div>
           </button>
         </div>
