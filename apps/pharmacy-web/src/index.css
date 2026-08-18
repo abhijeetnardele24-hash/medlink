@@ -185,3 +185,34 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+
+/* Print Styles for A4 Invoice */
+@media print {
+  @page {
+    size: A4;
+    margin: 0mm;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #printable-invoice, #printable-invoice * {
+    visibility: visible;
+  }
+  
+  #printable-invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 20mm; /* Internal A4 margins */
+    background-color: white !important;
+  }
+  
+  /* Hide UI specific buttons within the printable area if needed, though they shouldn't be inside #printable-invoice */
+  .no-print {
+    display: none !important;
+  }
+}

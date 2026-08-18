@@ -204,10 +204,13 @@ export const IncomingOrders: React.FC = () => {
                   <td className="p-4 text-right">
                     {o.status === 'paid' && (
                       <button 
-                        onClick={() => handleDispense(o.id)}
-                        className="text-xs bg-teal-600 text-white px-3 py-1.5 rounded hover:bg-teal-700 font-medium"
+                        onClick={async () => {
+                          await handleDispense(o.id);
+                          alert('Order Parcellled & Shipped! Patient Dashboard updated and tracking link sent via email.');
+                        }}
+                        className="text-xs bg-teal-600 text-white px-3 py-1.5 rounded hover:bg-teal-700 font-medium flex items-center gap-1 ml-auto"
                       >
-                        Dispense
+                        <Package size={14} /> Parcel & Ship
                       </button>
                     )}
                   </td>

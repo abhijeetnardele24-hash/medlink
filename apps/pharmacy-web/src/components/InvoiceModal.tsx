@@ -41,9 +41,12 @@ export const InvoiceModal: React.FC<InvoiceModalProps> = ({ orderId, patientName
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col">
         
         {/* Header Actions */}
-        <div className="sticky top-0 bg-white/90 backdrop-blur border-b border-gray-100 p-4 flex justify-between items-center z-10">
+        <div className="sticky top-0 bg-white/90 backdrop-blur border-b border-gray-100 p-4 flex justify-between items-center z-10 no-print">
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors border border-gray-200">
+            <button 
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors border border-gray-200"
+            >
               <Printer size={18} /> Print
             </button>
             <button className="flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-700 rounded-lg hover:bg-teal-100 font-medium transition-colors border border-teal-200">

@@ -205,23 +205,69 @@ export const OrderDetail: React.FC = () => {
                     disabled={cart.length === 0 || submitting}
                     className="w-full py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold disabled:opacity-50 transition-colors shadow-sm"
                   >
-                    {submitting ? 'Sending...' : 'Send Bill to Patient'}
+                    {submitting ? 'Sending...' : 'Accept & Send Bill to Patient'}
                   </button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50">
-              <CheckCircle size={64} className="text-teal-500 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Order Built Successfully</h2>
-              <p className="text-gray-600 mb-6 max-w-md">The patient has been notified and needs to complete payment. Order total: <span className="font-bold text-gray-900">₹{order.totalAmount}</span></p>
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50 relative">
+              {/* Tracker Visualization */}
+              <div className="w-full max-w-md mb-12 relative">
+                <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 -translate-y-1/2 rounded"></div>
+                <div className={`absolute top-1/2 left-0 h-1 bg-teal-500 -z-10 -translate-y-1/2 rounded transition-all duration-1000 ${order.status === 'pending_payment' ? 'w-1/2' : 'w-full'}`}></div>
+                
+                <div className="flex justify-between">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-md"><CheckCircle size={16}/></div>
+                    <span className="text-xs font-bold text-gray-700">Received</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-md"><CheckCircle size={16}/></div>
+                    <span className="text-xs font-bold text-gray-700">Accepted</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-colors ${order.status === 'dispensed' || order.status === 'shipped' ? 'bg-teal-500 text-white' : 'bg-white border-2 border-gray-200 text-gray-300'}`}>
+                      <Package size={16}/>
+                    </div>
+                    <span className={`text-xs font-bold ${order.status === 'dispensed' || order.status === 'shipped' ? 'text-gray-700' : 'text-gray-400'}`}>Shipped</span>
+                  </div>
+                </div>
+              </div>
+
+              <CheckCircle size={64} className="text-teal-500 mb-4 animate-bounce" />
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                {order.status === 'pending_payment' ? 'Order Accepted & Patient Notified' : 'Order Parcellled & Shipped'}
+              </h2>
+              <p className="text-gray-600 mb-6 max-w-md">
+                {order.status === 'pending_payment' 
+                  ? `An automated email via Resend has been sent to ${order.patientName} to complete payment. Order total: ₹${order.totalAmount}`
+                  : `An automated email with tracking link has been dispatched. The Patient Dashboard is now synced.`}
+              </p>
               
+              {/* Mock Patient Payment Button for Demo Purposes */}
+              {order.status === 'pending_payment' && (
+                <button 
+                  onClick={() => {
+                    // Simulate Patient Payment for Demo
+                    alert("DEMO: Simulating Patient Payment Success!");
+                    setOrder({...order, status: 'paid'});
+                  }}
+                  className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium text-sm transition-all mb-4"
+                >
+                  [Demo] Simulate Patient Payment
+                </button>
+              )}
+
               {order.status === 'paid' && (
                 <button 
-                  onClick={handleDispense}
-                  className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-semibold shadow-md transition-all"
+                  onClick={async () => {
+                    await handleDispense();
+                    setOrder({...order, status: 'shipped'});
+                  }}
+                  className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 font-bold shadow-md transition-all flex items-center gap-2"
                 >
-                  Mark as Dispensed
+                  <Package size={20} /> Parcel & Ship Order
                 </button>
               )}
             </div>

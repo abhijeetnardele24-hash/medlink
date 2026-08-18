@@ -32,11 +32,35 @@ function Layout({ user, profile, children }: { user: User, profile: UserProfile,
   return (
     <div className="flex h-screen bg-gray-50">
       <aside className="w-64 bg-white border-r flex flex-col">
-        <div className="p-6 border-b">
-          <h1 className="text-2xl font-black tracking-[0.12em] uppercase text-gray-900" style={{ fontFamily: '"Inter", sans-serif', margin: 0, lineHeight: 1 }}>
-            Med<span className="font-light">Link</span>
-          </h1>
-          <p className="text-xs text-teal-600 font-medium tracking-wider uppercase mt-1 mb-0">Pharmacy</p>
+        <div className="p-6 border-b flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-black tracking-[0.12em] uppercase text-gray-900" style={{ fontFamily: '"Inter", sans-serif', margin: 0, lineHeight: 1 }}>
+              Med<span className="font-light">Link</span>
+            </h1>
+            <p className="text-xs text-teal-600 font-medium tracking-wider uppercase mt-1 mb-0">Pharmacy</p>
+          </div>
+          
+          <button className="relative p-2 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-full transition-colors group">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            
+            <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="p-3 border-b text-sm font-bold text-gray-900 text-left">Notifications</div>
+              <div className="p-3 text-sm text-gray-600 text-left hover:bg-gray-50 border-b">
+                <span className="block font-medium text-gray-900">New Order Received</span>
+                Patient Rahul Sharma uploaded a prescription.
+                <span className="block text-xs text-gray-400 mt-1">2 mins ago</span>
+              </div>
+              <div className="p-3 text-sm text-gray-600 text-left hover:bg-gray-50 border-b">
+                <span className="block font-medium text-emerald-600">Payment Completed</span>
+                Order #ORD-7291 was paid. Ready to parcel.
+                <span className="block text-xs text-gray-400 mt-1">15 mins ago</span>
+              </div>
+              <div className="p-3 text-center text-xs text-teal-600 font-medium hover:bg-gray-50 rounded-b-xl">
+                View All
+              </div>
+            </div>
+          </button>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           <Link to="/orders" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/orders') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
