@@ -4,7 +4,7 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from './lib/firebase';
 import { api } from './lib/api';
 import './App.css';
-import { Package, Activity, LogOut } from 'lucide-react';
+import { Package, Activity, LogOut, DollarSign, History, BarChart3, Settings as SettingsIcon } from 'lucide-react';
 
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
@@ -12,6 +12,10 @@ import { Onboarding } from './pages/Onboarding';
 import { InventoryDashboard } from './pages/InventoryDashboard';
 import { IncomingOrders } from './pages/IncomingOrders';
 import { OrderDetail } from './pages/OrderDetail';
+import { Earnings } from './pages/Earnings';
+import { Analytics } from './pages/Analytics';
+import { OrderHistory } from './pages/OrderHistory';
+import { Settings } from './pages/Settings';
 
 export interface UserProfile {
   id: string;
@@ -34,16 +38,31 @@ function Layout({ user, profile, children }: { user: User, profile: UserProfile,
           </h1>
           <p className="text-xs text-teal-600 font-medium tracking-wider uppercase mt-1 mb-0">Pharmacy</p>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <Link to="/orders" className={`flex items-center gap-2 p-3 rounded-lg ${location.pathname.includes('/orders') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}>
-            <Activity size={20} /> Incoming Orders
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <Link to="/orders" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/orders') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <Activity size={20} /> Active Orders
           </Link>
-          <Link to="/inventory" className={`flex items-center gap-2 p-3 rounded-lg ${location.pathname.includes('/inventory') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}>
+          <Link to="/inventory" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/inventory') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
             <Package size={20} /> Inventory
           </Link>
+          <div className="my-4 border-t border-gray-100"></div>
+          <p className="px-3 text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">Enterprise</p>
+          <Link to="/history" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/history') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <History size={20} /> Order History
+          </Link>
+          <Link to="/earnings" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/earnings') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <DollarSign size={20} /> Earnings
+          </Link>
+          <Link to="/analytics" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/analytics') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <BarChart3 size={20} /> Analytics
+          </Link>
+          <div className="my-4 border-t border-gray-100"></div>
+          <Link to="/settings" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${location.pathname.includes('/settings') ? 'bg-teal-50 text-teal-700 font-medium' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}>
+            <SettingsIcon size={20} /> Settings
+          </Link>
         </nav>
-        <div className="p-4 border-t">
-          <button onClick={handleLogout} className="flex items-center gap-2 p-3 rounded-lg text-red-600 hover:bg-red-50 w-full">
+        <div className="p-4 border-t border-gray-100">
+          <button onClick={handleLogout} className="flex items-center gap-3 p-3 rounded-xl text-red-600 hover:bg-red-50 w-full transition-colors font-medium">
             <LogOut size={20} /> Sign Out
           </button>
         </div>
@@ -84,7 +103,6 @@ function App() {
           } else {
             setProfileError('Login failed: ' + (err?.response?.data?.error || err.message));
           }
-          // Sign out so they can try again cleanly
           await auth.signOut();
         }
       } else {
@@ -126,7 +144,11 @@ function App() {
                 <Routes>
                   <Route path="/orders" element={<IncomingOrders />} />
                   <Route path="/orders/:id" element={<OrderDetail />} />
+                  <Route path="/history" element={<OrderHistory />} />
                   <Route path="/inventory" element={<InventoryDashboard user={user} profile={profile} />} />
+                  <Route path="/earnings" element={<Earnings />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/orders" replace />} />
                 </Routes>
               </Layout>
