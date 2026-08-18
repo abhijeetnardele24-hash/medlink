@@ -12,8 +12,9 @@ import { Profile } from './pages/Profile';
 import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Earnings } from './pages/Earnings';
+import { Analytics } from './pages/Analytics';
+import { Reviews } from './pages/Reviews';
 import './index.css';
-
 function App() {
   return (
     <AuthProvider>
@@ -32,6 +33,8 @@ function App() {
               <Route path="/patients/:id" element={<PatientDetail />} />
               <Route path="/availability" element={<Availability />} />
               <Route path="/earnings" element={<Earnings />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/reviews" element={<Reviews />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
 

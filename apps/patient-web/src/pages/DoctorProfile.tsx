@@ -5,6 +5,7 @@ import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { PatientReviews } from '../components/PatientReviews';
 
 interface Doctor {
   id: string;
@@ -319,6 +320,8 @@ export const DoctorProfile: React.FC = () => {
           </form>
         </motion.div>
       </div>
+
+      {id && <PatientReviews doctorId={id} />}
     </div>
   );
 };

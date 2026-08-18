@@ -35,6 +35,7 @@ import consentsRouter from "./routes/consents.routes";
 import medicinesRouter from "./routes/medicines.routes";
 import pharmacyRouter from "./routes/pharmacy.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
+import { reviewsRouter } from "./routes/reviews.routes";
 import syncRouter from "./routes/sync.routes";
 import patientsRouter from "./routes/patients.routes";
 import aiRouter from "./routes/ai.routes";
@@ -133,6 +134,7 @@ export function createServer(): Express {
   const v1Router = express.Router();
   v1Router.use("/auth", authLimiter, authRouter);
   v1Router.use("/doctors", doctorsRouter);
+  v1Router.use("/doctors", reviewsRouter);
   v1Router.use("/appointments", authenticate, appointmentsRouter);
   v1Router.use("/encounters", authenticate, encountersRouter);
   v1Router.use("/patients", patientsRouter);
