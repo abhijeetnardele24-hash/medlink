@@ -8,7 +8,9 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "npx tsx tests/run-all-tests.ts"
+    "test:unit": "npx tsx tests/run-all-tests.ts",
+    "test:e2e": "npx tsx tests/e2e-full-ecosystem.ts",
+    "test": "npx tsx tests/run-all-tests.ts && npx tsx tests/e2e-full-ecosystem.ts"
   },
   "keywords": [],
   "author": "",

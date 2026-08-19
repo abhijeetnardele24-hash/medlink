@@ -763,15 +763,20 @@ router.post("/:id/payout-methods", authenticate, requireRole("doctor"), async (r
 router.post("/:id/withdraw", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
   const id = req.params.id as string;
   await verifyDoctorOwner(id, res.locals.user);
-  const db = getDb();
-  const { amount, payoutMethodId } = req.body;
+  const { amount } = req.body;
+  const payoutMethodId = req.body.payoutMethodId || req.body.methodId;
 
   if (typeof amount !== "number" || amount <= 0) {
     res.status(400).json({ error: "Invalid withdrawal amount" });
     return;
   }
+  if (!payoutMethodId) {
+    res.status(400).json({ error: "payoutMethodId is required" });
+    return;
+  }
 
   try {
+    const db = getDb();
     const result = await db.transaction(async (tx) => {
       // 1. Lock doctor row to serialize concurrent withdrawal attempts
       const lockedDoctor = await tx.execute(

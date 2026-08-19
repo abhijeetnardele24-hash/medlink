@@ -196,15 +196,17 @@ router.patch(
       }
 
       // Add to verification history
-      let actionName = status;
+      let actionName: "submitted" | "approved" | "rejected" | "correction_requested" = "approved";
       if (status === "needs_correction") actionName = "correction_requested";
+      else if (status === "rejected") actionName = "rejected";
+      else if (status === "verified") actionName = "approved";
       
       await tx
         .insert(pharmacistVerificationHistory)
         .values({
           pharmacistId: verif.pharmacistId,
           coordinatorId,
-          action: actionName as any,
+          action: actionName,
           notes: notes || reasonCode,
         });
 
