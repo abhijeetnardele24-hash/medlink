@@ -1,11 +1,11 @@
 import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
 import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications, pharmacyDispenseAudit, orderComplaints } from "../db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 import { validateBody } from "../middleware/validateBody";
 import { verifyPharmacistSchema, uploadPrescriptionSchema, buildOrderSchema, createOrderSchema, fileComplaintSchema, verifyPaymentSchema } from "../schemas/pharmacy.schema";
-import { AppError, ValidationError, UnauthorizedError, ForbiddenError, NotFoundError } from "../errors";
+import { AppError, ValidationError, UnauthorizedError, ForbiddenError, NotFoundError, ConflictError } from "../errors";
 
 import Razorpay from "razorpay";
 import { logger } from "../logger";
@@ -487,11 +487,10 @@ router.post("/orders", authenticate, validateBody(createOrderSchema), async (req
 
     // Insert audit logs first if any
     if (auditLogsToInsert.length > 0) {
-      await getDb().insert(prescriptionReconciliationAudit).values(auditLogsToInsert);
-      
-      // If any failed, reject order
+      // If any failed, reject order before creating transaction
       const failed = auditLogsToInsert.filter(a => !a.matched);
       if (failed.length > 0) {
+        await getDb().insert(prescriptionReconciliationAudit).values(auditLogsToInsert);
         throw new ForbiddenError(`Reconciliation failed: ${JSON.stringify(failed)}`);
       }
     }
@@ -516,26 +515,59 @@ router.post("/orders", authenticate, validateBody(createOrderSchema), async (req
       rzpCurrency = rzpOrder.currency;
     }
 
-    // Create Pharmacy Order in DB
-    const [order] = await getDb()
-      .insert(pharmacyOrders)
-      .values({
-        prescriptionId: prescriptionId || null,
-        patientId,
-        pharmacistId,
-        totalAmount,
-        deliveryAddress,
-        status: "pending_payment",
-        razorpayOrderId: rzpOrderId
-      })
-      .returning();
+    // Atomic stock check, decrement, audit insert, and order creation
+    const { order } = await getDb().transaction(async (tx) => {
+      // Lock medicine rows and verify sufficient stock
+      for (const item of orderItemsToInsert) {
+        const lockedMedRows = await tx.execute(
+          sql`SELECT id, name, stock_quantity as "stockQuantity" FROM ${medicines} WHERE id = ${item.medicineId} FOR UPDATE`
+        );
 
-    // Create Order Items
-    const itemsData = orderItemsToInsert.map(i => ({
-      orderId: order.id,
-      ...i
-    }));
-    await getDb().insert(pharmacyOrderItems).values(itemsData);
+        if (!lockedMedRows.rows || lockedMedRows.rows.length === 0) {
+          throw new NotFoundError(`Medicine ${item.medicineId}`);
+        }
+
+        const medRow = lockedMedRows.rows[0] as { id: string; name: string; stockQuantity: number };
+        if (medRow.stockQuantity < item.quantity) {
+          throw new ConflictError(
+            `Insufficient stock for medicine '${medRow.name}'. Available: ${medRow.stockQuantity}, Requested: ${item.quantity}`
+          );
+        }
+
+        await tx
+          .update(medicines)
+          .set({
+            stockQuantity: sql`${medicines.stockQuantity} - ${item.quantity}`,
+            updatedAt: new Date(),
+          })
+          .where(eq(medicines.id, item.medicineId));
+      }
+
+      if (auditLogsToInsert.length > 0) {
+        await tx.insert(prescriptionReconciliationAudit).values(auditLogsToInsert);
+      }
+
+      const [newOrder] = await tx
+        .insert(pharmacyOrders)
+        .values({
+          prescriptionId: prescriptionId || null,
+          patientId,
+          pharmacistId,
+          totalAmount,
+          deliveryAddress,
+          status: "pending_payment",
+          razorpayOrderId: rzpOrderId,
+        })
+        .returning();
+
+      const itemsData = orderItemsToInsert.map(i => ({
+        orderId: newOrder.id,
+        ...i,
+      }));
+      await tx.insert(pharmacyOrderItems).values(itemsData);
+
+      return { order: newOrder };
+    });
 
     res.status(201).json({ 
       order,
@@ -545,6 +577,9 @@ router.post("/orders", authenticate, validateBody(createOrderSchema), async (req
       message: "Pharmacy order created successfully" 
     });
   } catch (err: any) {
+    if (err instanceof AppError) {
+      throw err;
+    }
     logger.error({ err }, "Failed to create pharmacy order");
     res.status(500).json({ error: "Failed to create order" });
   }

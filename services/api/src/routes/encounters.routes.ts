@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors, patients, doctorMedicineRecommendations } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -19,25 +19,89 @@ const router = Router();
 
 router.use("/:id/messages", messagesRouter);
 
+// Helper to resolve DB user ID from Firebase UID
+async function resolveAuthUserId(uid: string): Promise<string> {
+  const [u] = await getDb().select({ id: dbUsers.id }).from(dbUsers).where(eq(dbUsers.firebaseUid, uid)).limit(1);
+  if (u) return u.id;
+  if (process.env.NODE_ENV === "production" || process.env.TEST_BYPASS_AUTH !== "true") {
+    throw new ForbiddenError("User not found in db");
+  }
+  return uid;
+}
+
+// Helper to verify encounter participant authorization
+async function verifyEncounterAccess(
+  encounterId: string,
+  user: { uid: string; role: string },
+  requireDoctorAssigned = false
+) {
+  const authUserId = await resolveAuthUserId(user.uid);
+  const rows = await getDb()
+    .select({
+      encounter: encounters,
+      appointment: appointments,
+      doctorUserId: doctors.userId,
+      doctorId: doctors.id,
+      patientUserId: patients.userId,
+      patientId: patients.id,
+    })
+    .from(encounters)
+    .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+    .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .where(eq(encounters.id, encounterId))
+    .limit(1);
+
+  if (rows.length === 0) throw new NotFoundError("Encounter");
+  const enc = rows[0];
+
+  if (user.role === "admin" || user.role === "coordinator") {
+    return { ...enc, authUserId };
+  }
+
+  if (requireDoctorAssigned) {
+    if (enc.doctorUserId !== authUserId) {
+      throw new ForbiddenError("You are not the assigned doctor for this encounter");
+    }
+    return { ...enc, authUserId };
+  }
+
+  const isPatient = enc.patientUserId === authUserId;
+  const isDoctor = enc.doctorUserId === authUserId;
+
+  if (!isPatient && !isDoctor) {
+    throw new ForbiddenError("You are not authorized to access this encounter");
+  }
+
+  return { ...enc, authUserId };
+}
+
 // ─── GET /encounters ────────────────────────────────────────────────────────
 router.get(
   "/",
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
-    const firebaseUid = res.locals.user.uid;
-    let userId = firebaseUid;
-    if (process.env.TEST_BYPASS_AUTH !== "true") {
-      const [u] = await getDb().select({ id: dbUsers.id }).from(dbUsers).where(eq(dbUsers.firebaseUid, firebaseUid)).limit(1);
-      if (!u) throw new ForbiddenError("User not found in db");
-      userId = u.id;
-    }
+    const authUserId = await resolveAuthUserId(res.locals.user.uid);
     const role = res.locals.user.role;
-    let myAppts;
+    let myAppts: { id: string }[] = [];
     
     if (role === "doctor") {
-      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, userId));
+      const [doc] = await getDb().select({ id: doctors.id }).from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
+      if (!doc) {
+        res.json({ data: [] });
+        return;
+      }
+      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.doctorId, doc.id));
+    } else if (role === "patient") {
+      const [pat] = await getDb().select({ id: patients.id }).from(patients).where(eq(patients.userId, authUserId)).limit(1);
+      if (!pat) {
+        res.json({ data: [] });
+        return;
+      }
+      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.patientId, pat.id));
     } else {
-      myAppts = await getDb().select({ id: appointments.id }).from(appointments).where(eq(appointments.patientId, userId));
+      // Coordinator / Admin
+      myAppts = await getDb().select({ id: appointments.id }).from(appointments);
     }
     
     if (myAppts.length === 0) {
@@ -94,6 +158,10 @@ router.post(
   requireRole("doctor"),
   async (_req: Request, res: Response): Promise<void> => {
     const { appointmentId } = _req.body as { appointmentId: string };
+    const authUserId = await resolveAuthUserId(res.locals.user.uid);
+
+    const [doc] = await getDb().select({ id: doctors.id }).from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
+    if (!doc) throw new ForbiddenError("Doctor profile not found");
 
     const apptRows = await getDb()
       .select()
@@ -102,23 +170,29 @@ router.post(
       .limit(1);
 
     if (apptRows.length === 0) throw new NotFoundError("Appointment");
+    if (apptRows[0].doctorId !== doc.id && res.locals.user.role !== "admin") {
+      throw new ForbiddenError("You are not the assigned doctor for this appointment");
+    }
 
-    // Create the encounter record
-    const [encounter] = await getDb()
-      .insert(encounters)
-      .values({
-        appointmentId,
-        status: "active",
-        currentMode: apptRows[0].preferredMode || "video",
-        startedAt: new Date(),
-      })
-      .returning();
+    // Atomic creation and status update
+    const [encounter] = await getDb().transaction(async (tx) => {
+      const [newEnc] = await tx
+        .insert(encounters)
+        .values({
+          appointmentId,
+          status: "active",
+          currentMode: apptRows[0].preferredMode || "video",
+          startedAt: new Date(),
+        })
+        .returning();
 
-    // Mark appointment as in progress
-    await getDb()
-      .update(appointments)
-      .set({ status: "in_progress", updatedAt: new Date() })
-      .where(eq(appointments.id, appointmentId));
+      await tx
+        .update(appointments)
+        .set({ status: "in_progress", updatedAt: new Date() })
+        .where(eq(appointments.id, appointmentId));
+
+      return [newEnc];
+    });
 
     res.status(201).json(encounter);
   }
@@ -130,15 +204,8 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-
-    const rows = await getDb()
-      .select()
-      .from(encounters)
-      .where(eq(encounters.id, id))
-      .limit(1);
-
-    if (rows.length === 0) throw new NotFoundError("Encounter");
-    res.json(rows[0]);
+    const { encounter } = await verifyEncounterAccess(id, res.locals.user);
+    res.json(encounter);
   }
 );
 
@@ -149,57 +216,57 @@ router.post(
   requireRole("doctor"),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-    const { doctorId, medicinesJson, instructionsText, ddiWarnings } = _req.body;
+    const { medicinesJson, instructionsText } = _req.body;
+
+    const access = await verifyEncounterAccess(id, res.locals.user, true);
 
     if (!Array.isArray(medicinesJson)) {
       res.status(400).json({ error: "medicinesJson must be an array of medicine objects" });
       return;
     }
 
-    // Find all medicines that have a medicineId and recommend=true
     const recommendedMedicineIds = medicinesJson
       .filter((m: any) => m.medicineId && m.recommend === true)
       .map((m: any) => m.medicineId);
 
-    const [prescription] = await getDb()
-      .insert(prescriptions)
-      .values({
-        encounterId: id,
-        doctorId,
-        medicinesJson,
-        instructionsText,
-        status: "issued",
-        issuedAt: new Date(),
-      })
-      .returning();
+    // Atomic transaction for prescription insert, recommendations upsert, encounter completion, and appointment completion
+    const prescription = await getDb().transaction(async (tx) => {
+      const [newPrescription] = await tx
+        .insert(prescriptions)
+        .values({
+          encounterId: id,
+          doctorId: access.doctorId,
+          medicinesJson,
+          instructionsText,
+          status: "issued",
+          issuedAt: new Date(),
+        })
+        .returning();
 
-    if (recommendedMedicineIds.length > 0) {
-      // Upsert into doctorMedicineRecommendations (ignore conflicts if already recommended)
-      await getDb()
-        .insert(doctorMedicineRecommendations)
-        .values(
-          recommendedMedicineIds.map((medicineId: string) => ({
-            doctorId,
-            medicineId,
-          }))
-        )
-        .onConflictDoNothing({ target: [doctorMedicineRecommendations.doctorId, doctorMedicineRecommendations.medicineId] });
-    }
+      if (recommendedMedicineIds.length > 0) {
+        await tx
+          .insert(doctorMedicineRecommendations)
+          .values(
+            recommendedMedicineIds.map((medicineId: string) => ({
+              doctorId: access.doctorId,
+              medicineId,
+            }))
+          )
+          .onConflictDoNothing({ target: [doctorMedicineRecommendations.doctorId, doctorMedicineRecommendations.medicineId] });
+      }
 
-    // Mark encounter as ended
-    const [updatedEncounter] = await getDb()
-      .update(encounters)
-      .set({ status: "ended", endedAt: new Date(), updatedAt: new Date() })
-      .where(eq(encounters.id, id))
-      .returning();
+      await tx
+        .update(encounters)
+        .set({ status: "ended", endedAt: new Date(), updatedAt: new Date() })
+        .where(eq(encounters.id, id));
 
-    if (updatedEncounter) {
-      // Mark appointment as completed
-      await getDb()
+      await tx
         .update(appointments)
         .set({ status: "completed", updatedAt: new Date() })
-        .where(eq(appointments.id, updatedEncounter.appointmentId));
-    }
+        .where(eq(appointments.id, access.appointment.id));
+
+      return newPrescription;
+    });
 
     res.status(201).json(prescription);
   }
@@ -214,26 +281,27 @@ router.post(
     const id = _req.params.id as string;
     const { summaryNotes } = _req.body;
 
-    const [updatedEncounter] = await getDb()
-      .update(encounters)
-      .set({
-        status: "ended",
-        endedAt: new Date(),
-        networkEventSummary: summaryNotes ? { notes: summaryNotes } : undefined,
-        updatedAt: new Date(),
-      })
-      .where(eq(encounters.id, id))
-      .returning();
+    const access = await verifyEncounterAccess(id, res.locals.user, true);
 
-    if (!updatedEncounter) {
-      throw new NotFoundError("Encounter");
-    }
+    const updatedEncounter = await getDb().transaction(async (tx) => {
+      const [enc] = await tx
+        .update(encounters)
+        .set({
+          status: "ended",
+          endedAt: new Date(),
+          networkEventSummary: summaryNotes ? { notes: summaryNotes } : undefined,
+          updatedAt: new Date(),
+        })
+        .where(eq(encounters.id, id))
+        .returning();
 
-    // Mark appointment as completed
-    await getDb()
-      .update(appointments)
-      .set({ status: "completed", updatedAt: new Date() })
-      .where(eq(appointments.id, updatedEncounter.appointmentId));
+      await tx
+        .update(appointments)
+        .set({ status: "completed", updatedAt: new Date() })
+        .where(eq(appointments.id, access.appointment.id));
+
+      return enc;
+    });
 
     res.json({ message: "Encounter ended successfully", encounter: updatedEncounter });
   }
@@ -248,6 +316,8 @@ router.post(
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const file = _req.file;
+
+    const access = await verifyEncounterAccess(id, res.locals.user, true);
 
     if (!file) {
       res.status(400).json({ error: "No recording file provided" });
@@ -288,6 +358,7 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
+    await verifyEncounterAccess(id, res.locals.user);
     const firebaseUid = res.locals.user.uid;
     let userId = firebaseUid;
     if (process.env.TEST_BYPASS_AUTH !== "true") {

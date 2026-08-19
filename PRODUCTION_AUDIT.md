@@ -46,39 +46,33 @@ A comprehensive code-level audit was conducted across all 17 backend route modul
 
 ---
 
-### [HIGH] Finding SEC-04: Broken Object-Level Authorization on Encounter Details and Recordings (IDOR)
+### [HIGH] Finding SEC-04: Broken Object-Level Authorization on Encounter Details and Recordings (IDOR) — [RESOLVED]
 - **Files:**
   - [`services/api/src/routes/encounters.routes.ts:128-142`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/encounters.routes.ts#L128-L142)
   - [`services/api/src/routes/encounters.routes.ts:244-283`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/encounters.routes.ts#L244-L283)
-- **Description:**
-  1. `GET /encounters/:id` allows any authenticated user to retrieve encounter metadata by ID without checking if they are the assigned doctor or patient.
-  2. `POST /encounters/:id/recording` allows any doctor to upload and attach video recording attachments to any encounter ID.
-- **Charter Violation:** Section 3 — *"verify ownership/participation explicitly (the pattern already established via requireEncounterParticipant / getAuthorizedEncounterIds)."*
+- **Status:** **RESOLVED**
+- **Fix:** Added `verifyEncounterAccess` helper across `GET /encounters/:id`, `POST /encounters/:id/prescriptions`, `POST /encounters/:id/end`, and `POST /encounters/:id/recording`. Verified with live test suite: unassigned doctors are blocked with HTTP 403; assigned doctors and patients successfully access encounters and issue prescriptions.
 
 ---
 
-### [HIGH] Finding SEC-05: Missing Doctor Ownership Verification on Payout Methods and Withdrawals
+### [HIGH] Finding SEC-05: Missing Doctor Ownership Verification on Payout Methods and Withdrawals — [RESOLVED]
 - **File:** [`services/api/src/routes/doctors.routes.ts:653-660, 664-718, 722-760`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/doctors.routes.ts#L653)
-- **Description:**
-  1. `GET /doctors/:id/payout-methods` and `POST /doctors/:id/payout-methods` take `:id` from parameters but do not verify that `res.locals.user` matches the doctor owner of `:id`.
-  2. `POST /doctors/:id/withdraw` locks the doctor row and calculates balances atomically, but lacks the check `if (doc.id !== id) throw new ForbiddenError(...)`.
-- **Impact:** A malicious doctor account can view another doctor's bank account / UPI ID or initiate withdrawals on their behalf.
-- **Charter Violation:** Section 3 — *"Any endpoint returning or mutating a specific record by ID must verify the requesting user has a real relationship to that record, not just a valid role."*
+- **Status:** **RESOLVED**
+- **Fix:** Added `verifyDoctorOwner` helper to `GET/POST /doctors/:id/payout-methods` and `POST /doctors/:id/withdraw` ensuring only the doctor owner (or admin) can manage payout methods or initiate withdrawals. Verified with live test suite: unauthorized doctor blocked with HTTP 403; doctor owner succeeds (HTTP 201).
 
 ---
 
-### [HIGH] Finding SEC-06: Pre-authenticated Seeded Account Linkage Vulnerability
+### [HIGH] Finding SEC-06: Pre-authenticated Seeded Account Linkage Vulnerability — [RESOLVED]
 - **File:** [`services/api/src/routes/auth.routes.ts:80-107`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/auth.routes.ts#L80-L107)
-- **Description:** In `POST /auth/register`, if a user record with a matching email already exists, the server updates `firebaseUid` to the caller's Firebase UID without verifying that `decoded.email_verified === true`.
-- **Impact:** If Firebase email verification is not enforced, an attacker registering an unverified Firebase account with a known doctor/coordinator email can take over the existing account and role.
-- **Charter Violation:** Section 3 — *"No hardcoded credentials, emails, or backdoors of any kind".*
+- **Status:** **RESOLVED**
+- **Fix:** In `POST /auth/register`, added strict `process.env.NODE_ENV === "production" && !decoded.email_verified` check throwing `ForbiddenError("Email must be verified before linking this account")`.
 
 ---
 
-### [HIGH] Finding SEC-07: Concurrency & Stock Depletion Gap on Pharmacy Orders
+### [HIGH] Finding SEC-07: Concurrency & Stock Depletion Gap on Pharmacy Orders — [RESOLVED]
 - **File:** [`services/api/src/routes/pharmacy.routes.ts:342-540`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/pharmacy.routes.ts#L342-L540)
-- **Description:** `POST /pharmacy/orders` reads medicine prices and checks restrictions, but does not atomically check or decrement inventory stock in `medicines` table using database-level locking (`SELECT ... FOR UPDATE` or conditional decrement).
-- **Charter Violation:** Section 3 — *"Any operation involving concurrent access to a shared balance/count (payouts, stock quantities, idempotency keys) must be checked for race conditions — use DB-level locking or atomic operations".*
+- **Status:** **RESOLVED**
+- **Fix:** Added row-level pessimistic locking (`SELECT ... FOR UPDATE`) in `POST /pharmacy/orders` within an atomic `db.transaction(...)`. The system checks available stock and decrements `stockQuantity` atomically. If requested quantity exceeds stock, throws `ConflictError(409)`. Verified with live test suite: over-ordering blocked with 409 Conflict; valid order atomically decremented inventory from 5 to 2.
 
 ---
 
@@ -143,20 +137,10 @@ A comprehensive code-level audit was conducted across all 17 backend route modul
 
 ## 5. Section 6: Performance, Reliability & Database Scalability Audit
 
-### [HIGH] Finding PERF-01: Zero Database Indexes Defined in Database Schema
+### [HIGH] Finding PERF-01: Zero Database Indexes Defined in Database Schema — [RESOLVED]
 - **File:** [`services/api/src/db/schema.ts`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/db/schema.ts)
-- **Description:** No explicit `index()` or `uniqueIndex()` declarations exist across the entire Drizzle schema.
-- **Critical Unindexed Columns Subject to Full Table Scans:**
-  - `users.firebaseUid` (queried on every authenticated request)
-  - `appointments.patientId`, `appointments.doctorId`, `appointments.status`
-  - `encounters.appointmentId`
-  - `prescriptions.encounterId`, `prescriptions.doctorId`
-  - `availabilitySlots.doctorId`, `availabilitySlots.startsAt`
-  - `messages.encounterId`, `messages.createdAt`
-  - `paymentRecords.appointmentId`, `paymentRecords.razorpayOrderId`
-  - `pharmacyOrders.patientId`, `pharmacyOrders.pharmacistId`
-  - `consentGrants.patientId`, `consentGrants.granteeId`
-- **Charter Violation:** Section 6 — *"Flag N+1 queries, missing indexes on frequently-filtered columns, and any endpoint that loads unbounded result sets without pagination."*
+- **Status:** **RESOLVED**
+- **Fix:** Added 40+ comprehensive `index()` and `uniqueIndex()` declarations in `schema.ts` and successfully applied them directly to PostgreSQL database across `users`, `patients`, `doctors`, `pharmacists`, `availabilitySlots`, `appointments`, `encounters`, `messages`, `prescriptions`, `medicines`, `pharmacyOrders`, `pharmacyOrderItems`, `notifications`, `consentGrants`, `doctorPayoutMethods`, and `payoutRecords`.
 
 ---
 

@@ -23,7 +23,7 @@ import { validateBody } from "../middleware/validateBody";
 import { registerSchema } from "../schemas/auth.schema";
 import { getFirebaseAdmin } from "../firebase";
 import { logger } from "../logger";
-import { ConflictError, NotFoundError } from "../errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
 
 const router = Router();
 
@@ -78,32 +78,39 @@ router.post(
     }
 
     // Link seeded account if email matches
-    const existingByEmail = await getDb()
-      .select()
-      .from(users)
-      .where(eq(users.email, email))
-      .limit(1);
-      
-    if (existingByEmail.length > 0) {
-      const existingUser = existingByEmail[0]!;
-      if (existingUser.role !== role) {
-        throw new ConflictError(
-          `Email already registered with role '${existingUser.role}'`
-        );
+    if (email && email.trim().length > 0) {
+      const existingByEmail = await getDb()
+        .select()
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+        
+      if (existingByEmail.length > 0) {
+        const existingUser = existingByEmail[0]!;
+        if (existingUser.role !== role) {
+          throw new ConflictError(
+            `Email already registered with role '${existingUser.role}'`
+          );
+        }
+        
+        // In production, require verified email before account linking
+        if (process.env.NODE_ENV === "production" && !decoded.email_verified) {
+          throw new ForbiddenError("Email must be verified before linking this account");
+        }
+        
+        // Update the seeded user with the real Firebase UID
+        await getDb().update(users).set({ firebaseUid, updatedAt: new Date() }).where(eq(users.id, existingUser.id));
+        
+        res.status(200).json({
+          message: "Seeded account linked successfully",
+          user: {
+            id: existingUser.id,
+            role: existingUser.role,
+            email: existingUser.email,
+          },
+        });
+        return;
       }
-      
-      // Update the seeded user with the real Firebase UID
-      await getDb().update(users).set({ firebaseUid }).where(eq(users.id, existingUser.id));
-      
-      res.status(200).json({
-        message: "Seeded account linked successfully",
-        user: {
-          id: existingUser.id,
-          role: existingUser.role,
-          email: existingUser.email,
-        },
-      });
-      return;
     }
 
     // Create user + role-specific profile in a transaction
