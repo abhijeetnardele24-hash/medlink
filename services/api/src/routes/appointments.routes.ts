@@ -35,6 +35,7 @@ import {
   createAppointmentSchema,
   patchAppointmentSchema,
   listAppointmentsQuerySchema,
+  verifyAppointmentPaymentSchema,
 } from "../schemas/appointment.schema";
 import { logger } from "../logger";
 import { NotFoundError, ForbiddenError, ConflictError, UnprocessableError } from "../errors";
@@ -514,7 +515,7 @@ router.post(
         .set({ razorpayOrderId: order.id, updatedAt: new Date() })
         .where(eq(paymentRecords.appointmentId, id));
 
-      const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_TO2oEBhVR4tpzl";
+      const keyId = process.env.RAZORPAY_KEY_ID || "";
 
       res.status(200).json({ order, fee, keyId });
     } catch (err: any) {
@@ -530,47 +531,74 @@ router.post(
   "/:id/verify-payment",
   authenticate,
   requireRole("patient"),
+  validateBody(verifyAppointmentPaymentSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = _req.body;
+    const { uid } = res.locals.user;
 
-    const secret = process.env.RAZORPAY_KEY_SECRET || "1ATNRjH2RILDqa9ZYHBkKdIz";
-    const generated_signature = crypto
-      .createHmac("sha256", secret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
+    const patient = await getPatientForUser(uid);
+    if (!patient) throw new NotFoundError("Patient profile");
 
-    if (generated_signature !== razorpay_signature) {
-      // Allow bypass if test demo
-      if (secret !== "1ATNRjH2RILDqa9ZYHBkKdIz" && secret !== "demo_secret") {
+    const apptRows = await getDb()
+      .select({
+        id: appointments.id,
+        patientId: appointments.patientId,
+        doctorId: appointments.doctorId,
+        slotId: appointments.slotId,
+        status: appointments.status,
+      })
+      .from(appointments)
+      .where(eq(appointments.id, id))
+      .limit(1);
+
+    if (apptRows.length === 0) throw new NotFoundError("Appointment");
+    if (apptRows[0].patientId !== patient.id) {
+      throw new ForbiddenError("You are not authorized to verify payment for this appointment");
+    }
+
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const isTestBypass = process.env.NODE_ENV !== "production" && process.env.TEST_BYPASS_AUTH === "true";
+
+    if (secret) {
+      const generated_signature = crypto
+        .createHmac("sha256", secret)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+
+      const sigBuffer = Buffer.from(razorpay_signature || "", "utf8");
+      const genBuffer = Buffer.from(generated_signature, "utf8");
+
+      if (sigBuffer.length !== genBuffer.length || !crypto.timingSafeEqual(sigBuffer, genBuffer)) {
         throw new ForbiddenError("Invalid payment signature");
       }
+    } else if (!isTestBypass) {
+      throw new ForbiddenError("Payment gateway configuration missing");
     }
 
-    // Update payment record to success
-    await getDb()
-      .update(paymentRecords)
-      .set({
-        state: "success",
-        razorpayPaymentId: razorpay_payment_id,
-        updatedAt: new Date(),
-      })
-      .where(eq(paymentRecords.appointmentId, id));
+    // Atomic transaction for payment record, appointment status, and slot booking
+    await getDb().transaction(async (tx) => {
+      await tx
+        .update(paymentRecords)
+        .set({
+          state: "success",
+          razorpayPaymentId: razorpay_payment_id,
+          updatedAt: new Date(),
+        })
+        .where(eq(paymentRecords.appointmentId, id));
 
-    // Confirm the appointment
-    const apptRows = await getDb()
-      .update(appointments)
-      .set({ status: "confirmed", updatedAt: new Date() })
-      .where(eq(appointments.id, id))
-      .returning();
+      await tx
+        .update(appointments)
+        .set({ status: "confirmed", updatedAt: new Date() })
+        .where(eq(appointments.id, id));
 
-    // Also mark slot as booked if attached
-    if (apptRows[0]?.slotId) {
-      await getDb()
-        .update(availabilitySlots)
-        .set({ status: "booked", updatedAt: new Date() })
-        .where(eq(availabilitySlots.id, apptRows[0].slotId));
-    }
+      if (apptRows[0].slotId) {
+        await tx
+          .update(availabilitySlots)
+          .set({ status: "booked", updatedAt: new Date() })
+          .where(eq(availabilitySlots.id, apptRows[0].slotId));
+      }
+    });
 
     logger.info({ appointmentId: id, paymentId: razorpay_payment_id }, "Payment verified and appointment confirmed");
 

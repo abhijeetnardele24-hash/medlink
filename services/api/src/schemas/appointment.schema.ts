@@ -69,3 +69,13 @@ export const listAppointmentsQuerySchema = z.object({
 });
 
 export type ListAppointmentsQuery = z.infer<typeof listAppointmentsQuerySchema>;
+
+/** POST /appointments/:id/verify-payment */
+export const verifyAppointmentPaymentSchema = z.object({
+  razorpay_order_id: z.string().min(1),
+  razorpay_payment_id: z.string().min(1),
+  razorpay_signature: z.string().min(1),
+});
+
+export type VerifyAppointmentPaymentInput = z.infer<typeof verifyAppointmentPaymentSchema>;
+

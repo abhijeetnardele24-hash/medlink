@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getDb } from "../db";
-import { users, patients } from "../db/schema";
+import { users, patients, doctors, appointments, consentGrants } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -160,14 +160,22 @@ router.put("/me", async (req: Request, res: Response): Promise<void> => {
 
 // ─── GET /v1/patients/:id ────────────────────────────────────────────────────────────
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {
-  const { role } = res.locals.user;
+  const { uid, role } = res.locals.user;
   const targetId = req.params.id as string;
 
-  // Doctors, coordinators, and admins can look up patient details
-  if (role !== "doctor" && role !== "coordinator" && role !== "admin") {
-    throw new ForbiddenError("Only clinical staff can access patient dossiers");
+  let authUserId = uid;
+  const [u] = await getDb()
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.firebaseUid, uid))
+    .limit(1);
+  if (u) {
+    authUserId = u.id;
+  } else if (process.env.NODE_ENV === "production" || process.env.TEST_BYPASS_AUTH !== "true") {
+    throw new ForbiddenError("User not found in db");
   }
 
+  // Look up target patient record
   const patientResult = await getDb()
     .select({
       id: patients.id,
@@ -203,8 +211,65 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     throw new NotFoundError("Patient");
   }
 
+  const patientDoc = patientResult[0];
+
+  // 1. If requester is a patient, they can only view their own dossier
+  if (role === "patient") {
+    if (patientDoc.userId !== authUserId) {
+      throw new ForbiddenError("You are not authorized to view another patient's medical dossier");
+    }
+  } else if (role === "doctor") {
+    // 2. If requester is a doctor, verify active appointment relationship OR active consent grant
+    const [doctor] = await getDb()
+      .select({ id: doctors.id })
+      .from(doctors)
+      .where(eq(doctors.userId, authUserId))
+      .limit(1);
+
+    if (!doctor) {
+      throw new ForbiddenError("Doctor profile not found");
+    }
+
+    // Check if doctor has an appointment with this patient
+    const apptRows = await getDb()
+      .select({ id: appointments.id })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, doctor.id),
+          eq(appointments.patientId, targetId)
+        )
+      )
+      .limit(1);
+
+    const hasAppointment = apptRows.length > 0;
+
+    // Check active consent grant
+    const [grant] = await getDb()
+      .select({ id: consentGrants.id })
+      .from(consentGrants)
+      .where(
+        and(
+          eq(consentGrants.patientId, targetId),
+          eq(consentGrants.granteeId, authUserId),
+          eq(consentGrants.status, "active")
+        )
+      )
+      .limit(1);
+
+    const hasActiveConsent = !!grant;
+
+    if (!hasAppointment && !hasActiveConsent) {
+      throw new ForbiddenError(
+        "You do not have an active appointment relationship or consent grant to access this patient's medical dossier"
+      );
+    }
+  } else if (role !== "coordinator" && role !== "admin") {
+    throw new ForbiddenError("Only clinical staff or authorized caretakers can access patient dossiers");
+  }
+
   res.json({
-    data: patientResult[0],
+    data: patientDoc,
   });
 });
 

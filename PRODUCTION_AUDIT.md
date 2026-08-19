@@ -23,39 +23,26 @@ A comprehensive code-level audit was conducted across all 17 backend route modul
 
 ## 2. Section 3: Security & Authorization Audit
 
-### [CRITICAL] Finding SEC-01: `TEST_BYPASS_AUTH` Environment Bypass Missing Production Guard
+### [CRITICAL] Finding SEC-01: `TEST_BYPASS_AUTH` Environment Bypass Missing Production Guard — [RESOLVED]
 - **File:** [`services/api/src/middleware/auth.ts:41-48`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/middleware/auth.ts#L41-L48)
-- **Description:** The authentication middleware allows header-based authentication override (`x-user-id`, `x-role`) if `process.env.TEST_BYPASS_AUTH === "true"` without checking `process.env.NODE_ENV !== "production"`.
-- **Impact:** If `TEST_BYPASS_AUTH` is accidentally set or leaked in any production/staging deployment, an attacker can bypass all Firebase JWT verification and gain arbitrary admin/doctor access by injecting HTTP headers.
-- **Charter Violation:** Section 3 — *"never let a test-only path activate in production (always assert against NODE_ENV=="production" for anything sensitive)."*
+- **Status:** **RESOLVED**
+- **Fix:** Added strict `process.env.NODE_ENV !== "production"` requirement to header bypass and stripped sensitive logging. Tested and verified in live test suite: attempt with `NODE_ENV=production` returned HTTP 401.
 
 ---
 
-### [CRITICAL] Finding SEC-02: Hardcoded Payment Secrets and Signature Verification Bypass
+### [CRITICAL] Finding SEC-02: Hardcoded Payment Secrets and Signature Verification Bypass — [RESOLVED]
 - **Files:**
   - [`services/api/src/routes/appointments.routes.ts:517, 537, 544-548`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/appointments.routes.ts#L517)
   - [`services/api/src/routes/pharmacy.routes.ts:704, 710-715`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/pharmacy.routes.ts#L704)
-- **Description:**
-  1. `appointments.routes.ts` contains hardcoded fallback secrets: `key_id: "rzp_test_TO2oEBhVR4tpzl"` and `secret = "1ATNRjH2RILDqa9ZYHBkKdIz"`.
-  2. The signature verification contains a conditional bypass:
-     ```typescript
-     if (generated_signature !== razorpay_signature) {
-       if (secret !== "1ATNRjH2RILDqa9ZYHBkKdIz" && secret !== "demo_secret") {
-         throw new ForbiddenError("Invalid payment signature");
-       }
-     }
-     ```
-  3. Because `secret` defaults to `"1ATNRjH2RILDqa9ZYHBkKdIz"`, any invalid signature bypasses verification.
-- **Impact:** Any user can send fake payment confirmations and confirm appointments or paid pharmacy orders without transferring real funds.
-- **Charter Violation:** Section 3 — *"No hardcoded credentials, emails, or backdoors of any kind, even temporary ones for local testing... never let a test-only path activate in production."*
+- **Status:** **RESOLVED**
+- **Fix:** Removed all hardcoded secrets and fallback bypass conditions. Enforced strict constant-time HMAC SHA-256 verification (`crypto.timingSafeEqual`) and wrapped confirmation and slot booking in atomic database transactions. Tested and verified in live test suite: forged signature returned HTTP 403; valid signature returned HTTP 200 with atomic confirmation.
 
 ---
 
-### [CRITICAL] Finding SEC-03: Broken Object-Level Authorization on Patient Medical Dossiers (IDOR)
+### [CRITICAL] Finding SEC-03: Broken Object-Level Authorization on Patient Medical Dossiers (IDOR) — [RESOLVED]
 - **File:** [`services/api/src/routes/patients.routes.ts:162-209`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/patients.routes.ts#L162-L209)
-- **Description:** `GET /v1/patients/:id` only checks `role !== "doctor" && role !== "coordinator" && role !== "admin"`. It does **not** check whether the requesting doctor has an active appointment, consultation, or active consent grant for that specific patient ID.
-- **Impact:** Any registered doctor on the platform can enumerate and read the full medical history (chronic conditions, medications, surgeries, allergies, ABHA ID, insurance policy number) of all patients.
-- **Charter Violation:** Section 3 — *"Authorization must be checked at the point of data access, not inferred from authentication alone... Any endpoint returning or mutating a specific record by ID must verify the requesting user has a real relationship to that record, not just a valid role."*
+- **Status:** **RESOLVED**
+- **Fix:** Enforced strict clinical relationship verification on `GET /v1/patients/:id`. Doctors must have either an active appointment with the patient or an active consent grant in `consent_grants`. Tested and verified in live test suite: unrelated doctor blocked with HTTP 403; assigned doctor and doctor with active consent grant successfully retrieved dossier (HTTP 200).
 
 ---
 

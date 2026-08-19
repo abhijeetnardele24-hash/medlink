@@ -701,27 +701,36 @@ router.post("/orders/:orderId/verify-payment", authenticate, validateBody(verify
       throw new ForbiddenError("Not authorized to verify payment for this order");
     }
 
-    const secret = process.env.RAZORPAY_KEY_SECRET || "demo_secret";
-    const generated_signature = crypto
-      .createHmac("sha256", secret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    const isTestBypass = process.env.NODE_ENV !== "production" && process.env.TEST_BYPASS_AUTH === "true";
 
-    if (generated_signature !== razorpay_signature) {
-      // Allow bypass if test demo
-      if (secret !== "demo_secret") {
+    if (secret) {
+      const generated_signature = crypto
+        .createHmac("sha256", secret)
+        .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+        .digest("hex");
+
+      const sigBuffer = Buffer.from(razorpay_signature || "", "utf8");
+      const genBuffer = Buffer.from(generated_signature, "utf8");
+
+      if (sigBuffer.length !== genBuffer.length || !crypto.timingSafeEqual(sigBuffer, genBuffer)) {
         throw new ForbiddenError("Invalid payment signature");
       }
+    } else if (!isTestBypass) {
+      throw new ForbiddenError("Payment gateway configuration missing");
     }
 
     // Update order status
     await getDb()
       .update(pharmacyOrders)
       .set({ 
-        status: "paid", 
-        // We could store razorpay_payment_id here if we had a field, but status 'paid' is enough
+        status: "paid",
+        razorpayPaymentId: razorpay_payment_id,
+        updatedAt: new Date(),
       })
       .where(eq(pharmacyOrders.id, orderId));
+
+    logger.info({ orderId, paymentId: razorpay_payment_id }, "Pharmacy order payment verified successfully");
 
     res.status(200).json({ success: true, message: "Payment verified successfully" });
   } catch (err: any) {

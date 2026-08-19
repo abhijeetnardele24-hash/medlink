@@ -38,10 +38,10 @@ export const authenticate = async (
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
 
-  if (process.env.TEST_BYPASS_AUTH === "true") {
+  if (process.env.TEST_BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production") {
     res.locals.user = { 
-      uid: req.headers["x-user-id"] as string || "test-id", 
-      role: req.headers["x-role"] as string || "doctor",
+      uid: (req.headers["x-user-id"] as string) || "test-id", 
+      role: (req.headers["x-role"] as string) || "doctor",
       email: "test@example.com"
     };
     return next();
@@ -60,8 +60,6 @@ export const authenticate = async (
     const decoded = await admin.auth().verifyIdToken(idToken);
 
     let role: string | undefined = decoded["role"] as string | undefined;
-
-    console.log("FIREBASE UID INTERCEPT:", decoded.uid, decoded.email);
 
     // Fallback: If custom claims haven't propagated to the client JWT yet,
     // look up the role from the database.
