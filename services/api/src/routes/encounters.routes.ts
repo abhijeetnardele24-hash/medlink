@@ -12,6 +12,7 @@ import { attachments } from "../db/schema";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+import { logger } from "../logger";
 import messagesRouter from "./messages.routes";
 
 const router = Router();
@@ -184,6 +185,20 @@ router.post(
           warningsJson: ddiWarnings,
           overridden: true,
         });
+
+      logger.warn(
+        {
+          event: "CDSS_DDI_WARNING_OVERRIDDEN",
+          prescriptionId: prescription.id,
+          encounterId: id,
+          doctorId,
+          warningSeverity: ddiWarnings.severity,
+          warnings: ddiWarnings.interactions || [],
+          allergyConflicts: ddiWarnings.allergyConflicts || [],
+          timestamp: new Date().toISOString(),
+        },
+        "Physician issued prescription overriding active CDSS drug safety warnings"
+      );
     }
 
     if (recommendedMedicineIds.length > 0) {
