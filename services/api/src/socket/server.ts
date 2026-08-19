@@ -15,16 +15,32 @@ export function initSocketServer(httpServer: any) {
   });
 
   if (process.env.REDIS_URL) {
-    const pubClient = new Redis(process.env.REDIS_URL);
+    const pubClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 3,
+      retryStrategy(times) {
+        if (times > 5) {
+          logger.warn("Socket.IO Redis Pub Client retry exhausted.");
+          return null;
+        }
+        return Math.min(times * 100, 3000);
+      },
+    });
     const subClient = pubClient.duplicate();
 
-    pubClient.on("error", (err) => console.error("Redis Pub Client Error", err));
-    subClient.on("error", (err) => console.error("Redis Sub Client Error", err));
+    pubClient.on("error", (err) => logger.warn({ err: err.message }, "Socket.IO Redis Pub Client Error"));
+    subClient.on("error", (err) => logger.warn({ err: err.message }, "Socket.IO Redis Sub Client Error"));
+
+    pubClient.on("ready", () => {
+      logger.info("Socket.IO Redis Pub Client connected");
+    });
+    subClient.on("ready", () => {
+      logger.info("Socket.IO Redis Sub Client connected");
+    });
 
     io.adapter(createAdapter(pubClient, subClient));
-    console.log("Redis Adapter for Socket.IO initialized");
+    logger.info("Redis Adapter for Socket.IO initialized");
   } else {
-    console.log("No REDIS_URL provided. Using in-memory adapter for Socket.IO");
+    logger.info("No REDIS_URL provided. Using in-memory adapter for Socket.IO");
   }
 
   // Handle client connections

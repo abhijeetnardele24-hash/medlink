@@ -5,6 +5,7 @@ import { doctorVerifications, doctors, appointments, patients, reminderTasks, ph
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError } from "../errors";
+import { invalidateCachePrefix } from "../redis";
 
 const router = Router();
 
@@ -82,6 +83,8 @@ router.patch(
           .where(eq(doctors.id, verif.doctorId));
       }
     });
+
+    await invalidateCachePrefix("doctors:");
 
     res.json({ success: true, message: `Doctor verification updated to ${status}` });
   }
@@ -182,6 +185,8 @@ router.patch(
           notes: notes || reasonCode,
         });
     });
+
+    await invalidateCachePrefix("medicines:");
 
     res.json({ success: true, message: `Pharmacist verification updated to ${status}` });
   }

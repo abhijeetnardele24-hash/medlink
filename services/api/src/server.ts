@@ -40,6 +40,7 @@ import patientsRouter from "./routes/patients.routes";
 import aiRouter from "./routes/ai.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
+import { getRateLimitStore } from "./redis";
 
 export function createServer(): Express {
   const app = express();
@@ -90,22 +91,26 @@ export function createServer(): Express {
   );
 
   // ── Global rate limiter - 100 req/min per IP ──────────────────────────────
+  const globalStore = getRateLimitStore("rl:global:");
   app.use(
     rateLimit({
       windowMs: 60 * 1000,
       max: 100,
       standardHeaders: true,
       legacyHeaders: false,
+      ...(globalStore ? { store: globalStore } : {}),
       message: { error: "Too many requests. Please try again in a minute." },
     })
   );
 
   // ── Stricter limiter on auth endpoints ──────────────────────────────────────
+  const authStore = getRateLimitStore("rl:auth:");
   const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 min
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
+    ...(authStore ? { store: authStore } : {}),
     message: { error: "Too many authentication attempts. Please wait 15 minutes." },
   });
 
