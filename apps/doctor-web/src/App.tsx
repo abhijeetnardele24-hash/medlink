@@ -13,7 +13,6 @@ import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Earnings } from './pages/Earnings';
 import { Analytics } from './pages/Analytics';
-import { Reviews } from './pages/Reviews';
 import './index.css';
 function App() {
   return (
@@ -34,7 +33,6 @@ function App() {
               <Route path="/availability" element={<Availability />} />
               <Route path="/earnings" element={<Earnings />} />
               <Route path="/analytics" element={<Analytics />} />
-              <Route path="/reviews" element={<Reviews />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
 

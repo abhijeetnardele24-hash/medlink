@@ -37,9 +37,6 @@ export const Layout: React.FC = () => {
           <NavLink to="/analytics" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Activity size={20} /> Analytics
           </NavLink>
-          <NavLink to="/reviews" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <User size={20} /> Reviews
-          </NavLink>
           <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <User size={20} /> Profile
           </NavLink>

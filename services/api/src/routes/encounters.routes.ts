@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations, prescriptionDdiAudit } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -148,7 +148,7 @@ router.post(
   requireRole("doctor"),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-    const { doctorId, medicinesJson, instructionsText } = _req.body;
+    const { doctorId, medicinesJson, instructionsText, ddiWarnings } = _req.body;
 
     if (!Array.isArray(medicinesJson)) {
       res.status(400).json({ error: "medicinesJson must be an array of medicine objects" });
@@ -171,6 +171,20 @@ router.post(
         issuedAt: new Date(),
       })
       .returning();
+
+    // Log CDSS DDI warning override if doctor was shown interaction warnings
+    if (ddiWarnings && (ddiWarnings.severity === "severe_contraindication" || ddiWarnings.severity === "moderate_caution")) {
+      await getDb()
+        .insert(prescriptionDdiAudit)
+        .values({
+          prescriptionId: prescription.id,
+          encounterId: id,
+          doctorId,
+          warningSeverity: ddiWarnings.severity,
+          warningsJson: ddiWarnings,
+          overridden: true,
+        });
+    }
 
     if (recommendedMedicineIds.length > 0) {
       // Upsert into doctorMedicineRecommendations (ignore conflicts if already recommended)

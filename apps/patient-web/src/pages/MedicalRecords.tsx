@@ -322,6 +322,12 @@ Serum Uric Acid: 5.4 mg/dL (Ref: 3.5 - 7.2 mg/dL) [NORMAL]`;
           {/* Analysis Results Display */}
           {labResult && (
             <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Advisory Disclaimer */}
+              <div style={{ padding: '0.85rem 1.25rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#f59e0b', fontSize: '0.875rem' }}>
+                <AlertTriangle size={20} style={{ flexShrink: 0 }} />
+                <span><strong>Advisory Only — Not a Medical Diagnosis:</strong> This automated lab analysis is intended as an educational summary to help you prepare for discussions with your physician. It does not replace professional medical consultation, diagnosis, or treatment.</span>
+              </div>
+
               {/* Health Synopsis Banner */}
               <div
                 className="glass-panel"

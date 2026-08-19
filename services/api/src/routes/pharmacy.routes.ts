@@ -339,7 +339,7 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
 });
 
 // POST /pharmacy/orders
-router.post("/", authenticate, validateBody(createOrderSchema), async (req: Request, res: Response): Promise<void> => {
+router.post("/orders", authenticate, validateBody(createOrderSchema), async (req: Request, res: Response): Promise<void> => {
   try {
     const { items, prescriptionId, deliveryAddress, pharmacistId: providedPharmacistId } = req.body;
     
@@ -550,8 +550,8 @@ router.post("/", authenticate, validateBody(createOrderSchema), async (req: Requ
   }
 });
 
-// PATCH /pharmacy/orders/:id/dispense
-router.patch("/orders/:id/dispense", authenticate, async (req: Request, res: Response): Promise<void> => {
+// PATCH /pharmacy/orders/:orderId/dispense
+router.patch("/orders/:orderId/dispense", authenticate, async (req: Request, res: Response): Promise<void> => {
   try {
     const orderId = req.params.orderId as string;
     const { uid } = res.locals.user;

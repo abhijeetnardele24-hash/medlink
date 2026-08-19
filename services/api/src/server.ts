@@ -147,7 +147,7 @@ export function createServer(): Express {
   v1Router.use("/webrtc", webrtcRouter);
   v1Router.use("/consents", authenticate, consentsRouter);
   v1Router.use("/medicines", medicinesRouter);
-  v1Router.use("/pharmacy/orders", pharmacyRouter);
+  v1Router.use("/pharmacy", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
   v1Router.use("/ai", aiRouter);

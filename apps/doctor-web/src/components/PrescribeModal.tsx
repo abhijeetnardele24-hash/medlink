@@ -156,7 +156,12 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
       await api.post(`/encounters/${encounterId}/prescriptions`, {
         doctorId,
         medicinesJson: medicines,
-        instructionsText: finalInstructions
+        instructionsText: finalInstructions,
+        ddiWarnings: safetyCheck ? {
+          severity: safetyCheck.severity,
+          interactions: safetyCheck.interactions,
+          allergyConflicts: safetyCheck.allergyConflicts
+        } : null
       });
       onSuccess();
     } catch (err: any) {
@@ -274,6 +279,11 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
                     ))}
                   </div>
                 )}
+
+                <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-white/50 flex items-start gap-1.5">
+                  <Info size={13} className="shrink-0 mt-0.5" />
+                  <span>Clinical Advisory Only: This automated CDSS check assists clinical decision making and does not substitute for independent physician judgment.</span>
+                </div>
               </div>
             )}
 

@@ -723,72 +723,124 @@ router.post("/:id/withdraw", authenticate, requireRole("doctor"), async (req: Re
   const id = req.params.id as string;
   const db = getDb();
   const { amount, payoutMethodId } = req.body;
-  
-  // Validate Balance
-  const earningsData = await db.select({ amount: paymentRecords.amount }).from(paymentRecords)
-    .innerJoin(appointments, eq(paymentRecords.appointmentId, appointments.id))
-    .where(and(eq(appointments.doctorId, id), eq(paymentRecords.state, "success")));
-    
-  const payoutsData = await db.select({ amount: payoutRecords.amount }).from(payoutRecords)
-    .where(and(eq(payoutRecords.doctorId, id), eq(payoutRecords.status, "processed")));
 
-  const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-  const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
-  const availableBalance = Math.max(0, totalEarnings - totalPayouts);
-  
-  if (amount > availableBalance) {
-    res.status(400).json({ error: "Insufficient available balance" });
+  if (typeof amount !== "number" || amount <= 0) {
+    res.status(400).json({ error: "Invalid withdrawal amount" });
     return;
   }
-  
-  const [method] = await db.select().from(doctorPayoutMethods).where(eq(doctorPayoutMethods.id, payoutMethodId)).limit(1);
-  if (!method) throw new NotFoundError("Payout method");
 
-  // Create Razorpay Payout (Transfer)
-  const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_demo",
-    key_secret: process.env.RAZORPAY_KEY_SECRET || "demo_secret"
-  });
-  
-  let payoutId = "fake_payout_" + Date.now();
-  let status: "processed" | "processing" | "rejected" = "processed"; // test mode auto-processes
-  let failureReason = null;
-  
-  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID !== "rzp_test_demo") {
-    try {
-      const payout = await (razorpay as any).payouts.create({
-        account_number: "2323230040715367", // Platform's RazorpayX account (example from docs)
-        fund_account_id: method.razorpayFundAccountId as string,
-        amount: amount * 100, // in paise
-        currency: "INR",
-        mode: method.type === "upi" ? "UPI" : "IMPS",
-        purpose: "payout",
-        reference_id: "wd_" + Date.now()
-      });
-      payoutId = payout.id;
-      status = payout.status === "processed" ? "processed" : (payout.status === "rejected" ? "rejected" : "processing");
-    } catch (err: any) {
-      logger.error({ err }, "Razorpay Payout failed");
-      status = "rejected";
-      failureReason = err.message;
+  try {
+    const result = await db.transaction(async (tx) => {
+      // 1. Lock doctor row to serialize concurrent withdrawal attempts
+      const lockedDoctor = await tx.execute(
+        sql`SELECT id FROM ${doctors} WHERE id = ${id} FOR UPDATE`
+      );
+      if (!lockedDoctor.rows || lockedDoctor.rows.length === 0) {
+        throw new NotFoundError("Doctor");
+      }
+
+      // 2. Fetch all successful earnings inside the transaction
+      const earningsData = await tx
+        .select({ amount: paymentRecords.amount })
+        .from(paymentRecords)
+        .innerJoin(appointments, eq(paymentRecords.appointmentId, appointments.id))
+        .where(and(eq(appointments.doctorId, id), eq(paymentRecords.state, "success")));
+
+      // 3. Fetch all active/processed payouts inside the transaction
+      const payoutsData = await tx
+        .select({ amount: payoutRecords.amount })
+        .from(payoutRecords)
+        .where(
+          and(
+            eq(payoutRecords.doctorId, id),
+            sql`${payoutRecords.status} IN ('processed', 'processing')`
+          )
+        );
+
+      const totalEarnings = earningsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const totalPayouts = payoutsData.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+      const availableBalance = Math.max(0, totalEarnings - totalPayouts);
+
+      if (amount > availableBalance) {
+        throw new ConflictError("Insufficient available balance");
+      }
+
+      const [method] = await tx
+        .select()
+        .from(doctorPayoutMethods)
+        .where(eq(doctorPayoutMethods.id, payoutMethodId))
+        .limit(1);
+      if (!method) throw new NotFoundError("Payout method");
+
+      // 4. Create Razorpay Payout (Transfer)
+      let payoutId = "fake_payout_" + Date.now();
+      let status: "processed" | "processing" | "rejected" = "processed";
+      let failureReason: string | null = null;
+
+      if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_ID !== "rzp_test_demo" && process.env.NODE_ENV === "production") {
+        try {
+          const authHeader = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString("base64");
+          const rzpRes = await fetch("https://api.razorpay.com/v1/payouts", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Basic ${authHeader}`
+            },
+            body: JSON.stringify({
+              account_number: "2323230040715367",
+              fund_account_id: method.razorpayFundAccountId as string,
+              amount: amount * 100,
+              currency: "INR",
+              mode: method.type === "upi" ? "UPI" : "IMPS",
+              purpose: "payout",
+              reference_id: "wd_" + Date.now()
+            })
+          });
+          const payout = await rzpRes.json();
+          if (!rzpRes.ok) {
+            throw new Error(payout.error?.description || "Gateway payout rejected");
+          }
+          payoutId = payout.id;
+          status = payout.status === "processed" ? "processed" : (payout.status === "rejected" ? "rejected" : "processing");
+        } catch (err: any) {
+          logger.error({ err }, "Razorpay Payout failed");
+          status = "rejected";
+          failureReason = err.message;
+        }
+      }
+
+      const [record] = await tx
+        .insert(payoutRecords)
+        .values({
+          doctorId: id,
+          payoutMethodId,
+          amount,
+          status,
+          razorpayPayoutId: payoutId,
+          failureReason,
+        })
+        .returning();
+
+      if (status === "rejected") {
+        throw new ConflictError(`Payout failed at gateway: ${failureReason}`);
+      }
+
+      return record;
+    });
+
+    res.status(200).json({ message: "Withdrawal initiated successfully", data: result });
+  } catch (err: any) {
+    if (err.name === "ConflictError" || err.message?.includes("Insufficient") || err.message?.includes("balance")) {
+      res.status(400).json({ error: err.message || "Insufficient available balance" });
+      return;
     }
+    if (err.name === "NotFoundError") {
+      res.status(404).json({ error: err.message });
+      return;
+    }
+    logger.error({ err }, "Withdrawal transaction failed");
+    res.status(500).json({ error: err.message || "Internal server error during withdrawal" });
   }
-
-  const [record] = await db.insert(payoutRecords).values({
-    doctorId: id,
-    payoutMethodId,
-    amount,
-    status,
-    razorpayPayoutId: payoutId,
-    failureReason
-  }).returning();
-  
-  if (status === "rejected") {
-    res.status(400).json({ error: "Payout failed at gateway", details: failureReason, record });
-    return;
-  }
-  
-  res.status(200).json({ message: "Withdrawal initiated successfully", data: record });
 });
 
 export default router;
