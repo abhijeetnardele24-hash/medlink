@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { RedisStore } from "rate-limit-redis";
+import { createAdapter } from "@socket.io/redis-adapter";
 import { logger } from "./logger";
 
 export let redisClient: Redis | null = null;
@@ -11,6 +12,22 @@ export function getRedisClient(): Redis | null {
 
 export function isRedisAvailable(): boolean {
   return redisAvailable && redisClient !== null;
+}
+
+/**
+ * Creates a Socket.IO Redis adapter using pub/sub client pairs
+ */
+export function createSocketRedisAdapter() {
+  if (!process.env.REDIS_URL || !redisClient) {
+    return null;
+  }
+  const pubClient = redisClient.duplicate();
+  const subClient = redisClient.duplicate();
+
+  pubClient.on("error", (err) => logger.warn({ err: err.message }, "Socket.IO Redis Pub Client Error"));
+  subClient.on("error", (err) => logger.warn({ err: err.message }, "Socket.IO Redis Sub Client Error"));
+
+  return createAdapter(pubClient, subClient);
 }
 
 if (process.env.REDIS_URL) {

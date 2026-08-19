@@ -17,6 +17,8 @@ if (fs.existsSync(envPath)) {
 
 import { createServer as createHttpServer } from "http";
 import { Server } from "socket.io";
+import { createAdapter } from "@socket.io/redis-adapter";
+import { createSocketRedisAdapter } from "./redis";
 import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
 import { getFirebaseAdmin } from "./firebase";
@@ -24,7 +26,7 @@ import { getDb } from "./db";
 import { users, encounters, appointments } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { startReminderCron } from "./cron/reminders";
-import { initSocketServer } from "./socket/server";
+import { setIo } from "./socket/server";
 
 // Start reminder cron
 startReminderCron();
@@ -36,7 +38,23 @@ const app = createServer();
 const httpServer = createHttpServer(app);
 
 // Socket.io WebRTC Signalling Server
-const io = initSocketServer(httpServer);
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim()) : ["http://localhost:5173", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:3001"],
+    credentials: true,
+  }
+});
+
+// Configure horizontal scaling adapter via Redis if available
+const socketAdapter = createSocketRedisAdapter();
+if (socketAdapter) {
+  io.adapter(socketAdapter);
+  console.log("[Socket.io] Redis adapter attached for horizontal scaling");
+} else {
+  console.log("[Socket.io] Using default in-memory adapter (single-node mode)");
+}
+
+setIo(io);
 
 io.use(async (socket, next) => {
   if (process.env.TEST_BYPASS_AUTH === "true") {

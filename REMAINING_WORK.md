@@ -106,13 +106,17 @@ connection, not just the doctor's.
 
 ---
 
-## 3. P2 — Hardening
+## 3. P2 — Hardening & Distributed Infrastructure
 
 - **CSP / security headers [DONE]**: configured `helmet` in `services/api/src/server.ts`, with strict CSP including Razorpay/Firebase whitelists.
-- **Rate limiting [DONE]**: global limit (100 req/min) and strict auth limit (20 req/15min) via `express-rate-limit`.
+- **Rate limiting [DONE]**: global limit (100 req/min) and strict auth limit (20 req/15min) via `express-rate-limit`, backed by distributed `RedisStore` with fallback.
 - **Request size limits [DONE]**: file/json upload limit set to 10MB (`express.json({ limit: "10mb" })`).
 - **ICE restart / reconnection handling [DONE]**: implemented auto-reconnect (`pc.restartIce()`) on drop in `useWebRTC.ts`, with pause protection on the adaptive quality engine.
 - **API versioning [DONE]**: mapped backend REST routes under `/v1` prefix and updated all 4 frontend API configurations to point to `/v1`. (Note: Webhooks are mounted at the root `/webhooks` and are intentionally NOT versioned since external providers like Razorpay require stable URLs).
+- **Redis Distributed Infrastructure [DONE]**:
+  - Socket.IO Redis Adapter (`@socket.io/redis-adapter` + `ioredis` pub/sub pair) applied directly to `io` instance in `services/api/src/index.ts` for multi-instance WebRTC/signalling relay, with single-instance in-memory fallback when `REDIS_URL` is omitted.
+  - Distributed rate-limiter store (`rate-limit-redis`) for cluster-wide rate tracking.
+  - Selective read-through cache (`withCache`) strictly on non-PHI catalogs (`GET /v1/doctors` and `GET /v1/medicines`), with non-blocking `SCAN` invalidation (`invalidateCachePrefix`).
 
 ---
 
