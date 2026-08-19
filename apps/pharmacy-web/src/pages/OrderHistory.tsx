@@ -1,23 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { History, Search, Filter, Download, PackageCheck, XCircle } from 'lucide-react';
 import { InvoiceModal } from '../components/InvoiceModal';
-
-// Mock historical data
-const mockHistory = [
-  { id: 'ORD-7291', date: '2026-08-16T14:30:00Z', patient: 'Rahul Sharma', total: 1250, status: 'dispensed', items: 3 },
-  { id: 'ORD-7288', date: '2026-08-15T09:15:00Z', patient: 'Priya Patel', total: 850, status: 'dispensed', items: 2 },
-  { id: 'ORD-7285', date: '2026-08-14T16:45:00Z', patient: 'Amit Kumar', total: 3200, status: 'cancelled', items: 5 },
-  { id: 'ORD-7281', date: '2026-08-14T11:20:00Z', patient: 'Neha Gupta', total: 450, status: 'dispensed', items: 1 },
-  { id: 'ORD-7279', date: '2026-08-13T18:05:00Z', patient: 'Suresh Iyer', total: 1800, status: 'dispensed', items: 4 },
-];
+import { api } from '../lib/api';
 
 export const OrderHistory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<typeof mockHistory[0] | null>(null);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const res = await api.get('/pharmacy/orders/incoming');
+      // Filter for dispensed or cancelled
+      const historyOrders = res.data.filter((o: any) => o.status === 'dispensed' || o.status === 'cancelled');
+      setOrders(historyOrders);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  const filtered = mockHistory.filter(o => 
+  const filtered = orders.filter(o => 
     o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    o.patient.toLowerCase().includes(searchTerm.toLowerCase())
+    o.patientName.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -59,47 +70,57 @@ export const OrderHistory: React.FC = () => {
                 <th className="p-4 font-medium">Order ID</th>
                 <th className="p-4 font-medium">Date & Time</th>
                 <th className="p-4 font-medium">Patient</th>
-                <th className="p-4 font-medium">Items</th>
                 <th className="p-4 font-medium">Total Amount</th>
                 <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {filtered.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="p-4 font-medium text-gray-900">{order.id}</td>
-                  <td className="p-4 text-gray-600">{new Date(order.date).toLocaleString()}</td>
-                  <td className="p-4 font-medium text-gray-800">{order.patient}</td>
-                  <td className="p-4 text-gray-600">{order.items} medicines</td>
-                  <td className="p-4 font-bold text-gray-900">₹{order.total}</td>
-                  <td className="p-4">
-                    {order.status === 'dispensed' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        <PackageCheck size={14} /> Fulfilled
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                        <XCircle size={14} /> Cancelled
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-4 text-right">
-                    <button 
-                      onClick={() => setSelectedInvoiceOrder(order)}
-                      className="text-teal-600 font-medium hover:text-teal-800 text-sm"
-                    >
-                      View Invoice
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600 mx-auto"></div>
                   </td>
                 </tr>
-              ))}
-              {filtered.length === 0 && (
+              ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-12 text-center text-gray-500">
+                  <td colSpan={6} className="p-12 text-center text-gray-500">
                     No orders match your search criteria.
                   </td>
                 </tr>
+              ) : (
+                filtered.map(order => (
+                  <tr key={order.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="p-4 font-medium text-gray-900">{order.id}</td>
+                    <td className="p-4 text-gray-600">{new Date(order.createdAt).toLocaleString()}</td>
+                    <td className="p-4 font-medium text-gray-800">{order.patientName}</td>
+                    <td className="p-4 font-bold text-gray-900">₹{order.totalAmount}</td>
+                    <td className="p-4">
+                      {order.status === 'dispensed' ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <PackageCheck size={14} /> Fulfilled
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                          <XCircle size={14} /> Cancelled
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <button 
+                        onClick={() => setSelectedInvoiceOrder({
+                          id: order.id,
+                          patient: order.patientName,
+                          total: order.totalAmount,
+                          date: order.createdAt
+                        })}
+                        className="text-teal-600 font-medium hover:text-teal-800 text-sm"
+                      >
+                        View Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>

@@ -24,6 +24,7 @@ export const Dashboard: React.FC = () => {
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -34,13 +35,19 @@ export const Dashboard: React.FC = () => {
     setError('');
 
     try {
-      const response = await api.get('/appointments');
-      if (response.data) {
-        setAppointments(response.data.data || []);
+      const [apptRes, msgRes] = await Promise.all([
+        api.get('/appointments'),
+        api.get('/doctors/me/messages/unread')
+      ]);
+      if (apptRes.data) {
+        setAppointments(apptRes.data.data || []);
+      }
+      if (msgRes.data) {
+        setUnreadMessages(msgRes.data.data || []);
       }
     } catch (err: any) {
       console.error(err);
-      setError('Failed to fetch appointments.');
+      setError('Failed to fetch data.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -169,7 +176,7 @@ export const Dashboard: React.FC = () => {
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
           
           {/* Active / Instant Action Card */}
-          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
+          <div className="bg-gradient-to-r from-teal-900 to-teal-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <Activity size={120} />
             </div>
@@ -179,10 +186,10 @@ export const Dashboard: React.FC = () => {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                 </span>
-                <span className="text-emerald-400 font-bold tracking-wider text-sm uppercase">Active Sandbox</span>
+                <span className="text-emerald-300 font-bold tracking-wider text-sm uppercase">Active Sandbox</span>
               </div>
-              <h2 className="text-3xl font-black mb-2">Telehealth Video Suite</h2>
-              <p className="text-gray-400 max-w-lg mb-8 leading-relaxed">
+              <h2 className="text-3xl font-black mb-2 text-white">Telehealth Video Suite</h2>
+              <p className="text-teal-100 max-w-lg mb-8 leading-relaxed">
                 Launch a secure, HIPAA-compliant virtual room instantly. Features local recording, AI transcription, and a real-time whiteboard.
               </p>
               <button
@@ -319,16 +326,34 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Sign Prescriptions</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">3 pending pharmacy orders require your digital signature.</p>
+                  <p className="text-xs text-gray-500 mt-0.5">0 pending pharmacy orders require your digital signature.</p>
                 </div>
               </div>
-              <div className="p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors flex items-start gap-3 border border-transparent hover:border-gray-100">
-                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shrink-0">
+              <div 
+                className="p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors flex items-start gap-3 border border-transparent hover:border-gray-100"
+                onClick={() => {
+                  if (unreadMessages.length > 0) {
+                    navigate(`/consultation/${unreadMessages[0].encounterId}`);
+                  }
+                }}
+              >
+                <div className="p-2 bg-blue-100 text-blue-600 rounded-lg shrink-0 relative">
                   <MessageSquare size={18} />
+                  {unreadMessages.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white"></span>
+                    </span>
+                  )}
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-900">Patient Messages</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">2 unread follow-up messages from yesterday's patients.</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {unreadMessages.length > 0 
+                      ? `${unreadMessages.length} unread follow-up message(s) from recent patients.`
+                      : 'No unread messages.'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
@@ -339,3 +364,4 @@ export const Dashboard: React.FC = () => {
     </motion.div>
   );
 };
+

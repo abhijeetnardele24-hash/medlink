@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { getDb } from "../db";
 import { prescriptions, doctors, encounters, appointments, patients, users } from "../db/schema";
 import { authenticate } from "../middleware/auth";
@@ -50,6 +50,52 @@ router.get(
   }
 );
 
+// ─── GET /prescriptions/pending ──────────────────────────────────────────────
+router.get(
+  "/pending",
+  authenticate,
+  async (req: Request, res: Response): Promise<void> => {
+    const firebaseUid = res.locals.user.uid;
+    const role = res.locals.user.role;
+
+    if (role !== "doctor") {
+      throw new ForbiddenError("Only doctors can fetch pending prescriptions");
+    }
+
+    let authUserId = firebaseUid;
+    if (process.env.TEST_BYPASS_AUTH !== "true") {
+      const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+      if (!u) throw new ForbiddenError("User not found in db");
+      authUserId = u.id;
+    }
+
+    const [doctor] = await getDb().select().from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
+    if (!doctor) throw new NotFoundError("Doctor profile");
+
+    const data = await getDb()
+      .select({
+        id: prescriptions.id,
+        encounterId: prescriptions.encounterId,
+        medicinesJson: prescriptions.medicinesJson,
+        createdAt: prescriptions.createdAt,
+        patientName: users.displayName,
+      })
+      .from(prescriptions)
+      .innerJoin(encounters, eq(prescriptions.encounterId, encounters.id))
+      .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+      .innerJoin(patients, eq(appointments.patientId, patients.id))
+      .innerJoin(users, eq(patients.userId, users.id))
+      .where(
+        and(
+          eq(prescriptions.doctorId, doctor.id),
+          eq(prescriptions.status, "draft")
+        )
+      )
+      .orderBy(prescriptions.createdAt);
+
+    res.json({ data });
+  }
+);
 
 // ─── GET /prescriptions/:id/pdf ──────────────────────────────────────────────
 router.get(

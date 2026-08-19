@@ -18,7 +18,7 @@ import { Router, type Request, type Response } from "express";
 import Razorpay from "razorpay";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctors, availabilitySlots, users, paymentRecords, payoutRecords, doctorPayoutMethods, appointments, doctorVerifications } from "../db/schema";
+import { doctors, availabilitySlots, users, paymentRecords, payoutRecords, doctorPayoutMethods, appointments, doctorVerifications, messages, encounters, patients } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { validateBody } from "../middleware/validateBody";
@@ -111,6 +111,50 @@ router.get("/me", authenticate, requireRole("doctor"), async (req: Request, res:
   }
 
   res.json(result[0]);
+});
+
+// ─── GET /doctors/me/messages/unread ──────────────────────────────────────────
+
+router.get("/me/messages/unread", authenticate, requireRole("doctor"), async (req: Request, res: Response): Promise<void> => {
+  const { uid } = res.locals.user;
+  const db = getDb();
+
+  const doctorRows = await db
+    .select({ id: doctors.id, userId: doctors.userId })
+    .from(doctors)
+    .innerJoin(users, eq(users.id, doctors.userId))
+    .where(eq(users.firebaseUid, uid))
+    .limit(1);
+
+  if (doctorRows.length === 0) {
+    throw new NotFoundError("Doctor profile");
+  }
+
+  const doctor = doctorRows[0]!;
+
+  const unreadMessages = await db
+    .select({
+      id: messages.id,
+      body: messages.body,
+      createdAt: messages.createdAt,
+      patientName: users.displayName,
+      encounterId: encounters.id,
+    })
+    .from(messages)
+    .innerJoin(encounters, eq(messages.encounterId, encounters.id))
+    .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(users, eq(patients.userId, users.id))
+    .where(
+      and(
+        eq(appointments.doctorId, doctor.id),
+        gte(messages.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000)),
+        sql`${messages.senderId} != ${doctor.userId}`
+      )
+    )
+    .orderBy(messages.createdAt);
+
+  res.json({ data: unreadMessages });
 });
 
 // ─── PATCH /doctors/me ────────────────────────────────────────────────────────
