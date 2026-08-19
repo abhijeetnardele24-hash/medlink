@@ -1,13 +1,11 @@
 import { motion } from 'framer-motion';
 import { Smartphone, Stethoscope, Server, Store, Activity, Cloud, RefreshCw, Zap, Shield, Database } from 'lucide-react';
 
-// Reusable animated dot component to represent data packets flowing
 const DataPacket = ({ pathId, delay = 0, color = "#6366f1", reverse = false }: { pathId: string, delay?: number, color?: string, reverse?: boolean }) => {
   return (
     <motion.circle
       r="4"
       fill={color}
-      style={{ filter: `drop-shadow(0 0 6px ${color})` }}
       initial={{ offsetDistance: reverse ? "100%" : "0%" }}
       animate={{ offsetDistance: reverse ? "0%" : "100%" }}
       transition={{
@@ -16,7 +14,10 @@ const DataPacket = ({ pathId, delay = 0, color = "#6366f1", reverse = false }: {
         ease: "linear",
         delay: delay
       }}
-      style={{ offsetPath: `url(#${pathId})` } as any}
+      style={{ 
+        filter: `drop-shadow(0 0 6px ${color})`,
+        offsetPath: `url(#${pathId})`
+      } as any}
     />
   );
 };
