@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Activity, Store } from 'lucide-react';
+import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Activity, Store, Moon, Sun } from 'lucide-react';
 import { ArchitectureDiagram } from './components/ArchitectureDiagram';
 import { useTranslation } from 'react-i18next';
 import './index.css';
@@ -20,6 +20,19 @@ const MedLinkLogo = () => (
 function App() {
   const { t, i18n } = useTranslation();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const containerVars = {
     hidden: { opacity: 0 },
@@ -52,7 +65,7 @@ function App() {
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
       
       {/* 2. Apple-Style Liquid Glass Navbar */}
-      <nav style={{ padding: '1rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', position: 'sticky', top: 0, zIndex: 100 }}>
+      <nav style={{ padding: '1rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-nav)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', position: 'sticky', top: 0, zIndex: 100 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <MedLinkLogo />
         </div>
@@ -78,7 +91,7 @@ function App() {
                   animate={{ opacity: 1, y: 0, scale: 1 }} 
                   exit={{ opacity: 0, y: 10, scale: 0.98 }} 
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ position: 'absolute', top: '100%', left: '-50%', width: '420px', background: 'white', border: '1px solid var(--border)', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 20px 40px -10px rgba(13, 38, 59, 0.1)', zIndex: 101, marginTop: '1.5rem' }}
+                  style={{ position: 'absolute', top: '100%', left: '-50%', width: '420px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border)', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 20px 40px -10px rgba(13, 38, 59, 0.1)', zIndex: 101, marginTop: '1.5rem' }}
                 >
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                     <a href={PATIENT_URL} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -132,6 +145,20 @@ function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <button 
+            onClick={toggleTheme}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '36px', height: '36px', borderRadius: '50%',
+              border: '1px solid var(--border)',
+              background: 'var(--bg-surface)',
+              cursor: 'pointer',
+              color: 'var(--text-main)',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <button 
             onClick={toggleLanguage}
             style={{
               padding: '6px 12px',
@@ -152,7 +179,7 @@ function App() {
       </nav>
 
       {/* 3. Expanded Premium Hero Section */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10rem 2rem 14rem', position: 'relative', overflow: 'hidden', background: '#FAFAFA' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10rem 2rem 14rem', position: 'relative', overflow: 'hidden', background: 'var(--bg-base)' }}>
 
         <motion.div
           variants={containerVars}
@@ -160,11 +187,11 @@ function App() {
           animate="show"
           style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '1100px' }}
         >
-          <motion.h1 variants={itemVars} className="hero-title" style={{ maxWidth: '900px', fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', color: '#0f172a' }}>
+          <motion.h1 variants={itemVars} className="hero-title" style={{ maxWidth: '900px', fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', color: 'var(--text-main)' }}>
             {t('hero.title1')}<span className="text-gradient">{t('hero.title2')}</span>
           </motion.h1>
 
-          <motion.p variants={itemVars} className="hero-subtitle" style={{ maxWidth: '750px', fontSize: '1.25rem', color: '#475569', marginTop: '1rem', marginBottom: '3.5rem' }}>
+          <motion.p variants={itemVars} className="hero-subtitle" style={{ maxWidth: '750px', fontSize: '1.25rem', color: 'var(--text-muted)', marginTop: '1rem', marginBottom: '3.5rem' }}>
             {t('hero.subtitle')}
           </motion.p>
 
@@ -172,16 +199,16 @@ function App() {
             <button onClick={() => scrollToSection('architecture')} className="btn btn-primary" style={{ padding: '16px 40px', fontSize: '1.1rem', boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(79, 70, 229, 0.1)' }}>
               {t('hero.exploreBtn')}
             </button>
-            <a href={DOCTOR_URL} className="btn" style={{ padding: '16px 40px', fontSize: '1.1rem', background: 'white', color: '#0f172a', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <a href={DOCTOR_URL} className="btn" style={{ padding: '16px 40px', fontSize: '1.1rem', background: 'var(--bg-surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
               {t('hero.doctorDemoBtn')} <ArrowRight size={18} />
             </a>
           </motion.div>
 
           {/* Trust Indicators with modern style */}
-          <motion.div variants={itemVars} style={{ display: 'flex', gap: '4rem', opacity: 0.7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', color: '#334155' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Shield size={22} style={{ color: '#2563eb' }}/> {t('hero.trust1')}</div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Lock size={22} style={{ color: '#2563eb' }}/> {t('hero.trust2')}</div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Activity size={22} style={{ color: '#10b981' }}/> {t('hero.trust3')}</div>
+          <motion.div variants={itemVars} style={{ display: 'flex', gap: '4rem', opacity: 0.7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', color: 'var(--text-muted)' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Shield size={22} style={{ color: 'var(--accent)' }}/> {t('hero.trust1')}</div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Lock size={22} style={{ color: 'var(--accent)' }}/> {t('hero.trust2')}</div>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Activity size={22} style={{ color: 'var(--success)' }}/> {t('hero.trust3')}</div>
           </motion.div>
 
         </motion.div>
