@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, Plus, CheckCircle, Package, ShieldCheck, ShieldAlert, AlertTriangle, Sparkles, Info } from 'lucide-react';
+import { X, Search, Plus, CheckCircle, Package, AlertCircle } from 'lucide-react';
 import { api } from '../lib/api';
 
 interface Medicine {
@@ -47,35 +47,6 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
   const [diagnosisResults, setDiagnosisResults] = useState<any[]>([]);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(initialDiagnosis || null);
   const [isSearchingDiagnosis, setIsSearchingDiagnosis] = useState(false);
-
-  // AI Safety & Drug-Drug Interaction (CDSS) State
-  const [safetyCheck, setSafetyCheck] = useState<any>(null);
-  const [isCheckingSafety, setIsCheckingSafety] = useState(false);
-
-  // Debounced AI Safety & DDI Check whenever prescribed medicines change
-  useEffect(() => {
-    if (medicines.length === 0) {
-      setSafetyCheck(null);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsCheckingSafety(true);
-      try {
-        const res = await api.post('/ai/safety/ddi-check', {
-          medicines: medicines.map(m => ({ name: m.name, dosage: m.dosage })),
-          patientAllergies: ['Penicillin'] // Standard safety check
-        });
-        setSafetyCheck(res.data);
-      } catch (err) {
-        console.warn('Safety check notice:', err);
-      } finally {
-        setIsCheckingSafety(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [medicines]);
 
   // Debounced search
   useEffect(() => {
@@ -156,12 +127,7 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
       await api.post(`/encounters/${encounterId}/prescriptions`, {
         doctorId,
         medicinesJson: medicines,
-        instructionsText: finalInstructions,
-        ddiWarnings: safetyCheck ? {
-          severity: safetyCheck.severity,
-          interactions: safetyCheck.interactions,
-          allergyConflicts: safetyCheck.allergyConflicts
-        } : null
+        instructionsText: finalInstructions
       });
       onSuccess();
     } catch (err: any) {
@@ -223,70 +189,8 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Prescribed Medicines & AI CDSS Safety Guard */}
+          {/* Right Column: Prescribed Medicines */}
           <div className="w-2/3 flex flex-col gap-6">
-            {/* Live AI Safety & Drug-Drug Interaction (CDSS) Banner */}
-            {medicines.length > 0 && (
-              <div className={`p-4 rounded-xl border transition-all ${
-                isCheckingSafety
-                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-300'
-                  : safetyCheck?.severity === 'severe_contraindication'
-                  ? 'bg-red-500/15 border-red-500/40 text-red-200 animate-pulse shadow-lg shadow-red-500/20'
-                  : safetyCheck?.severity === 'moderate_caution'
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-                  : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-200'
-              }`}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex items-center gap-2 font-bold text-xs">
-                    {isCheckingSafety ? (
-                      <Sparkles size={16} className="animate-spin text-blue-400" />
-                    ) : safetyCheck?.severity === 'severe_contraindication' ? (
-                      <ShieldAlert size={16} className="text-red-400" />
-                    ) : safetyCheck?.severity === 'moderate_caution' ? (
-                      <AlertTriangle size={16} className="text-amber-400" />
-                    ) : (
-                      <ShieldCheck size={16} className="text-emerald-400" />
-                    )}
-                    <span>
-                      {isCheckingSafety
-                        ? 'Analyzing Drug-Drug Interactions & Allergy Risks...'
-                        : safetyCheck?.severity === 'severe_contraindication'
-                        ? 'CRITICAL CONTRAINDICATION / DDI ALERT'
-                        : safetyCheck?.severity === 'moderate_caution'
-                        ? 'CLINICAL CAUTION / INTERACTION DETECTED'
-                        : 'ALL SAFETY CHECKS PASSED (CDSS)'}
-                    </span>
-                  </div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                    AI Clinical Decision Guard
-                  </span>
-                </div>
-
-                <p className="text-xs opacity-90 leading-relaxed m-0">
-                  {safetyCheck?.overallSafetySummary || 'Cross-referencing pharmacopeia interactions...'}
-                </p>
-
-                {/* Interaction list if any */}
-                {safetyCheck?.interactions && safetyCheck.interactions.length > 0 && (
-                  <div className="mt-2.5 pt-2.5 border-t border-white/10 space-y-1.5">
-                    {safetyCheck.interactions.map((inter: any, idx: number) => (
-                      <div key={idx} className="text-xs bg-black/40 p-2 rounded-lg">
-                        <strong className="text-red-300">⚠️ {inter.drug1} + {inter.drug2}:</strong> {inter.description}
-                        <div className="text-[11px] text-white/70 mt-0.5">
-                          <em>Action:</em> {inter.clinicalAction}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-2.5 pt-2 border-t border-white/10 text-[10px] text-white/50 flex items-start gap-1.5">
-                  <Info size={13} className="shrink-0 mt-0.5" />
-                  <span>Clinical Advisory Only: This automated CDSS check assists clinical decision making and does not substitute for independent physician judgment.</span>
-                </div>
-              </div>
-            )}
-
             <div>
               <h3 className="font-semibold text-white/80 mb-4">Prescribed Medicines</h3>
               {medicines.length === 0 ? (

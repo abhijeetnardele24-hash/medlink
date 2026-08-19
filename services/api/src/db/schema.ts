@@ -986,25 +986,3 @@ export const payoutRecords = pgTable(
     index("payout_records_status_idx").on(t.status),
   ]
 );
-
-// ─────────────────────────────────────────────────────────────
-// PRESCRIPTION DDI & AI SAFETY AUDIT LOGS
-// ─────────────────────────────────────────────────────────────
-
-export const prescriptionDdiAudit = pgTable(
-  "prescription_ddi_audit",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    prescriptionId: uuid("prescription_id").references(() => prescriptions.id, { onDelete: "cascade" }),
-    encounterId: uuid("encounter_id").notNull().references(() => encounters.id),
-    doctorId: uuid("doctor_id").notNull().references(() => doctors.id),
-    warningSeverity: text("warning_severity").notNull(), // 'moderate_caution' | 'severe_contraindication'
-    warningsJson: jsonb("warnings_json").notNull(),
-    overridden: boolean("overridden").notNull().default(true),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  },
-  (t) => [
-    index("prescription_ddi_audit_prescription_id_idx").on(t.prescriptionId),
-    index("prescription_ddi_audit_doctor_id_idx").on(t.doctorId),
-  ]
-);

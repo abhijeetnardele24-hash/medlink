@@ -221,3 +221,11 @@ Before implementing the schema or the frontend, we established the following arc
 3. **Public license display:** Show each seller's pharmacy name and license number on `patient-web` storefront.
 4. **Dispense audit log:** Log which pharmacist account fulfilled a prescription-gated item.
 5. **Complaint/support channel:** Add lightweight "report an issue" action on patient orders for coordinator review.
+
+---
+
+## 2.7 Architectural Decision: Complete Removal of AI-Based Features
+
+**Status:** Executed & Permanently Removed  
+**Scope:** `services/api`, `apps/doctor-web`, `apps/patient-web`, `services/api/src/db/schema.ts`  
+**Decision & Rationale:** All AI-based features (LLM Ambient Scribe, Conversational Symptom Triage, Generative DDI Checker, and AI Lab Report Analyzer) were evaluated and deliberately removed in favor of the deterministic rule-based recommendation engine, due to clinical accuracy and medical liability concerns for a telehealth healthcare platform.

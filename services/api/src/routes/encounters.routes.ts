@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations, prescriptionDdiAudit } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors, doctorMedicineRecommendations } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { NotFoundError, ForbiddenError } from "../errors";
@@ -172,34 +172,6 @@ router.post(
         issuedAt: new Date(),
       })
       .returning();
-
-    // Log CDSS DDI warning override if doctor was shown interaction warnings
-    if (ddiWarnings && (ddiWarnings.severity === "severe_contraindication" || ddiWarnings.severity === "moderate_caution")) {
-      await getDb()
-        .insert(prescriptionDdiAudit)
-        .values({
-          prescriptionId: prescription.id,
-          encounterId: id,
-          doctorId,
-          warningSeverity: ddiWarnings.severity,
-          warningsJson: ddiWarnings,
-          overridden: true,
-        });
-
-      logger.warn(
-        {
-          event: "CDSS_DDI_WARNING_OVERRIDDEN",
-          prescriptionId: prescription.id,
-          encounterId: id,
-          doctorId,
-          warningSeverity: ddiWarnings.severity,
-          warnings: ddiWarnings.interactions || [],
-          allergyConflicts: ddiWarnings.allergyConflicts || [],
-          timestamp: new Date().toISOString(),
-        },
-        "Physician issued prescription overriding active CDSS drug safety warnings"
-      );
-    }
 
     if (recommendedMedicineIds.length > 0) {
       // Upsert into doctorMedicineRecommendations (ignore conflicts if already recommended)

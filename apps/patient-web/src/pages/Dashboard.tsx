@@ -4,10 +4,9 @@ import { api } from '../lib/api';
 import { 
   HeartPulse, Calendar, Clock, MapPin, User, Stethoscope, 
   ArrowRight, Video, CheckCircle, AlertCircle, Activity,
-  DollarSign, Zap 
+  DollarSign, Zap, Search
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { AITriageModal } from '../components/AITriageModal';
 
 interface Doctor {
   id: string;
@@ -42,12 +41,10 @@ interface Appointment {
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [openSlots, setOpenSlots] = useState<OpenSlot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isTriageOpen, setIsTriageOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,29 +106,32 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* AI Clinical Triage & Video Suite Cards Grid */}
+      {/* Quick Action Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '3rem' }}>
-        {/* Card 1: Clinical Symptom Triage */}
+        {/* Card 1: Find a Doctor */}
         <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', flexShrink: 0 }}>
-              <Activity size={24} />
+              <Search size={24} />
             </div>
             <div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Clinical Symptom Triage
+                Find a Doctor
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
-                Interactive pre-consultation triage. Evaluates emergency red flags and finds the exact right specialist for your condition.
+                Browse verified specialists across cardiology, dermatology, general medicine, and schedule your appointment.
               </p>
             </div>
           </div>
           <button
-            onClick={() => setIsTriageOpen(true)}
+            onClick={() => {
+              const el = document.getElementById('doctor-directory');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
             className="btn btn-primary"
             style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
-            <Activity size={16} /> Start Symptom Assessment
+            <Search size={16} /> Browse Verified Doctors
           </button>
         </div>
 
@@ -368,12 +368,6 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* Conversational AI Clinical Triage Modal */}
-      <AITriageModal
-        isOpen={isTriageOpen}
-        onClose={() => setIsTriageOpen(false)}
-      />
     </div>
   );
 };

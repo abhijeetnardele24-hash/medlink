@@ -64,8 +64,6 @@
 - **Data Reads:**
   - `GET /v1/prescriptions/me` -> [`prescriptions.routes.ts:16`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/prescriptions.routes.ts#L16) (DB table: `prescriptions`, joined with `doctors`)
   - `GET /v1/prescriptions/:id/pdf` -> [`prescriptions.routes.ts:100`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/prescriptions.routes.ts#L100) (Formatted clinical HTML blob with consent & auth verification)
-- **Data Writes:**
-  - `POST /v1/ai/lab-report/analyze` -> [`ai.routes.ts:153`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/ai.routes.ts#L153) (Gemini / Heuristic structured clinical lab report parser).
 
 ### 1.6 Consent Management (`src/pages/Consents.tsx`)
 - **Status:** `CONNECTED`
@@ -118,7 +116,6 @@
 - **Data Reads:**
   - `GET /v1/encounters/:id` -> [`encounters.routes.ts:17`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/encounters.routes.ts#L17) (DB tables: `encounters`, `appointments`, `patients`)
   - `GET /v1/medicines?search=...` -> [`medicines.routes.ts:21`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/medicines.routes.ts#L21) (DB table: `medicines`)
-  - `POST /v1/ai/safety/ddi-check` -> [`ai.routes.ts:192`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/ai.routes.ts#L192) (Drug-Drug Interaction AI checker)
 - **Data Writes:**
   - `POST /v1/encounters/:id/prescriptions` -> [`encounters.routes.ts:146`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/encounters.routes.ts#L146) (DB tables: `prescriptions`, `doctor_medicine_recommendations`)
   - `POST /v1/encounters/:id/complete` -> [`encounters.routes.ts:80`](file:///c:/Users/Abhijeet%20Nardele/OneDrive/Desktop/Edi%20project%20sem%205/services/api/src/routes/encounters.routes.ts#L80) (DB table: `encounters`)

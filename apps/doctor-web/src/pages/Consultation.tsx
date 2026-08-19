@@ -15,7 +15,6 @@ import {
   Radio,
   Hand,
   ScreenShare,
-  Sparkles,
   LayoutGrid,
   Maximize2
 } from 'lucide-react';
@@ -23,7 +22,6 @@ import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
 import { PrescribeModal } from '../components/PrescribeModal';
-import { AIScribeModal } from '../components/AIScribeModal';
 import { MeetingControls } from '../components/MeetingControls';
 import { WhiteboardModal } from '../components/WhiteboardModal';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
@@ -95,8 +93,6 @@ export const Consultation: React.FC = () => {
   // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPrescribeOpen, setIsPrescribeOpen] = useState(false);
-  const [isAIScribeOpen, setIsAIScribeOpen] = useState(false);
-  const [autoFilledMedicines, setAutoFilledMedicines] = useState<any[]>([]);
   const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBlurActive, setIsBlurActive] = useState(false);
@@ -373,8 +369,6 @@ export const Consultation: React.FC = () => {
           isChatOpen={isChatOpen}
           onToggleChat={() => setIsChatOpen(!isChatOpen)}
           onOpenPrescribe={() => setIsPrescribeOpen(true)}
-          onToggleAIScribe={() => setIsAIScribeOpen(!isAIScribeOpen)}
-          isAIScribeOpen={isAIScribeOpen}
           onEndCall={() => navigate('/dashboard')}
           onEndMeetingForAll={endMeetingForAll}
           isDoctor={true}
@@ -396,29 +390,6 @@ export const Consultation: React.FC = () => {
         onSendStroke={sendWhiteboardStroke}
         onClear={clearWhiteboard}
       />
-
-      {/* Ambient AI Clinical Scribe Modal */}
-      {id && (
-        <AIScribeModal
-          isOpen={isAIScribeOpen}
-          onClose={() => setIsAIScribeOpen(false)}
-          encounterId={id}
-          patientName="Patient"
-          onAutoFillPrescription={(extractedMeds) => {
-            const mapped = extractedMeds.map((m: any) => ({
-              medicineId: '',
-              name: m.medicineName,
-              dosage: m.dosage,
-              frequency: m.frequency,
-              duration: m.duration,
-              recommend: true
-            }));
-            setAutoFilledMedicines(mapped);
-            setIsAIScribeOpen(false);
-            setIsPrescribeOpen(true);
-          }}
-        />
-      )}
 
       {/* Device & Hardware Settings Modal */}
       <DeviceSettingsModal
@@ -443,7 +414,6 @@ export const Consultation: React.FC = () => {
         <PrescribeModal
           encounterId={id}
           doctorId={profile.id}
-          initialMedicines={autoFilledMedicines}
           onClose={() => setIsPrescribeOpen(false)}
           onSuccess={() => {
             setIsPrescribeOpen(false);
