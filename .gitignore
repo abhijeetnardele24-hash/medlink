@@ -72,6 +72,38 @@ fix_readme2.js
 delete-dashboard.js
 run-socket-tests.js
 test-build.js
+run-test-ui.js
+
+# Internal development audit documents
+CHECKLIST.md
+INTEGRATION_AUDIT.md
+PRODUCTION_AUDIT.md
+PRODUCTION_STANDARDS.md
+PROJECT_RESEARCH_AND_ANALYSIS.md
+REMAINING_WORK.md
+TEST_LOG.md
+
+# API one-off scratch scripts and debug logs
+services/api/*.js
+services/api/tsc-out.txt
+services/api/test-*.ts
+services/api/test-*.json
+services/api/create-*.ts
+services/api/migrate-*.ts
+services/api/migrate_*.ts
+services/api/migrate.ts
+services/api/add-*.ts
+services/api/apply-*.ts
+services/api/clean-db.ts
+services/api/clear-orders.ts
+services/api/fetch-pdf.ts
+services/api/fix-db.ts
+services/api/inject-routes.ts
+services/api/link-users.ts
+services/api/patch-build-route.ts
+services/api/run-all-tests.ts
+services/api/seed-*.ts
+services/api/seed_*.ts
 
 # Windows batch convenience scripts (local-only, not portable)
 build-all.bat
