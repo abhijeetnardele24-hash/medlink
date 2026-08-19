@@ -135,6 +135,19 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(2px);
 }
 
+.nav-link {
+  color: var(--text-main);
+  transition: color 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--accent);
+}
+
 /* Advanced Clean UI elements */
 .glass-panel {
   background: rgba(255, 255, 255, 0.85);

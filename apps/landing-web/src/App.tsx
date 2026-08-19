@@ -71,8 +71,8 @@ function App() {
         </div>
         
         <div style={{ display: 'flex', gap: '3rem', alignItems: 'center', fontWeight: 500, fontSize: '0.95rem', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
-          <motion.div whileHover={{ color: 'var(--accent)', opacity: 1 }} onClick={() => scrollToSection('architecture')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>{t('nav.architecture')}</motion.div>
-          <motion.div whileHover={{ color: 'var(--accent)', opacity: 1 }} onClick={() => scrollToSection('capabilities')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>{t('nav.capabilities')}</motion.div>
+          <div className="nav-link" onClick={() => scrollToSection('architecture')}>{t('nav.architecture')}</div>
+          <div className="nav-link" onClick={() => scrollToSection('capabilities')}>{t('nav.capabilities')}</div>
 
           {/* Solutions Dropdown */}
           <div 
@@ -80,9 +80,9 @@ function App() {
             onMouseEnter={() => setActiveDropdown('solutions')}
             onMouseLeave={() => setActiveDropdown(null)}
           >
-            <motion.div whileHover={{ color: 'var(--accent)', opacity: 1 }} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', transition: 'color 0.2s' }}>
+            <div className={`nav-link ${activeDropdown === 'solutions' ? 'active' : ''}`}>
               {t('nav.solutions')} <ChevronDown size={16} style={{ transform: activeDropdown === 'solutions' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
-            </motion.div>
+            </div>
             
             <AnimatePresence>
               {activeDropdown === 'solutions' && (
@@ -140,7 +140,7 @@ function App() {
             </AnimatePresence>
           </div>
 
-          <motion.div whileHover={{ color: 'var(--accent)', opacity: 1 }} onClick={() => scrollToSection('workflow')} style={{ cursor: 'pointer', transition: 'color 0.2s' }}>{t('nav.videoEngine')}</motion.div>
+          <div className="nav-link" onClick={() => scrollToSection('workflow')}>{t('nav.videoEngine')}</div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
