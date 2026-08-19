@@ -1,5 +1,6 @@
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Smartphone, Stethoscope, Server, Store, Activity, Cloud, RefreshCw, Zap, Shield, Database } from 'lucide-react';
+import { Smartphone, Stethoscope, Store, Activity, Cloud, RefreshCw, Zap, Shield, Database } from 'lucide-react';
 
 const DataPacket = ({ pathId, delay = 0, color = "#6366f1", reverse = false }: { pathId: string, delay?: number, color?: string, reverse?: boolean }) => {
   return (
@@ -17,7 +18,7 @@ const DataPacket = ({ pathId, delay = 0, color = "#6366f1", reverse = false }: {
       style={{ 
         filter: `drop-shadow(0 0 6px ${color})`,
         offsetPath: `url(#${pathId})`
-      } as any}
+      } as React.CSSProperties}
     />
   );
 };
