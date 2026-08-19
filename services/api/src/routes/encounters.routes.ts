@@ -4,6 +4,8 @@ import { getDb } from "../db";
 import { encounters, prescriptions, appointments, users as dbUsers, doctors, patients, doctorMedicineRecommendations } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
+import { validateBody } from "../middleware/validateBody";
+import { createEncounterSchema, createPrescriptionSchema, endEncounterSchema } from "../schemas/encounter.schema";
 import { NotFoundError, ForbiddenError } from "../errors";
 import multer from "multer";
 import { v4 as uuidv4 } from "uuid";
@@ -156,6 +158,7 @@ router.post(
   "/",
   authenticate,
   requireRole("doctor"),
+  validateBody(createEncounterSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const { appointmentId } = _req.body as { appointmentId: string };
     const authUserId = await resolveAuthUserId(res.locals.user.uid);
@@ -214,16 +217,12 @@ router.post(
   "/:id/prescriptions",
   authenticate,
   requireRole("doctor"),
+  validateBody(createPrescriptionSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const { medicinesJson, instructionsText } = _req.body;
 
     const access = await verifyEncounterAccess(id, res.locals.user, true);
-
-    if (!Array.isArray(medicinesJson)) {
-      res.status(400).json({ error: "medicinesJson must be an array of medicine objects" });
-      return;
-    }
 
     const recommendedMedicineIds = medicinesJson
       .filter((m: any) => m.medicineId && m.recommend === true)
@@ -277,6 +276,7 @@ router.post(
   "/:id/end",
   authenticate,
   requireRole("doctor"),
+  validateBody(endEncounterSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const { summaryNotes } = _req.body;

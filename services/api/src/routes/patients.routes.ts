@@ -4,6 +4,8 @@ import { getDb } from "../db";
 import { users, patients, doctors, appointments, consentGrants } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
+import { validateBody } from "../middleware/validateBody";
+import { updatePatientProfileSchema } from "../schemas/patient.schema";
 import { NotFoundError, ForbiddenError } from "../errors";
 import { logger } from "../logger";
 
@@ -74,7 +76,7 @@ router.get("/me", async (_req: Request, res: Response): Promise<void> => {
 });
 
 // ─── PUT /v1/patients/me ─────────────────────────────────────────────────────────────
-router.put("/me", async (req: Request, res: Response): Promise<void> => {
+router.put("/me", validateBody(updatePatientProfileSchema), async (req: Request, res: Response): Promise<void> => {
   const { uid } = res.locals.user;
   const body = req.body || {};
 

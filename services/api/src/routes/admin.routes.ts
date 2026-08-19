@@ -1,9 +1,11 @@
 import { Router, type Request, type Response } from "express";
 import { eq, count, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications, pharmacistVerificationHistory, users } from "../db/schema";
+import { doctorVerifications, doctors, appointments, patients, reminderTasks, pharmacists, pharmacistVerifications, pharmacistVerificationHistory, users, auditEvents } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
+import { validateBody } from "../middleware/validateBody";
+import { reviewDoctorVerificationSchema, reviewPharmacistVerificationSchema } from "../schemas/admin.schema";
 import { NotFoundError } from "../errors";
 import { invalidateCachePrefix } from "../redis";
 
@@ -50,9 +52,19 @@ router.patch(
   "/verifications/:id",
   authenticate,
   requireRole("coordinator"),
+  validateBody(reviewDoctorVerificationSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const { status, reasonCode } = _req.body as { status: string; reasonCode?: string };
+    const { uid } = res.locals.user;
+
+    const userRows = await getDb()
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.firebaseUid, uid))
+      .limit(1);
+
+    const coordinatorId = userRows[0]?.id || "system";
 
     const verifRows = await getDb()
       .select()
@@ -63,7 +75,7 @@ router.patch(
     if (verifRows.length === 0) throw new NotFoundError("Doctor Verification");
     const verif = verifRows[0];
 
-    // Transaction to update both verification and doctor status atomically
+    // Transaction to update both verification, doctor status, and audit log atomically
     await getDb().transaction(async (tx) => {
       await tx
         .update(doctorVerifications)
@@ -82,6 +94,16 @@ router.patch(
           .set({ verificationStatus: status as any, updatedAt: new Date() })
           .where(eq(doctors.id, verif.doctorId));
       }
+
+      await tx.insert(auditEvents).values({
+        actorId: coordinatorId,
+        actorRole: "coordinator",
+        action: `doctor.verification.${status}`,
+        resourceType: "doctor",
+        resourceId: verif.doctorId,
+        outcome: "success",
+        metadata: { verificationId: id, status, reasonCode },
+      });
     });
 
     await invalidateCachePrefix("doctors:");
@@ -129,6 +151,7 @@ router.patch(
   "/pharmacist-verifications/:id",
   authenticate,
   requireRole("coordinator"),
+  validateBody(reviewPharmacistVerificationSchema),
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
     const { status, reasonCode, notes } = _req.body as { status: string; reasonCode?: string; notes?: string };
@@ -184,6 +207,16 @@ router.patch(
           action: actionName as any,
           notes: notes || reasonCode,
         });
+
+      await tx.insert(auditEvents).values({
+        actorId: coordinatorId,
+        actorRole: "coordinator",
+        action: `pharmacist.verification.${status}`,
+        resourceType: "pharmacist",
+        resourceId: verif.pharmacistId,
+        outcome: "success",
+        metadata: { verificationId: id, status, reasonCode, notes },
+      });
     });
 
     await invalidateCachePrefix("medicines:");

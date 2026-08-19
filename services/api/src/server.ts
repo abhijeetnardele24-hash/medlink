@@ -149,6 +149,7 @@ export function createServer(): Express {
   v1Router.use("/pharmacy", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
+  v1Router.use("/webhooks", webhooksRouter);
 
   // Mount unversioned external webhooks and health probes
   app.use("/", healthRouter);

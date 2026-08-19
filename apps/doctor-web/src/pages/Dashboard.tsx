@@ -8,16 +8,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import type { Appointment } from '../types';
-
-// Mock data for mini-charts to give it an enterprise feel
-const mockEarningsData = [
-  { day: 'Mon', value: 1200 }, { day: 'Tue', value: 1800 }, 
-  { day: 'Wed', value: 1500 }, { day: 'Thu', value: 2400 }, 
-  { day: 'Fri', value: 2100 }, { day: 'Sat', value: 800 }, 
-  { day: 'Sun', value: 3000 }
-];
 
 export const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
@@ -142,29 +133,19 @@ export const Dashboard: React.FC = () => {
           { label: 'Pending Requests', value: requests.length, icon: <AlertCircle size={20} />, color: 'bg-amber-100 text-amber-600', trend: '+2 since yesterday' },
           { label: 'Upcoming Today', value: upcomingAppointments.length, icon: <Clock size={20} />, color: 'bg-teal-100 text-teal-600', trend: 'Next in 45 mins' },
           { label: 'Total Patients', value: uniquePatients, icon: <Users size={20} />, color: 'bg-blue-100 text-blue-600', trend: '+12% this month' },
-          { label: 'Weekly Earnings', value: '₹12.8k', icon: <TrendingUp size={20} />, color: 'bg-emerald-100 text-emerald-600', isChart: true },
+          { label: 'Total Consultations', value: appointments.length, icon: <TrendingUp size={20} />, color: 'bg-emerald-100 text-emerald-600', trend: 'All-time total' },
         ].map((stat, idx) => (
           <div key={idx} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-teal-200 transition-colors">
             <div className="flex justify-between items-start mb-4">
               <div className={`p-3 rounded-xl ${stat.color}`}>
                 {stat.icon}
               </div>
-              {!stat.isChart && <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">{stat.trend}</span>}
+              <span className="text-xs font-medium text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">{stat.trend}</span>
             </div>
             <div>
               <div className="text-3xl font-black text-gray-900 mb-1">{stat.value}</div>
               <div className="text-sm font-medium text-gray-500">{stat.label}</div>
             </div>
-            
-            {stat.isChart && (
-              <div className="absolute bottom-0 left-0 right-0 h-16 opacity-30 group-hover:opacity-100 transition-opacity">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={mockEarningsData}>
-                    <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="#10b981" fillOpacity={0.2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
           </div>
         ))}
       </motion.div>

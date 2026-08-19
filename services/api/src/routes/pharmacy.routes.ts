@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { getDb } from "../db";
 import { medicines, pharmacyOrders, pharmacyOrderItems, prescriptions, patients, users, prescriptionReconciliationAudit, pharmacists, pharmacistVerifications, pharmacyDispenseAudit, orderComplaints } from "../db/schema";
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql, desc } from "drizzle-orm";
 import { authenticate } from "../middleware/auth";
 import { validateBody } from "../middleware/validateBody";
 import { verifyPharmacistSchema, uploadPrescriptionSchema, buildOrderSchema, createOrderSchema, fileComplaintSchema, verifyPaymentSchema } from "../schemas/pharmacy.schema";
@@ -140,11 +140,17 @@ router.get("/inventory", authenticate, async (req: Request, res: Response): Prom
 
     const pharmacistId = pharmacistRows[0].id;
 
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
+
     const inventory = await getDb()
       .select()
       .from(medicines)
       .where(eq(medicines.pharmacistId, pharmacistId))
-      .orderBy(medicines.name);
+      .orderBy(medicines.name)
+      .limit(limit)
+      .offset(offset);
 
     res.json(inventory);
   } catch (err: any) {
@@ -316,6 +322,10 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
     const patientRows = await getDb().select({ id: patients.id }).from(patients).where(eq(patients.userId, userRows[0].id)).limit(1);
     if (!patientRows.length) { throw new ForbiddenError("Only patients can view orders"); }
     
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
+
     const orders = await getDb()
       .select({
         id: pharmacyOrders.id,
@@ -329,7 +339,9 @@ router.get("/orders", authenticate, async (req: Request, res: Response): Promise
       .from(pharmacyOrders)
       .innerJoin(pharmacists, eq(pharmacists.id, pharmacyOrders.pharmacistId))
       .where(eq(pharmacyOrders.patientId, patientRows[0].id))
-      .orderBy(pharmacyOrders.createdAt);
+      .orderBy(desc(pharmacyOrders.createdAt))
+      .limit(limit)
+      .offset(offset);
       
     res.json(orders);
   } catch (err: any) {

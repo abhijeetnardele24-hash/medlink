@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { paymentRecords, appointments, pharmacyOrders, patients } from "../db/schema";
+import { paymentRecords, appointments, availabilitySlots, pharmacyOrders, patients } from "../db/schema";
 import crypto from "crypto";
 import { logger } from "../logger";
 import { emitNotification } from "../socket/emitter";
@@ -20,7 +20,7 @@ router.post(
         return;
       }
       
-      const secret = process.env.RAZORPAY_WEBHOOK_SECRET || (process.env.TEST_BYPASS_AUTH === "true" ? "test_secret" : "");
+      const secret = process.env.RAZORPAY_WEBHOOK_SECRET || (process.env.TEST_BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production" ? "test_secret" : "");
       if (!secret) {
         logger.error("RAZORPAY_WEBHOOK_SECRET is not configured");
         res.status(500).json({ error: "Webhook secret not configured" });
@@ -33,8 +33,11 @@ router.post(
         .update(payloadString)
         .digest("hex");
 
-      if (expectedSignature !== signature) {
-        logger.warn({ expectedSignature, signature }, "Invalid webhook signature");
+      const sigBuf = Buffer.from(signature || "", "utf8");
+      const expBuf = Buffer.from(expectedSignature, "utf8");
+
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+        logger.warn("Invalid webhook signature");
         res.status(400).json({ error: "Invalid signature" });
         return;
       }
@@ -57,21 +60,30 @@ router.post(
           const { appointmentId, state } = paymentRows[0];
           
           if (state !== "success") {
-            // Update payment record to success
-            await getDb()
-              .update(paymentRecords)
-              .set({
-                state: "success",
-                razorpayPaymentId,
-                updatedAt: new Date(),
-              })
-              .where(eq(paymentRecords.appointmentId, appointmentId));
+            // Atomic transaction for paymentRecord, appointment status, and slot booking
+            await getDb().transaction(async (tx) => {
+              await tx
+                .update(paymentRecords)
+                .set({
+                  state: "success",
+                  razorpayPaymentId,
+                  updatedAt: new Date(),
+                })
+                .where(eq(paymentRecords.appointmentId, appointmentId));
 
-            // Confirm the appointment
-            await getDb()
-              .update(appointments)
-              .set({ status: "confirmed", updatedAt: new Date() })
-              .where(eq(appointments.id, appointmentId));
+              const [appt] = await tx
+                .update(appointments)
+                .set({ status: "confirmed", updatedAt: new Date() })
+                .where(eq(appointments.id, appointmentId))
+                .returning();
+
+              if (appt?.slotId) {
+                await tx
+                  .update(availabilitySlots)
+                  .set({ status: "booked", updatedAt: new Date() })
+                  .where(eq(availabilitySlots.id, appt.slotId));
+              }
+            });
 
             // Notify patient
             const userRows = await getDb()
@@ -91,7 +103,7 @@ router.post(
               );
             }
 
-            logger.info({ appointmentId, razorpayPaymentId }, "Appointment payment captured via webhook");
+            logger.info({ appointmentId, razorpayPaymentId }, "Appointment payment captured via webhook and slot booked");
           } else {
             logger.info({ appointmentId, razorpayPaymentId }, "Idempotent appointment webhook skip");
           }

@@ -32,17 +32,21 @@ router.get("/", authenticate, async (req: Request, res: Response, next: NextFunc
       internalRole = u.role;
     }
 
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
+
     let consents;
     if (internalRole === "patient") {
       const [patientRec] = await db.select({ id: patients.id }).from(patients).where(eq(patients.userId, userId)).limit(1);
       if (!patientRec) throw new NotFoundError("Patient record");
-      consents = await db.select().from(consentGrants).where(eq(consentGrants.patientId, patientRec.id));
+      consents = await db.select().from(consentGrants).where(eq(consentGrants.patientId, patientRec.id)).limit(limit).offset(offset);
     } else {
       // Doctor or coordinator
-      consents = await db.select().from(consentGrants).where(eq(consentGrants.granteeId, userId));
+      consents = await db.select().from(consentGrants).where(eq(consentGrants.granteeId, userId)).limit(limit).offset(offset);
     }
     
-    res.json({ data: consents });
+    res.json({ data: consents, page, limit });
   } catch (error) {
     next(error);
   }

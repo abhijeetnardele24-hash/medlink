@@ -1,11 +1,16 @@
 import { Router, type Request, type Response } from "express";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { getDb } from "../db";
-import { prescriptions, doctors, encounters, appointments, patients, users } from "../db/schema";
+import { prescriptions, doctors, encounters, appointments, patients, users, consentGrants } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { NotFoundError, ForbiddenError } from "../errors";
 
 const router = Router();
+
+async function resolveAuthUserId(firebaseUid: string): Promise<string> {
+  const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+  return u ? u.id : firebaseUid;
+}
 
 // ─── GET /me ─────────────────────────────────────────────────────────────────
 router.get(
@@ -19,15 +24,14 @@ router.get(
       throw new ForbiddenError("Only patients can fetch their own prescriptions here");
     }
 
-    let authUserId = firebaseUid;
-    if (process.env.TEST_BYPASS_AUTH !== "true") {
-      const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
-      if (!u) throw new ForbiddenError("User not found in db");
-      authUserId = u.id;
-    }
+    const authUserId = await resolveAuthUserId(firebaseUid);
 
     const [patient] = await getDb().select().from(patients).where(eq(patients.userId, authUserId)).limit(1);
     if (!patient) throw new NotFoundError("Patient profile");
+
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 20), 100);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
 
     const data = await getDb()
       .select({
@@ -44,9 +48,11 @@ router.get(
       .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
       .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
       .where(eq(appointments.patientId, patient.id))
-      .orderBy(prescriptions.issuedAt);
+      .orderBy(desc(prescriptions.issuedAt))
+      .limit(limit)
+      .offset(offset);
 
-    res.json({ data });
+    res.json({ data, page, limit });
   }
 );
 
@@ -62,12 +68,7 @@ router.get(
       throw new ForbiddenError("Only doctors can fetch pending prescriptions");
     }
 
-    let authUserId = firebaseUid;
-    if (process.env.TEST_BYPASS_AUTH !== "true") {
-      const [u] = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
-      if (!u) throw new ForbiddenError("User not found in db");
-      authUserId = u.id;
-    }
+    const authUserId = await resolveAuthUserId(firebaseUid);
 
     const [doctor] = await getDb().select().from(doctors).where(eq(doctors.userId, authUserId)).limit(1);
     if (!doctor) throw new NotFoundError("Doctor profile");
@@ -151,9 +152,6 @@ router.get(
     }
 
     if (role === "doctor" && rx.doctorUserId !== authUserId) {
-      // @ts-ignore
-      const { consentGrants } = await import("../db/schema");
-      const { and } = await import("drizzle-orm");
       const [grant] = await getDb()
         .select()
         .from(consentGrants)
