@@ -7,7 +7,8 @@
     "dev": "npx tsx watch --env-file=.env src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "npx tsx tests/run-all-tests.ts"
   },
   "keywords": [],
   "author": "",

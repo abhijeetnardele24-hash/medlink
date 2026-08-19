@@ -248,14 +248,23 @@ void verifyDatabaseConnection()
   });
 
 const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
-  try {
-    await closeDatabasePool();
-    console.log(`medlink-api closed database pool after ${signal}`);
-    process.exit(0);
-  } catch (error: unknown) {
-    console.error("error while closing database pool", error);
+  console.log(`medlink-api received ${signal}, closing HTTP server...`);
+  httpServer.close(async () => {
+    try {
+      await closeDatabasePool();
+      console.log(`medlink-api closed database pool after ${signal}`);
+      process.exit(0);
+    } catch (error: unknown) {
+      console.error("error while closing database pool", error);
+      process.exit(1);
+    }
+  });
+
+  // Force exit after 10s timeout
+  setTimeout(() => {
+    console.error("Forcefully terminating after shutdown timeout");
     process.exit(1);
-  }
+  }, 10000).unref();
 };
 
 process.on("SIGINT", () => {
