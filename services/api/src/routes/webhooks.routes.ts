@@ -27,10 +27,13 @@ router.post(
         return;
       }
 
-      const payloadString = JSON.stringify(req.body);
+      const rawBody = (req as any).rawBody 
+        ? (req as any).rawBody.toString('utf8')
+        : JSON.stringify(req.body);
+
       const expectedSignature = crypto
         .createHmac("sha256", secret)
-        .update(payloadString)
+        .update(rawBody)
         .digest("hex");
 
       const sigBuf = Buffer.from(signature || "", "utf8");

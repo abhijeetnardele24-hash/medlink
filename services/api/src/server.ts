@@ -114,7 +114,12 @@ export function createServer(): Express {
   });
 
   // ── Body parsing ────────────────────────────────────────────────────────────
-  app.use(express.json({ limit: "10mb" }));
+  app.use(express.json({ 
+    limit: "10mb",
+    verify: (req: any, res, buf) => {
+      req.rawBody = buf;
+    }
+  }));
 
   // ── Request logging (logs path + status; no PHI) ───────────────────────────
   app.use((req: Request, res: Response, next: NextFunction) => {

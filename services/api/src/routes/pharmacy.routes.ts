@@ -171,6 +171,10 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
     
     const pharmacistId = pharmacistRows[0].id;
     
+    const limit = Math.min(Math.max(1, parseInt(req.query.limit as string) || 50), 100);
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const offset = (page - 1) * limit;
+
     const orders = await getDb()
       .select({
         id: pharmacyOrders.id,
@@ -184,7 +188,10 @@ router.get("/orders/incoming", authenticate, async (req: Request, res: Response)
       .from(pharmacyOrders)
       .innerJoin(patients, eq(patients.id, pharmacyOrders.patientId))
       .innerJoin(users, eq(users.id, patients.userId))
-      .where(eq(pharmacyOrders.pharmacistId, pharmacistId));
+      .where(eq(pharmacyOrders.pharmacistId, pharmacistId))
+      .orderBy(desc(pharmacyOrders.createdAt))
+      .limit(limit)
+      .offset(offset);
       
     res.json(orders);
   } catch (err: any) {

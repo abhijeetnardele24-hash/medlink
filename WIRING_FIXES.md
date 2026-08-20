@@ -3,3 +3,5 @@
 - apps/doctor-web/src/pages/Analytics.tsx: Wired demographics, earnings, and consultations to live `GET /doctors/:id/analytics` endpoint.
 - apps/pharmacy-web/src/pages/Settings.tsx: Added "Read-Only Prototype" banner instead of wiring to a non-existent backend.
 - apps/coordinator-web/src/pages/Settings.tsx: Added "Read-Only Prototype" banner instead of faking backend save states.
+- services/api/src/routes/webhooks.routes.ts: Fixed Webhook HMAC signature to use raw buffer instead of re-stringified JSON.
+- services/api/src/routes/pharmacy.routes.ts: Added pagination (limit/offset) to GET /pharmacy/orders/incoming.
