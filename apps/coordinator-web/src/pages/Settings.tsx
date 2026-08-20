@@ -24,6 +24,20 @@ export const Settings = () => {
         </button>
       </div>
 
+      <div style={{ 
+        padding: '1rem', 
+        background: 'rgba(59, 130, 246, 0.1)', 
+        color: '#3b82f6', 
+        border: '1px solid rgba(59, 130, 246, 0.2)', 
+        borderRadius: '8px', 
+        marginBottom: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        <AlertTriangle size={18} /> <strong>Read-Only Prototype:</strong> This settings module is for demonstration purposes. Backend integration is pending.
+      </div>
+
       {savedMessage && (
         <div style={{ 
           padding: '1rem', 

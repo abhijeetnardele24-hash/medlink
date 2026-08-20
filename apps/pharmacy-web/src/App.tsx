@@ -216,8 +216,8 @@ function App() {
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/history" element={<OrderHistory />} />
                   <Route path="/inventory" element={<InventoryDashboard user={user} profile={profile} />} />
-                  <Route path="/earnings" element={<Earnings />} />
-                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/earnings" element={<Earnings profile={profile} />} />
+                  <Route path="/analytics" element={<Analytics profile={profile} />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<Navigate to="/orders" replace />} />
                 </Routes>

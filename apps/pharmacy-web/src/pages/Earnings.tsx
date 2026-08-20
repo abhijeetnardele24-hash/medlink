@@ -1,28 +1,75 @@
-import React, { useState } from 'react';
-import { DollarSign, ArrowUpRight, ArrowDownRight, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { DollarSign, ArrowUpRight, ArrowDownRight, ArrowRight, AlertCircle, RefreshCw } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TransactionDetailModal } from '../components/TransactionDetailModal';
+import { api } from '../lib/api';
 
-const data = [
-  { name: 'Mon', earnings: 4000 },
-  { name: 'Tue', earnings: 3000 },
-  { name: 'Wed', earnings: 5000 },
-  { name: 'Thu', earnings: 2780 },
-  { name: 'Fri', earnings: 6890 },
-  { name: 'Sat', earnings: 8390 },
-  { name: 'Sun', earnings: 3490 },
-];
+interface EarningsProps {
+  profile?: any;
+}
 
-const mockLedger = [
-  { id: 'TXN-90214', date: '2026-08-16T14:30:00Z', grossAmount: 1250, status: 'settled', type: 'Payout' },
-  { id: 'TXN-90213', date: '2026-08-15T09:15:00Z', grossAmount: 850, status: 'settled', type: 'Payout' },
-  { id: 'TXN-90212', date: '2026-08-14T11:20:00Z', grossAmount: 450, status: 'settled', type: 'Payout' },
-  { id: 'TXN-90211', date: '2026-08-13T18:05:00Z', grossAmount: 1800, status: 'settled', type: 'Payout' },
-  { id: 'TXN-90210', date: '2026-08-12T10:10:00Z', grossAmount: 3200, status: 'settled', type: 'Payout' },
-];
+export const Earnings: React.FC<EarningsProps> = ({ profile }) => {
+  const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [earnings, setEarnings] = useState({
+    totalRevenueThisMonth: 0,
+    pendingPayouts: 0,
+    averageOrderValue: 0,
+    revenueData: [],
+    ledger: []
+  });
 
-export const Earnings: React.FC = () => {
-  const [selectedTransaction, setSelectedTransaction] = useState<typeof mockLedger[0] | null>(null);
+  const fetchEarnings = async () => {
+    if (!profile?.id) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get('/pharmacy/analytics');
+      setEarnings(res.data.data.earnings);
+    } catch (err: any) {
+      console.error('Failed to fetch pharmacy earnings', err);
+      setError(err.response?.data?.error || 'Failed to load earnings.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEarnings();
+  }, [profile?.id]);
+
+  if (loading) {
+    return <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div></div>;
+  }
+
+  if (!profile) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto flex justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md">
+          <AlertCircle size={48} className="mx-auto text-amber-500 mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Profile Required</h2>
+          <p className="text-gray-500">Please complete your Pharmacy Profile to view your earnings.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto flex justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md">
+          <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Earnings</h2>
+          <p className="text-gray-500 mb-6">{error}</p>
+          <button onClick={fetchEarnings} className="btn btn-primary inline-flex items-center gap-2">
+            <RefreshCw size={16} /> Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -38,7 +85,7 @@ export const Earnings: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-sm font-medium text-gray-500 mb-2">Total Revenue (This Month)</p>
           <div className="flex items-end gap-4">
-            <h2 className="text-4xl font-bold text-gray-900">₹1,24,500</h2>
+            <h2 className="text-4xl font-bold text-gray-900">₹{earnings.totalRevenueThisMonth.toLocaleString()}</h2>
             <span className="flex items-center text-sm font-medium text-emerald-600 mb-1">
               <ArrowUpRight size={16} /> +12.5%
             </span>
@@ -48,7 +95,7 @@ export const Earnings: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-sm font-medium text-gray-500 mb-2">Pending Payouts</p>
           <div className="flex items-end gap-4">
-            <h2 className="text-4xl font-bold text-gray-900">₹18,200</h2>
+            <h2 className="text-4xl font-bold text-gray-900">₹{earnings.pendingPayouts.toLocaleString()}</h2>
             <span className="flex items-center text-sm font-medium text-gray-400 mb-1">
               Settles in 2 days
             </span>
@@ -58,7 +105,7 @@ export const Earnings: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <p className="text-sm font-medium text-gray-500 mb-2">Average Order Value</p>
           <div className="flex items-end gap-4">
-            <h2 className="text-4xl font-bold text-gray-900">₹850</h2>
+            <h2 className="text-4xl font-bold text-gray-900">₹{earnings.averageOrderValue.toFixed(2)}</h2>
             <span className="flex items-center text-sm font-medium text-red-500 mb-1">
               <ArrowDownRight size={16} /> -2.1%
             </span>
@@ -72,7 +119,7 @@ export const Earnings: React.FC = () => {
         </div>
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={earnings.revenueData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorEarnings" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0d9488" stopOpacity={0.3}/>
@@ -110,7 +157,7 @@ export const Earnings: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {mockLedger.map(txn => (
+              {earnings.ledger.map((txn: any) => (
                 <tr key={txn.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="p-4 font-medium text-gray-900">{txn.id}</td>
                   <td className="p-4 text-gray-600">{new Date(txn.date).toLocaleString()}</td>

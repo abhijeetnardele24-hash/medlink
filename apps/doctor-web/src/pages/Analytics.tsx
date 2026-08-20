@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area
 } from 'recharts';
-import { TrendingUp, Users, DollarSign, Activity, Star } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, Activity, Star, AlertCircle, RefreshCw } from 'lucide-react';
 
 export function Analytics() {
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [stats, setStats] = useState({
     totalEarnings: 0,
     totalPatients: 0,
@@ -15,48 +18,60 @@ export function Analytics() {
     averageRating: 0,
   });
 
-  // Mock data for charts
-  const revenueData = [
-    { name: 'Mon', earnings: 4000 },
-    { name: 'Tue', earnings: 3000 },
-    { name: 'Wed', earnings: 2000 },
-    { name: 'Thu', earnings: 2780 },
-    { name: 'Fri', earnings: 1890 },
-    { name: 'Sat', earnings: 2390 },
-    { name: 'Sun', earnings: 3490 },
-  ];
+  const [revenueData, setRevenueData] = useState([]);
+  const [patientDemographics, setPatientDemographics] = useState([]);
 
-  const patientDemographics = [
-    { ageGroup: '18-24', male: 40, female: 60 },
-    { ageGroup: '25-34', male: 120, female: 140 },
-    { ageGroup: '35-44', male: 80, female: 100 },
-    { ageGroup: '45-54', male: 50, female: 40 },
-    { ageGroup: '55+', male: 30, female: 20 },
-  ];
+  const fetchStats = async () => {
+    if (!profile?.id) return;
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get(`/doctors/${profile.id}/analytics`);
+      const { stats, revenueData, patientDemographics } = res.data.data;
+      setStats(stats);
+      setRevenueData(revenueData);
+      setPatientDemographics(patientDemographics);
+    } catch (err: any) {
+      console.error('Failed to fetch analytics', err);
+      setError(err.response?.data?.error || 'Failed to load analytics.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // We will fetch real stats here eventually
-        // For now, setting some realistic demo numbers
-        setStats({
-          totalEarnings: 124500,
-          totalPatients: 342,
-          consultationsCompleted: 456,
-          averageRating: 4.8,
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch analytics', error);
-        setLoading(false);
-      }
-    };
-
     fetchStats();
-  }, []);
+  }, [profile?.id]);
 
   if (loading) {
     return <div className="p-8 flex justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div></div>;
+  }
+
+  if (!profile) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto flex justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md">
+          <AlertCircle size={48} className="mx-auto text-amber-500 mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Profile Required</h2>
+          <p className="text-gray-500">Please complete your Doctor Profile to view your analytics.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 max-w-7xl mx-auto flex justify-center">
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md">
+          <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Analytics</h2>
+          <p className="text-gray-500 mb-6">{error}</p>
+          <button onClick={fetchStats} className="btn btn-primary inline-flex items-center gap-2">
+            <RefreshCw size={16} /> Retry Connection
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

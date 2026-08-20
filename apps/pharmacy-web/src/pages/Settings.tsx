@@ -14,6 +14,10 @@ export const Settings: React.FC = () => {
         <p className="text-gray-500 mt-2">Manage your pharmacy profile, operating hours, and system preferences.</p>
       </div>
 
+      <div className="mb-8 p-4 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl flex items-center gap-2">
+        <Shield size={18} /> <strong>Read-Only Prototype:</strong> This settings module is for demonstration purposes. Backend integration is pending.
+      </div>
+
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="lg:w-64 flex-shrink-0">
           <nav className="space-y-1">
