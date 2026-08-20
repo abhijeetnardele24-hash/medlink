@@ -31,9 +31,9 @@ export const useWebRTC = (encounterId: string | null) => {
 
   // Hardware Controls
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(true);
   const [remoteAudioMuted, setRemoteAudioMuted] = useState(false);
-  const [remoteVideoOff, setRemoteVideoOff] = useState(false);
+  const [remoteVideoOff, setRemoteVideoOff] = useState(true);
   const [audioLevel, setAudioLevel] = useState<number>(0);
 
   // Screen Sharing
@@ -96,10 +96,20 @@ export const useWebRTC = (encounterId: string | null) => {
 
     const init = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-        });
+        let stream: MediaStream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          });
+          stream.getVideoTracks().forEach(track => { track.enabled = false; });
+        } catch (mediaErr) {
+          console.warn("Camera failed, falling back to audio-only", mediaErr);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          });
+        }
 
         if (!isMounted) {
           stream.getTracks().forEach(t => t.stop());
@@ -170,6 +180,16 @@ export const useWebRTC = (encounterId: string | null) => {
         pc.ontrack = (event) => {
           if (event.streams && event.streams[0]) {
             setRemoteStream(event.streams[0]);
+          }
+        };
+
+        pc.onnegotiationneeded = async () => {
+          try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            socket.emit('webrtc-offer', { encounterId, offer: pc.localDescription });
+          } catch (err) {
+            console.error("Error during renegotiation:", err);
           }
         };
 
@@ -306,12 +326,29 @@ export const useWebRTC = (encounterId: string | null) => {
   }, [localStream, isAudioMuted, isVideoOff, encounterId]);
 
   // Toggle Camera On/Off
-  const toggleVideo = useCallback(() => {
+  const toggleVideo = useCallback(async () => {
     if (!localStream) return;
     const newOff = !isVideoOff;
-    localStream.getVideoTracks().forEach(track => {
-      track.enabled = !newOff;
-    });
+    
+    if (!newOff && localStream.getVideoTracks().length === 0) {
+      try {
+        const vidStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } });
+        const newTrack = vidStream.getVideoTracks()[0];
+        localStream.addTrack(newTrack);
+        originalVideoTrackRef.current = newTrack;
+        if (peerConnectionRef.current) {
+           peerConnectionRef.current.addTrack(newTrack, localStream);
+        }
+      } catch (e) {
+        alert("Camera could not be accessed.");
+        return;
+      }
+    } else {
+      localStream.getVideoTracks().forEach(track => {
+        track.enabled = !newOff;
+      });
+    }
+
     setIsVideoOff(newOff);
     if (encounterId && socketRef.current) {
       socketRef.current.emit('media-state-change', {
@@ -337,6 +374,8 @@ export const useWebRTC = (encounterId: string | null) => {
       const videoSender = senders.find(s => s.track && s.track.kind === 'video');
       if (videoSender) {
         await videoSender.replaceTrack(screenVideoTrack);
+      } else {
+        peerConnectionRef.current.addTrack(screenVideoTrack, screenStreamRef.current);
       }
 
       setIsScreenSharing(true);
@@ -357,11 +396,15 @@ export const useWebRTC = (encounterId: string | null) => {
       screenStreamRef.current.getTracks().forEach(t => t.stop());
       screenStreamRef.current = null;
     }
-    if (peerConnectionRef.current && originalVideoTrackRef.current) {
+    if (peerConnectionRef.current) {
       const senders = peerConnectionRef.current.getSenders();
       const videoSender = senders.find(s => s.track && s.track.kind === 'video');
       if (videoSender) {
-        await videoSender.replaceTrack(originalVideoTrackRef.current);
+        if (originalVideoTrackRef.current) {
+          await videoSender.replaceTrack(originalVideoTrackRef.current);
+        } else {
+          peerConnectionRef.current.removeTrack(videoSender);
+        }
       }
     }
     setIsScreenSharing(false);
