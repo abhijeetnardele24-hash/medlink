@@ -1,0 +1,5 @@
+- apps/pharmacy-web/src/pages/Analytics.tsx: Replaced mock data with live API endpoint `GET /pharmacy/analytics`.
+- apps/pharmacy-web/src/pages/Earnings.tsx: Connected revenue and ledger directly to live `GET /pharmacy/analytics` response.
+- apps/doctor-web/src/pages/Analytics.tsx: Wired demographics, earnings, and consultations to live `GET /doctors/:id/analytics` endpoint.
+- apps/pharmacy-web/src/pages/Settings.tsx: Added "Read-Only Prototype" banner instead of wiring to a non-existent backend.
+- apps/coordinator-web/src/pages/Settings.tsx: Added "Read-Only Prototype" banner instead of faking backend save states.
