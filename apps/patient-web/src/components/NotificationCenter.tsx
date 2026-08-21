@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 export const NotificationCenter: React.FC = () => {
   const { notifications, unreadCount, markAsRead } = useNotifications();
+  const { isSupported, subscription, subscribeToPush } = usePushNotifications();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -23,8 +25,16 @@ export const NotificationCenter: React.FC = () => {
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-20 border border-gray-200">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+            {isSupported && !subscription && (
+              <button 
+                onClick={subscribeToPush}
+                className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+              >
+                Enable Push
+              </button>
+            )}
           </div>
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (

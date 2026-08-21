@@ -8,9 +8,10 @@ import { validateBody } from "../middleware/validateBody";
 import { createEncounterSchema, createPrescriptionSchema, endEncounterSchema } from "../schemas/encounter.schema";
 import { NotFoundError, ForbiddenError } from "../errors";
 import multer from "multer";
-import { v4 as uuidv4 } from "uuid";
 import { getFirebaseAdmin } from "../firebase";
-import { attachments } from "../db/schema";
+import { v4 as uuidv4 } from "uuid";
+import { attachments, notifications } from "../db/schema";
+import { sendPushNotification } from "../services/push.service";
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -265,6 +266,22 @@ router.post(
         .where(eq(appointments.id, access.appointment.id));
 
       return newPrescription;
+    });
+
+    // Notify patient via push
+    await sendPushNotification(access.patientUserId, {
+      title: "New Prescription Issued",
+      body: `Your doctor has issued a new prescription for your recent consultation.`,
+      url: `/patient/history`,
+    });
+
+    // Notify patient via DB
+    await getDb().insert(notifications).values({
+      userId: access.patientUserId,
+      title: "New Prescription Issued",
+      message: `Your doctor has issued a new prescription for your recent consultation.`,
+      type: "appointment",
+      isRead: false,
     });
 
     res.status(201).json(prescription);

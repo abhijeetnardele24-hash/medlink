@@ -1,8 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { eq, desc, and } from "drizzle-orm";
-import { users } from "../db/schema";
+import { users, pushSubscriptions, notifications } from "../db/schema";
 import { getDb } from "../db";
-import { notifications } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { NotFoundError } from "../errors";
 
@@ -61,6 +60,48 @@ router.patch("/:id/read", authenticate, async (req: Request, res: Response): Pro
   }
 
   res.json(notification);
+});
+
+// POST /notifications/subscribe - Subscribe to web push notifications
+router.post("/subscribe", authenticate, async (req: Request, res: Response): Promise<void> => {
+  const firebaseUid = res.locals.user?.uid;
+  if (!firebaseUid) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const { subscription } = req.body;
+  if (!subscription || !subscription.endpoint || !subscription.keys) {
+    res.status(400).json({ error: "Invalid subscription object" });
+    return;
+  }
+
+  const userRecord = await getDb().select({ id: users.id }).from(users).where(eq(users.firebaseUid, firebaseUid)).limit(1);
+  if (userRecord.length === 0) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+  const userId = userRecord[0].id;
+
+  // Save or update subscription
+  await getDb()
+    .insert(pushSubscriptions)
+    .values({
+      userId,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        userId,
+        p256dh: subscription.keys.p256dh,
+        auth: subscription.keys.auth,
+      },
+    });
+
+  res.status(201).json({ success: true });
 });
 
 export { router as notificationsRouter };
