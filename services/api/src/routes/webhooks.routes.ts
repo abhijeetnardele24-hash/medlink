@@ -1,10 +1,12 @@
 import { Router, type Request, type Response } from "express";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
-import { paymentRecords, appointments, availabilitySlots, pharmacyOrders, patients } from "../db/schema";
+import { paymentRecords, appointments, availabilitySlots, pharmacyOrders, patients, pharmacyOrderItems, medicines } from "../db/schema";
 import crypto from "crypto";
 import { logger } from "../logger";
 import { emitNotification } from "../socket/emitter";
+import { releaseLock } from "../redis";
+import { sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -123,14 +125,35 @@ router.post(
           const { id, status } = pharmacyRows[0];
           
           if (status === "pending_payment") {
-            await getDb()
-              .update(pharmacyOrders)
-              .set({
-                status: "paid",
-                razorpayPaymentId,
-                updatedAt: new Date(),
-              })
-              .where(eq(pharmacyOrders.id, id));
+            const orderId = id;
+            await getDb().transaction(async (tx) => {
+              await tx
+                .update(pharmacyOrders)
+                .set({
+                  status: "paid",
+                  razorpayPaymentId,
+                  updatedAt: new Date(),
+                })
+                .where(eq(pharmacyOrders.id, orderId));
+                
+              // Fetch items to decrement stock
+              const items = await tx.query.pharmacyOrderItems.findMany({
+                where: eq(pharmacyOrderItems.orderId, orderId)
+              });
+              
+              for (const item of items) {
+                // Decrement actual stock
+                await tx
+                  .update(medicines)
+                  .set({
+                    stockQuantity: sql`${medicines.stockQuantity} - ${item.quantity}`
+                  })
+                  .where(eq(medicines.id, item.medicineId));
+                  
+                // Release temporary lock
+                await releaseLock(`lock:inventory:${item.medicineId}`, orderId);
+              }
+            });
 
             // Notify patient
             const userRows = await getDb()

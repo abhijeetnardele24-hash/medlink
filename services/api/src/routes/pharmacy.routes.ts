@@ -10,6 +10,7 @@ import { AppError, ValidationError, UnauthorizedError, ForbiddenError, NotFoundE
 import Razorpay from "razorpay";
 import { logger } from "../logger";
 import crypto from "crypto";
+import { acquireLock, releaseLock } from "../redis";
 
 const router = Router();
 
@@ -431,8 +432,30 @@ router.post("/orders/:orderId/build", authenticate, validateBody(buildOrderSchem
       if (!med || med.pharmacistId !== pharmacistId) {
         throw new ValidationError("Invalid medicine");
       }
+      if (med.stockQuantity < item.quantity) {
+        throw new ConflictError(`Insufficient stock for '${med.name}'`);
+      }
       totalAmount += med.price * item.quantity;
       orderItemsToInsert.push({ orderId, medicineId: med.id, quantity: item.quantity, unitPrice: med.price });
+    }
+    
+    // Acquire Redis locks for inventory (10 minutes = 600s)
+    const acquiredLocks: string[] = [];
+    try {
+      for (const item of items) {
+        const lockKey = `lock:inventory:${item.medicineId}`;
+        const lockAcquired = await acquireLock(lockKey, 600, orderId);
+        if (!lockAcquired) {
+          throw new ConflictError(`Another customer is currently purchasing '${medMap.get(item.medicineId)?.name}'. Please try again in a few minutes.`);
+        }
+        acquiredLocks.push(lockKey);
+      }
+    } catch (err) {
+      // Release any acquired locks if we failed to lock all items
+      for (const key of acquiredLocks) {
+        await releaseLock(key, orderId);
+      }
+      throw err;
     }
     
     // Create Razorpay Order
@@ -603,6 +626,10 @@ router.post("/orders", authenticate, validateBody(createOrderSchema), async (req
       const qty = parseInt(item.quantity, 10);
       if (qty <= 0) {
         throw new ValidationError("Invalid quantity");
+      }
+
+      if (med.stockQuantity < qty) {
+        throw new ValidationError(`Insufficient stock for '${med.name}'. Available: ${med.stockQuantity}, Requested: ${qty}`);
       }
 
       if (med.prescriptionTier === "restricted") {

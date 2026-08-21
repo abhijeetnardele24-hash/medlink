@@ -137,3 +137,36 @@ export async function invalidateCachePrefix(prefix: string): Promise<void> {
     logger.warn({ err, prefix }, "Failed to invalidate Redis cache prefix");
   }
 }
+
+/**
+ * Acquire a distributed lock
+ */
+export async function acquireLock(key: string, ttlSeconds: number, value: string): Promise<boolean> {
+  if (!redisClient || !redisAvailable) return true; // Fallback allow if redis is down
+  try {
+    const result = await redisClient.set(key, value, "EX", ttlSeconds, "NX");
+    return result === "OK";
+  } catch (err) {
+    logger.warn({ err, key }, "Failed to acquire Redis lock");
+    return true; // Graceful fallback
+  }
+}
+
+/**
+ * Release a distributed lock securely using Lua script
+ */
+export async function releaseLock(key: string, value: string): Promise<void> {
+  if (!redisClient || !redisAvailable) return;
+  try {
+    const script = `
+      if redis.call("get", KEYS[1]) == ARGV[1] then
+        return redis.call("del", KEYS[1])
+      else
+        return 0
+      end
+    `;
+    await redisClient.eval(script, 1, key, value);
+  } catch (err) {
+    logger.warn({ err, key }, "Failed to release Redis lock");
+  }
+}

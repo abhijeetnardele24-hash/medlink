@@ -24,6 +24,7 @@ import { registerSchema } from "../schemas/auth.schema";
 import { getFirebaseAdmin } from "../firebase";
 import { logger } from "../logger";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
+import { sendEmail } from "../utils/resend";
 
 const router = Router();
 
@@ -163,6 +164,26 @@ router.post(
           email: newUser.email,
         },
       });
+
+      // Send welcome email asynchronously if email is provided
+      if (email && email.trim().length > 0) {
+        const subject = "Welcome to MedLink!";
+        let html = `<h1>Welcome to MedLink!</h1><p>Hi ${name || 'there'},</p><p>Your account has been successfully created.</p>`;
+        
+        if (role === 'doctor') {
+          html += `<p>Please complete your profile and submit your verification documents in the portal.</p>`;
+        } else if (role === 'pharmacist') {
+          html += `<p>Please submit your pharmacy license and store details to start selling.</p>`;
+        } else {
+          html += `<p>You can now book appointments and order medicines directly from your dashboard.</p>`;
+        }
+        
+        html += `<br/><p>Best regards,<br/>The MedLink Team</p>`;
+
+        sendEmail(email, subject, html).catch((err) => {
+          logger.error({ err, userId: newUser.id }, "Failed to send welcome email");
+        });
+      }
     });
   }
 );
