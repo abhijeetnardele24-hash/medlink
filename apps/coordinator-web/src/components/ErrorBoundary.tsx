@@ -3,12 +3,15 @@ import * as Sentry from '@sentry/react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
 
 interface ErrorFallbackProps {
-  error: Error;
+  error: unknown;
   componentStack: string | null;
+  eventId: string | null;
   resetError: () => void;
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -58,7 +61,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
           overflowX: 'auto'
         }}>
           <code style={{ color: '#f87171', fontSize: '0.85rem' }}>
-            {error.message || 'Unknown error'}
+            {errorMessage || 'Unknown error'}
           </code>
         </div>
         
