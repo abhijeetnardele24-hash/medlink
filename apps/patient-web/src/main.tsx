@@ -6,6 +6,20 @@ import App from './App.tsx'
 import './i18n';
 import { registerSW } from 'virtual:pwa-register';
 import React from 'react';
+import * as Sentry from "@sentry/react";
+import { AppErrorBoundary } from './components/ErrorBoundary';
+
+Sentry.init({
+  dsn: import.meta.env.VITE_SENTRY_DSN || "",
+  integrations: [
+    Sentry.browserTracingIntegration(),
+    Sentry.replayIntegration(),
+  ],
+  tracesSampleRate: 1.0,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+  enabled: !!import.meta.env.VITE_SENTRY_DSN,
+});
 
 // Unregister service worker in dev to avoid offline loop, auto-register in prod
 if (import.meta.env.DEV) {
@@ -20,32 +34,10 @@ if (import.meta.env.DEV) {
   registerSW({ immediate: true });
 }
 
-class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: any}> {
-  constructor(props: {children: React.ReactNode}) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-  static getDerivedStateFromError(error: any) {
-    return { hasError: true, error };
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{ padding: 20, color: 'red', background: '#fee' }}>
-          <h1>Fatal React Error</h1>
-          <pre>{this.state.error?.toString()}</pre>
-          <pre>{this.state.error?.stack}</pre>
-        </div>
-      );
-    }
-    return this.props.children; 
-  }
-}
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ErrorBoundary>
+    <AppErrorBoundary>
       <App />
-    </ErrorBoundary>
+    </AppErrorBoundary>
   </StrictMode>,
 )

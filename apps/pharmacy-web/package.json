@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@sentry/react": "^10.70.0",
     "axios": "^1.19.0",
     "firebase": "^12.17.1",
     "framer-motion": "^13.0.0",
