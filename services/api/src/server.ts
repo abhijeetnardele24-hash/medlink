@@ -67,7 +67,15 @@ export function createServer(): Express {
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https://checkout.razorpay.com"],
       }
-    }
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    },
+    xssFilter: true,
+    noSniff: true,
+    frameguard: { action: "deny" }
   }));
 
   // ── CORS — restrict to known origins in production ──────────────────────────
@@ -115,7 +123,7 @@ export function createServer(): Express {
 
   // ── Body parsing ────────────────────────────────────────────────────────────
   app.use(express.json({ 
-    limit: "10mb",
+    limit: "100kb",
     verify: (req: any, res, buf) => {
       req.rawBody = buf;
     }

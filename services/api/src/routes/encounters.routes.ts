@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { eq, inArray, and } from "drizzle-orm";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import { getDb } from "../db";
 import { encounters, prescriptions, appointments, users as dbUsers, doctors, patients, doctorMedicineRecommendations } from "../db/schema";
 import { authenticate } from "../middleware/auth";
@@ -131,7 +131,9 @@ router.get(
       .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
       .innerJoin(dbUsers, eq(doctors.userId, dbUsers.id))
       .leftJoin(prescriptions, eq(encounters.id, prescriptions.encounterId))
-      .where(inArray(encounters.appointmentId, apptIds));
+      .where(inArray(encounters.appointmentId, apptIds))
+      .orderBy(desc(encounters.startedAt))
+      .limit(50);
 
     const formattedRows = rows.map(r => ({
       id: r.id,
