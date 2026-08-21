@@ -94,7 +94,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError }) => {
 
 export const AppErrorBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <Sentry.ErrorBoundary fallback={ErrorFallback} showDialog>
+    <Sentry.ErrorBoundary fallback={(props) => <ErrorFallback {...props} />} showDialog>
       {children}
     </Sentry.ErrorBoundary>
   );

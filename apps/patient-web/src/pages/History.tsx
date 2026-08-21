@@ -50,7 +50,7 @@ export const History: React.FC = () => {
 
     try {
       const res = await api.get(`/prescriptions/${prescriptionId}/pdf`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       
       newWindow.location.href = url;
       

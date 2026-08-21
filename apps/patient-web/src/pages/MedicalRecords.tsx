@@ -35,10 +35,10 @@ export const MedicalRecords: React.FC = () => {
   const handleDownload = async (id: string) => {
     try {
       const res = await api.get(`/prescriptions/${id}/pdf`, { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `prescription-${id.substring(0, 8)}.html`);
+      link.setAttribute('download', `prescription-${id.substring(0, 8)}.pdf`);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);

@@ -4,6 +4,7 @@ import { getDb } from "../db";
 import { prescriptions, doctors, encounters, appointments, patients, users, consentGrants } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { NotFoundError, ForbiddenError } from "../errors";
+import PDFDocument from "pdfkit";
 
 const router = Router();
 
@@ -181,83 +182,87 @@ router.get(
       medicines = rx.medicinesJson;
     }
 
-    const medicinesHtml = medicines.map((m: any) => `
-      <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${m.name || 'Unknown'}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${m.dosage || '-'}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${m.frequency || '-'}</td>
-        <td style="padding: 8px; border: 1px solid #ddd;">${m.duration || '-'}</td>
-      </tr>
-    `).join('');
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
 
-    const html = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <title>Prescription ${rx.prescriptionId}</title>
-      <style>
-        body { font-family: system-ui, -apple-system, sans-serif; padding: 40px; color: #333; max-width: 800px; margin: 0 auto; }
-        .header { display: flex; justify-content: space-between; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .clinic-info { text-align: right; }
-        h1 { margin: 0; color: #2563eb; }
-        h2 { margin-top: 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { background: #f8fafc; text-align: left; padding: 12px 8px; border: 1px solid #ddd; }
-        .footer { margin-top: 50px; font-size: 12px; color: #666; text-align: center; border-top: 1px solid #ddd; padding-top: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div>
-          <h1>MedLink</h1>
-          <p>Digital Prescription Receipt</p>
-        </div>
-        <div class="clinic-info">
-          <h2>${rx.doctorName}</h2>
-          <p>${rx.doctorSpeciality}<br>
-          Reg No: ${rx.doctorReg}<br>
-          ${rx.facility}</p>
-        </div>
-      </div>
-      
-      <div style="margin-bottom: 30px;">
-        <strong>Patient:</strong> ${rx.patientName || 'Unknown'}<br>
-        <strong>Date Issued:</strong> ${new Date(rx.issuedAt || Date.now()).toLocaleDateString()}
-      </div>
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=prescription-${rx.prescriptionId.substring(0, 8)}.pdf`);
 
-      <h3>Medicines Prescribed</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Medicine Name</th>
-            <th>Dosage</th>
-            <th>Frequency</th>
-            <th>Duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${medicinesHtml || '<tr><td colspan="4" style="text-align: center; padding: 10px;">No medicines listed</td></tr>'}
-        </tbody>
-      </table>
+    doc.pipe(res);
 
-      ${rx.instructionsText ? `
-      <div style="margin-top: 30px;">
-        <h3>Doctor's Instructions:</h3>
-        <p style="white-space: pre-wrap; background: #f8fafc; padding: 15px; border-radius: 6px;">${rx.instructionsText}</p>
-      </div>
-      ` : ''}
+    // Header
+    doc.fontSize(24).fillColor('#2563eb').text('MedLink', { align: 'left' });
+    doc.fontSize(10).fillColor('#666666').text('Digital Prescription Receipt', { align: 'left' });
+    
+    // Doctor Info
+    doc.moveUp(2);
+    doc.fontSize(14).fillColor('#333333').text(rx.doctorName || 'Doctor', { align: 'right' });
+    doc.fontSize(10).fillColor('#666666').text(rx.doctorSpeciality || '', { align: 'right' });
+    if (rx.doctorReg) doc.text(`Reg No: ${rx.doctorReg}`, { align: 'right' });
+    if (rx.facility) doc.text(rx.facility, { align: 'right' });
 
-      <div class="footer">
-        Prescription ID: ${rx.prescriptionId}<br>
-        Electronically signed and issued via MedLink Platform.
-      </div>
-    </body>
-    </html>
-    `;
+    doc.moveDown();
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#2563eb').lineWidth(2).stroke();
+    doc.moveDown(2);
 
-    res.setHeader("Content-Type", "text/html");
-    res.send(html);
+    // Patient Info
+    doc.fontSize(12).fillColor('#333333');
+    doc.font('Helvetica-Bold').text('Patient: ', { continued: true }).font('Helvetica').text(rx.patientName || 'Unknown');
+    doc.font('Helvetica-Bold').text('Date Issued: ', { continued: true }).font('Helvetica').text(new Date(rx.issuedAt || Date.now()).toLocaleDateString());
+    
+    doc.moveDown(2);
+
+    // Medicines Table
+    doc.fontSize(14).font('Helvetica-Bold').fillColor('#2563eb').text('Medicines Prescribed');
+    doc.moveDown(1);
+    
+    // Table Headers
+    const tableTop = doc.y;
+    doc.fontSize(10).fillColor('#333333').font('Helvetica-Bold');
+    doc.text('Medicine Name', 50, tableTop);
+    doc.text('Dosage', 250, tableTop);
+    doc.text('Frequency', 350, tableTop);
+    doc.text('Duration', 450, tableTop);
+    
+    doc.moveTo(50, doc.y + 5).lineTo(545, doc.y + 5).strokeColor('#dddddd').lineWidth(1).stroke();
+    
+    // Table Rows
+    let rowY = doc.y + 15;
+    doc.font('Helvetica');
+    if (medicines.length === 0) {
+      doc.text('No medicines listed', 50, rowY);
+    } else {
+      for (const m of medicines) {
+        doc.text(m.name || 'Unknown', 50, rowY);
+        doc.text(m.dosage || '-', 250, rowY);
+        doc.text(m.frequency || '-', 350, rowY);
+        doc.text(m.duration || '-', 450, rowY);
+        rowY += 20;
+      }
+    }
+    
+    doc.y = rowY;
+    doc.moveDown(2);
+
+    // Instructions
+    if (rx.instructionsText) {
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#333333').text("Doctor's Instructions:");
+      doc.moveDown(0.5);
+      doc.fontSize(10).font('Helvetica').fillColor('#444444').text(rx.instructionsText, {
+        align: 'left',
+        indent: 10
+      });
+      doc.moveDown(2);
+    }
+
+    // Footer
+    const bottom = doc.page.height - 100;
+    doc.y = bottom;
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor('#dddddd').lineWidth(1).stroke();
+    doc.moveDown();
+    doc.fontSize(8).fillColor('#888888').text(`Prescription ID: ${rx.prescriptionId}`, { align: 'center' });
+    doc.text('Electronically signed and issued via MedLink Platform.', { align: 'center' });
+
+    doc.end();
   }
 );
 
