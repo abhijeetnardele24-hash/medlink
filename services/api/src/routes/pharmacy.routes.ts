@@ -11,6 +11,7 @@ import Razorpay from "razorpay";
 import { logger } from "../logger";
 import crypto from "crypto";
 import { acquireLock, releaseLock } from "../redis";
+import { confirmPharmacyOrder } from "../services/payment.service";
 
 const router = Router();
 
@@ -709,62 +710,74 @@ router.post("/orders", authenticate, validateBody(createOrderSchema), async (req
       rzpCurrency = rzpOrder.currency;
     }
 
-    // Atomic stock check, decrement, audit insert, and order creation
-    const { order } = await getDb().transaction(async (tx) => {
-      // Lock medicine rows and verify sufficient stock
-      for (const item of orderItemsToInsert) {
-        const lockedMedRows = await tx.execute(
-          sql`SELECT id, name, stock_quantity as "stockQuantity" FROM ${medicines} WHERE id = ${item.medicineId} FOR UPDATE`
-        );
+    // Acquire Redis locks for inventory (10 minutes = 600s)
+    const acquiredLocks: string[] = [];
+    try {
+      for (const item of items) {
+        const lockKey = `lock:inventory:${item.medicineId}`;
+        const lockAcquired = await acquireLock(lockKey, 600, `patient_order_${patientId}`);
+        if (!lockAcquired) {
+          throw new ConflictError(`Another customer is currently purchasing '${medMap.get(item.medicineId)?.name}'. Please try again in a few minutes.`);
+        }
+        acquiredLocks.push(lockKey);
+      }
+    } catch (err) {
+      // Release any acquired locks if we failed to lock all items
+      for (const key of acquiredLocks) {
+        await releaseLock(key, `patient_order_${patientId}`);
+      }
+      throw err;
+    }
 
-        if (!lockedMedRows.rows || lockedMedRows.rows.length === 0) {
-          throw new NotFoundError(`Medicine ${item.medicineId}`);
+    // Atomic order creation (NO stock deduction yet, reserved via Redis lock)
+    let newOrder;
+    try {
+      const { order } = await getDb().transaction(async (tx) => {
+        if (auditLogsToInsert.length > 0) {
+          await tx.insert(prescriptionReconciliationAudit).values(auditLogsToInsert);
         }
 
-        const medRow = lockedMedRows.rows[0] as { id: string; name: string; stockQuantity: number };
-        if (medRow.stockQuantity < item.quantity) {
-          throw new ConflictError(
-            `Insufficient stock for medicine '${medRow.name}'. Available: ${medRow.stockQuantity}, Requested: ${item.quantity}`
-          );
-        }
-
-        await tx
-          .update(medicines)
-          .set({
-            stockQuantity: sql`${medicines.stockQuantity} - ${item.quantity}`,
-            updatedAt: new Date(),
+        const [createdOrder] = await tx
+          .insert(pharmacyOrders)
+          .values({
+            prescriptionId: prescriptionId || null,
+            patientId,
+            pharmacistId,
+            totalAmount,
+            deliveryAddress,
+            status: "pending_payment",
+            razorpayOrderId: rzpOrderId,
           })
-          .where(eq(medicines.id, item.medicineId));
+          .returning();
+
+        const itemsData = orderItemsToInsert.map(i => ({
+          orderId: createdOrder.id,
+          ...i,
+        }));
+        await tx.insert(pharmacyOrderItems).values(itemsData);
+
+        return { order: createdOrder };
+      });
+      newOrder = order;
+    } catch (err) {
+      // Transaction failed, release locks
+      for (const key of acquiredLocks) {
+        await releaseLock(key, `patient_order_${patientId}`);
       }
-
-      if (auditLogsToInsert.length > 0) {
-        await tx.insert(prescriptionReconciliationAudit).values(auditLogsToInsert);
-      }
-
-      const [newOrder] = await tx
-        .insert(pharmacyOrders)
-        .values({
-          prescriptionId: prescriptionId || null,
-          patientId,
-          pharmacistId,
-          totalAmount,
-          deliveryAddress,
-          status: "pending_payment",
-          razorpayOrderId: rzpOrderId,
-        })
-        .returning();
-
-      const itemsData = orderItemsToInsert.map(i => ({
-        orderId: newOrder.id,
-        ...i,
-      }));
-      await tx.insert(pharmacyOrderItems).values(itemsData);
-
-      return { order: newOrder };
-    });
+      throw err;
+    }
+    
+    // Pass the lock ownership from 'patient_order' to the actual 'orderId'
+    // For simplicity we just let it expire in 10 minutes or be cleared by the webhook/verify-payment.
+    // verify-payment and webhooks will use the orderId, so let's re-acquire with orderId and release the old one
+    for (const item of items) {
+       const lockKey = `lock:inventory:${item.medicineId}`;
+       await releaseLock(lockKey, `patient_order_${patientId}`);
+       await acquireLock(lockKey, 600, newOrder.id);
+    }
 
     res.status(201).json({ 
-      order,
+      order: newOrder,
       razorpayOrderId: rzpOrderId,
       amount: rzpAmount,
       currency: rzpCurrency,
@@ -949,21 +962,11 @@ router.post("/orders/:orderId/verify-payment", authenticate, validateBody(verify
       throw new ForbiddenError("Payment gateway configuration missing");
     }
 
-    // Update order status
-    await getDb()
-      .update(pharmacyOrders)
-      .set({ 
-        status: "paid",
-        razorpayPaymentId: razorpay_payment_id,
-        updatedAt: new Date(),
-      })
-      .where(eq(pharmacyOrders.id, orderId));
+    await confirmPharmacyOrder(orderId, razorpay_payment_id);
 
-    logger.info({ orderId, paymentId: razorpay_payment_id }, "Pharmacy order payment verified successfully");
-
-    res.status(200).json({ success: true, message: "Payment verified successfully" });
-  } catch (err: any) {
-    logger.error({ err, orderId: req.params.orderId }, "Failed to verify payment");
+    res.json({ success: true, message: "Payment verified successfully" });
+  } catch (error) {
+    logger.error({ error }, "Failed to verify payment");
     res.status(500).json({ error: "Failed to verify payment" });
   }
 });

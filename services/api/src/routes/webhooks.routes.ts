@@ -4,9 +4,7 @@ import { getDb } from "../db";
 import { paymentRecords, appointments, availabilitySlots, pharmacyOrders, patients, pharmacyOrderItems, medicines } from "../db/schema";
 import crypto from "crypto";
 import { logger } from "../logger";
-import { emitNotification } from "../socket/emitter";
-import { releaseLock } from "../redis";
-import { sql } from "drizzle-orm";
+import { confirmAppointmentPayment, confirmPharmacyOrder } from "../services/payment.service";
 
 const router = Router();
 
@@ -62,56 +60,7 @@ router.post(
           .limit(1);
 
         if (paymentRows.length > 0) {
-          const { appointmentId, state } = paymentRows[0];
-          
-          if (state !== "success") {
-            // Atomic transaction for paymentRecord, appointment status, and slot booking
-            await getDb().transaction(async (tx) => {
-              await tx
-                .update(paymentRecords)
-                .set({
-                  state: "success",
-                  razorpayPaymentId,
-                  updatedAt: new Date(),
-                })
-                .where(eq(paymentRecords.appointmentId, appointmentId));
-
-              const [appt] = await tx
-                .update(appointments)
-                .set({ status: "confirmed", updatedAt: new Date() })
-                .where(eq(appointments.id, appointmentId))
-                .returning();
-
-              if (appt?.slotId) {
-                await tx
-                  .update(availabilitySlots)
-                  .set({ status: "booked", updatedAt: new Date() })
-                  .where(eq(availabilitySlots.id, appt.slotId));
-              }
-            });
-
-            // Notify patient
-            const userRows = await getDb()
-              .select({ userId: patients.userId })
-              .from(appointments)
-              .innerJoin(patients, eq(patients.id, appointments.patientId))
-              .where(eq(appointments.id, appointmentId))
-              .limit(1);
-
-            if (userRows[0]?.userId) {
-              await emitNotification(
-                userRows[0].userId,
-                "payment_success",
-                "Appointment Confirmed",
-                "Your payment was successful and your appointment is confirmed.",
-                { appointmentId }
-              );
-            }
-
-            logger.info({ appointmentId, razorpayPaymentId }, "Appointment payment captured via webhook and slot booked");
-          } else {
-            logger.info({ appointmentId, razorpayPaymentId }, "Idempotent appointment webhook skip");
-          }
+          await confirmAppointmentPayment(paymentRows[0].appointmentId, razorpayPaymentId);
         }
 
         // Check if it's a pharmacy order payment
@@ -122,61 +71,7 @@ router.post(
           .limit(1);
 
         if (pharmacyRows.length > 0) {
-          const { id, status } = pharmacyRows[0];
-          
-          if (status === "pending_payment") {
-            const orderId = id;
-            await getDb().transaction(async (tx) => {
-              await tx
-                .update(pharmacyOrders)
-                .set({
-                  status: "paid",
-                  razorpayPaymentId,
-                  updatedAt: new Date(),
-                })
-                .where(eq(pharmacyOrders.id, orderId));
-                
-              // Fetch items to decrement stock
-              const items = await tx.query.pharmacyOrderItems.findMany({
-                where: eq(pharmacyOrderItems.orderId, orderId)
-              });
-              
-              for (const item of items) {
-                // Decrement actual stock
-                await tx
-                  .update(medicines)
-                  .set({
-                    stockQuantity: sql`${medicines.stockQuantity} - ${item.quantity}`
-                  })
-                  .where(eq(medicines.id, item.medicineId));
-                  
-                // Release temporary lock
-                await releaseLock(`lock:inventory:${item.medicineId}`, orderId);
-              }
-            });
-
-            // Notify patient
-            const userRows = await getDb()
-              .select({ userId: patients.userId })
-              .from(pharmacyOrders)
-              .innerJoin(patients, eq(patients.id, pharmacyOrders.patientId))
-              .where(eq(pharmacyOrders.id, id))
-              .limit(1);
-
-            if (userRows[0]?.userId) {
-              await emitNotification(
-                userRows[0].userId,
-                "payment_success",
-                "Pharmacy Order Paid",
-                "Your payment was successful and your pharmacy order is now processing.",
-                { orderId: id }
-              );
-            }
-
-            logger.info({ orderId: id, razorpayPaymentId }, "Pharmacy order payment captured via webhook");
-          } else {
-             logger.info({ orderId: id, razorpayPaymentId }, "Idempotent pharmacy webhook skip");
-          }
+          await confirmPharmacyOrder(pharmacyRows[0].id, razorpayPaymentId);
         }
       }
 

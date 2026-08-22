@@ -41,6 +41,7 @@ import { logger } from "../logger";
 import { NotFoundError, ForbiddenError, ConflictError, UnprocessableError } from "../errors";
 import { emitNotification } from "../socket/emitter";
 import { sendEmail } from "../utils/resend";
+import { confirmAppointmentPayment } from "../services/payment.service";
 
 const router = Router();
 
@@ -576,31 +577,7 @@ router.post(
       throw new ForbiddenError("Payment gateway configuration missing");
     }
 
-    // Atomic transaction for payment record, appointment status, and slot booking
-    await getDb().transaction(async (tx) => {
-      await tx
-        .update(paymentRecords)
-        .set({
-          state: "success",
-          razorpayPaymentId: razorpay_payment_id,
-          updatedAt: new Date(),
-        })
-        .where(eq(paymentRecords.appointmentId, id));
-
-      await tx
-        .update(appointments)
-        .set({ status: "confirmed", updatedAt: new Date() })
-        .where(eq(appointments.id, id));
-
-      if (apptRows[0].slotId) {
-        await tx
-          .update(availabilitySlots)
-          .set({ status: "booked", updatedAt: new Date() })
-          .where(eq(availabilitySlots.id, apptRows[0].slotId));
-      }
-    });
-
-    logger.info({ appointmentId: id, paymentId: razorpay_payment_id }, "Payment verified and appointment confirmed");
+    await confirmAppointmentPayment(id, razorpay_payment_id);
 
     res.status(200).json({ success: true });
   }
