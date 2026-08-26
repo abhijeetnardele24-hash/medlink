@@ -156,31 +156,7 @@ export const Dashboard: React.FC = () => {
         {/* Left Column: Daily Agenda Timeline */}
         <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
           
-          {/* Active / Instant Action Card */}
-          <div className="bg-gradient-to-r from-teal-900 to-teal-800 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-10">
-              <Activity size={120} />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <span className="flex h-3 w-3 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                </span>
-                <span className="text-emerald-300 font-bold tracking-wider text-sm uppercase">Active Sandbox</span>
-              </div>
-              <h2 className="text-3xl font-black mb-2 text-white">Telehealth Video Suite</h2>
-              <p className="text-teal-100 max-w-lg mb-8 leading-relaxed">
-                Launch a secure, HIPAA-compliant virtual room instantly. Features local recording, AI transcription, and a real-time whiteboard.
-              </p>
-              <button
-                onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
-                className="bg-white text-gray-900 hover:bg-gray-50 px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all transform hover:scale-105 shadow-lg"
-              >
-                <Video size={20} className="text-teal-600" /> Start Instant Meeting
-              </button>
-            </div>
-          </div>
+
 
           {/* Timeline View */}
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
