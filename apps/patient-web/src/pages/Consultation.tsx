@@ -148,7 +148,7 @@ export const Consultation: React.FC = () => {
   }
 
   return (
-    <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden', userSelect: 'none', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden', userSelect: 'none' }}>
       {/* Floating Reactions Layer */}
       <FloatingReactions reactions={reactions} />
 
@@ -164,10 +164,10 @@ export const Consultation: React.FC = () => {
         ) : (
           <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#818cf8', fontFamily: 'Manrope, sans-serif' }}>DR</span>
+              <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#818cf8' }}>DR</span>
             </div>
             <div>
-              <p style={{ fontFamily: 'Manrope, sans-serif', fontWeight: 700, fontSize: '1.5rem', color: 'white', margin: '0 0 0.25rem 0' }}>
+              <p style={{ fontWeight: 700, fontSize: '1.5rem', color: 'white', margin: '0 0 0.25rem 0' }}>
                 {remoteVideoOff ? 'Doctor Camera is Off' : t('consultation.waitingForDoctor') || 'Waiting for Doctor to connect...'}
               </p>
               <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
@@ -198,7 +198,7 @@ export const Consultation: React.FC = () => {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <h2 style={{ color: 'white', fontFamily: 'Manrope, sans-serif', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
+              <h2 style={{ color: 'white', fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>
                 {t('consultation.title') || 'Doctor Consultation'}
               </h2>
               {isConnected && (

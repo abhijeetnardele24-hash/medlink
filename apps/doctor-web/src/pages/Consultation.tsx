@@ -190,7 +190,7 @@ export const Consultation: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 bg-[#0A0A0A] relative flex flex-col h-screen overflow-hidden select-none font-['Inter',sans-serif]">
+    <div className="flex-1 bg-[#0A0A0A] relative flex flex-col h-screen overflow-hidden select-none">
       {/* Floating Reactions Layer */}
       <FloatingReactions reactions={reactions} />
 
@@ -206,10 +206,10 @@ export const Consultation: React.FC = () => {
         ) : (
           <div className="text-white/60 flex flex-col items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-neutral-800/80 border border-white/10 flex items-center justify-center shadow-2xl">
-              <span className="text-4xl font-bold text-blue-400 font-['Manrope']">PT</span>
+              <span className="text-4xl font-bold text-blue-400">PT</span>
             </div>
             <div className="text-center">
-              <p className="font-bold text-2xl text-white mb-1 font-['Manrope']">
+              <p className="font-bold text-2xl text-white mb-1">
                 {remoteVideoOff ? 'Patient Camera is Off' : 'Waiting for Patient'}
               </p>
               <p className="text-sm text-white/50">
@@ -236,7 +236,7 @@ export const Consultation: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-bold text-white font-['Manrope']">MedLink Consultation</h2>
+              <h2 className="text-lg font-bold text-white">MedLink Consultation</h2>
               {isConnected && (
                 <span className="bg-white/10 backdrop-blur-md border border-white/10 px-2.5 py-0.5 rounded-full text-xs font-mono text-white/80">
                   {formatTimer(callDuration)}
@@ -320,7 +320,7 @@ export const Consultation: React.FC = () => {
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-neutral-800 text-white/50">
-            <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-white text-lg font-['Manrope']">
+            <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-white text-lg">
               DR
             </div>
             <span className="text-xs text-white/50">Camera Off</span>
