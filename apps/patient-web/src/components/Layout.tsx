@@ -28,6 +28,9 @@ export const Layout: React.FC = () => {
           <NavLink to="/history" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Clock size={20} /> Appt History
           </NavLink>
+          <NavLink to="/triage" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+            <HeartPulse size={20} /> Intake & Triage
+          </NavLink>
           <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <User size={20} /> Health Profile
           </NavLink>

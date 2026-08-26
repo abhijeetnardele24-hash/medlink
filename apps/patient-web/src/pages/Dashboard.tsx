@@ -112,26 +112,23 @@ export const Dashboard: React.FC = () => {
         <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', flexShrink: 0 }}>
-              <Search size={24} />
+              <Activity size={24} />
             </div>
             <div>
               <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Find a Doctor
+                Smart Intake & Routing
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
-                Browse verified specialists across cardiology, dermatology, general medicine, and schedule your appointment.
+                Enter your symptoms and our recommendation engine will find the perfect specialist for you.
               </p>
             </div>
           </div>
           <button
-            onClick={() => {
-              const el = document.getElementById('doctor-directory');
-              el?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => navigate('/triage')}
             className="btn btn-primary"
             style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
           >
-            <Search size={16} /> Browse Verified Doctors
+            <Search size={16} /> Find Recommended Doctors
           </button>
         </div>
 

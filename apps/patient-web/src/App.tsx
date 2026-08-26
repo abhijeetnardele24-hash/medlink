@@ -12,6 +12,7 @@ import { PharmacyStorefront } from './pages/PharmacyStorefront';
 import { PharmacyOrders } from './pages/PharmacyOrders';
 import { HealthProfile } from './pages/HealthProfile';
 import { MedicalRecords } from './pages/MedicalRecords';
+import { Triage } from './pages/Triage';
 import { Layout } from './components/Layout';
 import { IncomingCallModal } from './components/IncomingCallModal';
 import './index.css';
@@ -35,6 +36,7 @@ function App() {
               <Route path="/consents" element={<Consents />} />
               <Route path="/pharmacy" element={<PharmacyStorefront />} />
               <Route path="/pharmacy-orders" element={<PharmacyOrders />} />
+              <Route path="/triage" element={<Triage />} />
             </Route>
             {/* Consultation is full screen, no sidebar */}
             <Route path="/consultation/:id" element={<Consultation />} />
