@@ -25,6 +25,7 @@ import { getFirebaseAdmin } from "../firebase";
 import { logger } from "../logger";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
 import { sendEmail } from "../utils/resend";
+import { publishEvent } from "../events/publisher";
 
 const router = Router();
 
@@ -180,8 +181,10 @@ router.post(
         
         html += `<br/><p>Best regards,<br/>The MedLink Team</p>`;
 
-        sendEmail(email, subject, html).catch((err) => {
-          logger.error({ err, userId: newUser.id }, "Failed to send welcome email");
+        publishEvent("email:send", {
+          to: email,
+          subject,
+          html
         });
       }
     });

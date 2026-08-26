@@ -41,6 +41,7 @@ import { logger } from "../logger";
 import { NotFoundError, ForbiddenError, ConflictError, UnprocessableError } from "../errors";
 import { emitNotification } from "../socket/emitter";
 import { sendEmail } from "../utils/resend";
+import { publishEvent } from "../events/publisher";
 import { confirmAppointmentPayment } from "../services/payment.service";
 
 const router = Router();
@@ -165,16 +166,16 @@ router.post(
       // Get the doctor's user to find their email
       const docUser = await getDb().select({ email: users.email }).from(users).where(eq(users.id, doctorRows[0].userId)).limit(1);
       if (docUser[0]?.email) {
-        await sendEmail(
-          docUser[0].email,
-          'New Appointment Request - MedLink',
-          `<h2>New Appointment Request</h2>
+        publishEvent("email:send", {
+          to: docUser[0].email,
+          subject: 'New Appointment Request - MedLink',
+          html: `<h2>New Appointment Request</h2>
            <p>Dr. ${doctorRows[0].fullName}, you have a new appointment request.</p>
            <p><strong>Time:</strong> ${new Date(body.scheduledAt).toLocaleString()}</p>
            <p><strong>Concern:</strong> ${body.concernCategory}</p>
            <br/>
            <p>Please log in to your dashboard to confirm or reject.</p>`
-        ).catch(e => logger.error('Failed to send email notification to doctor', e));
+        });
       }
     }
 
