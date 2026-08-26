@@ -124,7 +124,7 @@ export const WhiteboardModal: React.FC<WhiteboardModalProps> = ({
               <Edit2 size={18} />
             </div>
             <div>
-              <h3 className="text-white font-bold text-lg font-['Manrope']">Collaborative Whiteboard</h3>
+              <h3 className="text-white font-bold text-lg">Collaborative Whiteboard</h3>
               <p className="text-xs text-white/50">Draw & annotate simultaneously in real time</p>
             </div>
           </div>

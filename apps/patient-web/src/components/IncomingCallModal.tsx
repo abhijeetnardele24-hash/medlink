@@ -52,7 +52,7 @@ export const IncomingCallModal: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2 font-['Manrope']">Incoming Call</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Incoming Call</h2>
         <p className="text-gray-600 mb-8">{incomingCall.doctorName} is calling you for your consultation.</p>
 
         <div className="flex justify-center gap-6">

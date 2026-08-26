@@ -165,7 +165,7 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
       {/* Header */}
       <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h3 style={{ color: 'white', margin: 0, fontSize: '1rem', fontWeight: 700, fontFamily: 'Manrope, sans-serif' }}>In-Meeting Chat</h3>
+          <h3 style={{ color: 'white', margin: 0, fontSize: '1rem', fontWeight: 700 }}>In-Meeting Chat</h3>
           <p style={{ margin: 0, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)' }}>Direct encrypted messages</p>
         </div>
       </div>

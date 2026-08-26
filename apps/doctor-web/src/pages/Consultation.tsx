@@ -26,6 +26,7 @@ import { MeetingControls } from '../components/MeetingControls';
 import { WhiteboardModal } from '../components/WhiteboardModal';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
 import { FloatingReactions } from '../components/FloatingReactions';
+import { RecordingPreviewModal } from '../components/RecordingPreviewModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 
@@ -66,6 +67,7 @@ export const Consultation: React.FC = () => {
     pauseRecording,
     resumeRecording,
     stopRecording,
+    clearRecording,
 
     isHandRaised,
     remoteHandRaised,
@@ -407,6 +409,14 @@ export const Consultation: React.FC = () => {
         audioLevel={audioLevel}
         isBlurActive={isBlurActive}
         onToggleBlur={() => setIsBlurActive(!isBlurActive)}
+      />
+
+      {/* Recording Preview Modal */}
+      <RecordingPreviewModal
+        isOpen={!!recordingBlob}
+        onClose={clearRecording}
+        recordingBlob={recordingBlob}
+        encounterId={id || null}
       />
 
       {/* Prescribe Modal */}

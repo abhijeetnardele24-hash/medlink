@@ -69,7 +69,7 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
           background: 'rgba(0,0,0,0.4)'
         }}>
           <div>
-            <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.25rem', margin: 0, fontFamily: 'Manrope, sans-serif' }}>Audio & Video Settings</h3>
+            <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.25rem', margin: 0 }}>Audio & Video Settings</h3>
             <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: '0.25rem 0 0 0' }}>Select hardware devices & effects</p>
           </div>
           <button

@@ -541,7 +541,7 @@ export const useWebRTC = (encounterId: string | null) => {
       ...dest.stream.getAudioTracks()
     ]);
 
-    let options = { mimeType: 'video/webm;codecs=vp9,opus' };
+    let options = { mimeType: 'video/webm;codecs=h264,opus' };
     if (!MediaRecorder.isTypeSupported(options.mimeType)) {
       options = { mimeType: 'video/webm' };
     }
@@ -556,22 +556,8 @@ export const useWebRTC = (encounterId: string | null) => {
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(recordingChunksRef.current, { type: 'video/webm' });
+        const blob = new Blob(recordingChunksRef.current, { type: 'video/mp4' });
         setRecordingBlob(blob);
-
-        // Instant Direct Download to Local Storage / Computer
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        a.download = `MedLink_Consultation_${encounterId || 'session'}_${timestamp}.webm`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 100);
       };
 
       recorder.start(1000);
@@ -633,6 +619,10 @@ export const useWebRTC = (encounterId: string | null) => {
       }
     }
   }, [encounterId]);
+
+  const clearRecording = useCallback(() => {
+    setRecordingBlob(null);
+  }, []);
 
   // Adaptive network monitoring
   useEffect(() => {
@@ -703,6 +693,7 @@ export const useWebRTC = (encounterId: string | null) => {
     pauseRecording,
     resumeRecording,
     stopRecording,
+    clearRecording,
     remoteRecordingActive,
 
     isHandRaised,

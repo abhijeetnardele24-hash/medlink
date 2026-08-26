@@ -165,7 +165,7 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
       {/* Header */}
       <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
         <div>
-          <h3 className="text-white font-bold text-base font-['Manrope']">In-Meeting Messages</h3>
+          <h3 className="text-white font-bold text-base">In-Meeting Messages</h3>
           <p className="text-[11px] text-white/50">Messages are synced securely</p>
         </div>
       </div>

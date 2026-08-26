@@ -42,7 +42,7 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
           <div>
-            <h3 className="text-white font-bold text-xl font-['Manrope']">Audio & Video Settings</h3>
+            <h3 className="text-white font-bold text-xl">Audio & Video Settings</h3>
             <p className="text-xs text-white/50 mt-0.5">Customize your hardware devices and effects</p>
           </div>
           <button
