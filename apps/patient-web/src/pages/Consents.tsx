@@ -14,6 +14,7 @@ interface ConsentGrant {
 
 export const Consents: React.FC = () => {
   const [consents, setConsents] = useState<ConsentGrant[]>([]);
+  const [doctors, setDoctors] = useState<{ id: string; fullName: string; speciality: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -25,21 +26,25 @@ export const Consents: React.FC = () => {
     expiresAt: ''
   });
 
-  const fetchConsents = async () => {
+  const fetchConsentsAndDoctors = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/consents');
-      setConsents(res.data.data);
+      const [consentsRes, doctorsRes] = await Promise.all([
+        api.get('/consents'),
+        api.get('/doctors')
+      ]);
+      setConsents(consentsRes.data.data);
+      setDoctors(doctorsRes.data.data || []);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch consents');
+      setError(err.response?.data?.error || 'Failed to fetch data');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchConsents();
+    fetchConsentsAndDoctors();
   }, []);
 
   const handleRevoke = async (id: string) => {
@@ -69,7 +74,7 @@ export const Consents: React.FC = () => {
       await api.post('/consents', payload);
       setIsModalOpen(false);
       setNewGrant({ granteeId: '', purpose: 'medical_records', scope: 'all_history', expiresAt: '' });
-      fetchConsents();
+      fetchConsentsAndDoctors();
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to grant consent');
     }
@@ -119,9 +124,13 @@ export const Consents: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {consents.map(c => (
+              {consents.map(c => {
+                const doctorInfo = doctors.find(d => d.id === c.granteeId);
+                const doctorName = doctorInfo ? `Dr. ${doctorInfo.fullName}` : `${c.granteeId.split('-')[0]}...`;
+                
+                return (
                 <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1.25rem 1.5rem', fontFamily: 'monospace', fontWeight: 500 }}>{c.granteeId.split('-')[0]}...</td>
+                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 600 }}>{doctorName}</td>
                   <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>{c.purpose.replace(/_/g, ' ')}</td>
                   <td style={{ padding: '1.25rem 1.5rem', color: 'var(--text-muted)' }}>{c.scope.replace(/_/g, ' ')}</td>
                   <td style={{ padding: '1.25rem 1.5rem' }}>
@@ -149,7 +158,8 @@ export const Consents: React.FC = () => {
                     )}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -167,15 +177,18 @@ export const Consents: React.FC = () => {
             
             <form onSubmit={handleGrant} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Doctor ID (UUID)</label>
-                <input 
-                  type="text" 
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Doctor</label>
+                <select 
                   required 
                   className="input-field" 
                   value={newGrant.granteeId}
                   onChange={e => setNewGrant({...newGrant, granteeId: e.target.value})}
-                  placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000"
-                />
+                >
+                  <option value="" disabled>Select a doctor...</option>
+                  {doctors.map(d => (
+                    <option key={d.id} value={d.id}>Dr. {d.fullName} ({d.speciality})</option>
+                  ))}
+                </select>
               </div>
               
               <div>

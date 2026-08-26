@@ -107,9 +107,9 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* Quick Action Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '3rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem', marginBottom: '3rem' }}>
         {/* Card 1: Find a Doctor */}
-        <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
+        <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(37, 99, 235, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb', flexShrink: 0 }}>
               <Activity size={24} />
@@ -126,33 +126,9 @@ export const Dashboard: React.FC = () => {
           <button
             onClick={() => navigate('/triage')}
             className="btn btn-primary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+            style={{ padding: '1rem 2rem', fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
           >
-            <Search size={16} /> Find Recommended Doctors
-          </button>
-        </div>
-
-        {/* Card 2: Instant Video Consultation Sandbox Card */}
-        <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', flexShrink: 0 }}>
-              <Video size={24} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: '0 0 0.25rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                Telehealth Video Suite
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, lineHeight: 1.5 }}>
-                Local HD recording, whiteboard sharing, live message reactions, and background blur settings.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate(`/consultation/instant-${Date.now().toString(36)}`)}
-            className="btn btn-secondary"
-            style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-          >
-            <Video size={16} /> Test & Join Sandbox Room
+            <Search size={18} /> Find Recommended Doctors
           </button>
         </div>
       </div>
