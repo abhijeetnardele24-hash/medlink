@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { Appointment } from '../types';
 import { Video, Phone, MessageSquare, WifiOff, Clock, User, Check, X } from 'lucide-react';
 
@@ -21,46 +22,46 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   const getModeIcon = () => {
     switch (appointment.preferredMode) {
-      case 'video': return <Video size={16} />;
-      case 'audio': return <Phone size={16} />;
-      case 'async_chat': return <MessageSquare size={16} />;
-      case 'offline': return <WifiOff size={16} />;
-      default: return <Video size={16} />;
+      case 'video': return <Video size={16} aria-label="Video consultation" />;
+      case 'audio': return <Phone size={16} aria-label="Audio consultation" />;
+      case 'async_chat': return <MessageSquare size={16} aria-label="Chat consultation" />;
+      case 'offline': return <WifiOff size={16} aria-label="Offline consultation" />;
+      default: return <Video size={16} aria-label="Video consultation" />;
     }
   };
 
   const getStatusBadge = () => {
     const statusColors: Record<string, string> = {
-      requested: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-      confirmed: 'bg-green-500/20 text-green-300 border-green-500/30',
-      rejected: 'bg-red-500/20 text-red-300 border-red-500/30',
-      cancelled: 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+      requested: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
+      confirmed: 'bg-green-500/20 text-green-500 border-green-500/30',
+      rejected: 'bg-red-500/20 text-red-500 border-red-500/30',
+      cancelled: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
     };
 
-    const styles = statusColors[appointment.status] || 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+    const styles = statusColors[appointment.status] || 'bg-blue-500/20 text-blue-500 border-blue-500/30';
     
     return (
-      <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', borderRadius: '12px', textTransform: 'capitalize', border: '1px solid', backgroundColor: 'rgba(59, 130, 246, 0.1)' }} className={styles}>
+      <span className={`text-xs px-2 py-1 rounded-xl capitalize border ${styles}`}>
         {appointment.status.replace('_', ' ')}
       </span>
     );
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1rem', transition: 'all 0.2s ease' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--bg-surface-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <User size={24} color="var(--text-muted)" />
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-all">
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex gap-4 items-center">
+          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+            <User size={24} className="text-gray-400" />
           </div>
           <div>
-            <h4 style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '0.1rem' }}>Patient ID: {appointment.patientId.substring(0, 8)}...</h4>
-            <div style={{ display: 'flex', gap: '0.75rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <h4 className="font-bold text-lg text-gray-900 mb-0.5">Patient ID: {appointment.patientId.substring(0, 8)}...</h4>
+            <div className="flex gap-3 text-gray-500 text-sm">
+              <span className="flex items-center gap-1">
                 <Clock size={14} /> {dateString}, {timeString}
               </span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                {getModeIcon()} <span style={{ textTransform: 'capitalize' }}>{appointment.preferredMode?.replace('_', ' ') ?? 'N/A'}</span>
+              <span className="flex items-center gap-1">
+                {getModeIcon()} <span className="capitalize">{appointment.preferredMode?.replace('_', ' ') ?? 'N/A'}</span>
               </span>
             </div>
           </div>
@@ -68,30 +69,30 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         {getStatusBadge()}
       </div>
 
-      <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.9rem' }}>
-        <div style={{ fontWeight: 500, marginBottom: '0.25rem', color: 'var(--primary)' }}>
+      <div className="bg-gray-50 p-4 rounded-xl mb-4 text-sm border border-gray-100">
+        <div className="font-semibold mb-1 text-teal-600">
           {appointment.concernCategory}
         </div>
-        <p style={{ color: 'var(--text-muted)' }}>
+        <p className="text-gray-600">
           {appointment.patientNotes || 'No additional notes provided by the patient.'}
         </p>
       </div>
 
       {appointment.status === 'requested' && onAccept && onReject && (
-        <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+        <div className="flex gap-3 justify-end">
           <button 
-            className="btn btn-secondary" 
+            className="px-4 py-2 text-sm font-semibold text-red-500 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50"
             onClick={() => onReject(appointment.id, appointment.version)}
             disabled={isActionLoading}
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', color: '#fca5a5', borderColor: 'rgba(239, 68, 68, 0.3)' }}
+            aria-label="Decline Appointment"
           >
             {isActionLoading ? 'Wait...' : <><X size={16} /> Decline</>}
           </button>
           <button 
-            className="btn btn-primary" 
+            className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 rounded-xl hover:bg-teal-700 transition-colors flex items-center gap-2 disabled:opacity-50"
             onClick={() => onAccept(appointment.id, appointment.version)}
             disabled={isActionLoading}
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: '#10b981' }}
+            aria-label="Accept Appointment"
           >
             {isActionLoading ? 'Processing...' : <><Check size={16} /> Accept Appointment</>}
           </button>
@@ -99,14 +100,14 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       )}
 
       {appointment.status === 'confirmed' && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-          <a 
-            href={`/consultation/${appointment.id}`}
-            className="btn btn-primary" 
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: '#3b82f6', textDecoration: 'none' }}
+        <div className="flex justify-end mt-4">
+          <Link 
+            to={`/consultation/${appointment.id}`}
+            className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 no-underline"
+            aria-label="Start Consultation"
           >
             <Video size={16} /> Start Consultation
-          </a>
+          </Link>
         </div>
       )}
     </div>
