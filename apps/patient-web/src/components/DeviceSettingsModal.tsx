@@ -37,80 +37,37 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      zIndex: 50,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem',
-      background: 'rgba(0,0,0,0.8)',
-      backdropFilter: 'blur(12px)'
-    }}>
-      <div style={{
-        background: '#18181B',
-        border: '1px solid rgba(255,255,255,0.1)',
-        width: '100%',
-        maxWidth: '32rem',
-        borderRadius: '1.5rem',
-        overflow: 'hidden',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md fade-in">
+      <div className="bg-zinc-900 border border-white/10 w-full max-w-lg rounded-3xl overflow-hidden flex flex-col shadow-2xl">
         {/* Header */}
-        <div style={{
-          padding: '1.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'rgba(0,0,0,0.4)'
-        }}>
+        <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
           <div>
-            <h3 style={{ color: 'white', fontWeight: 700, fontSize: '1.25rem', margin: 0 }}>Audio & Video Settings</h3>
-            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: '0.25rem 0 0 0' }}>Select hardware devices & effects</p>
+            <h3 className="text-white font-bold text-xl m-0">Audio & Video Settings</h3>
+            <p className="text-xs text-white/50 mt-1 mb-0">Select hardware devices & effects</p>
           </div>
           <button
             onClick={onClose}
-            style={{
-              padding: '0.5rem',
-              borderRadius: '0.75rem',
-              background: 'rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.8)',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            className="p-2 rounded-xl bg-white/5 text-white/80 border-none cursor-pointer hover:bg-white/10 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+        <div className="p-6 flex flex-col gap-6">
           {/* Camera Selection */}
           <div>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <Camera size={16} color="#818cf8" /> Camera
+            <label className="text-sm font-semibold text-white/90 flex items-center gap-2 mb-2">
+              <Camera size={16} className="text-indigo-400" /> Camera
             </label>
             <select
               value={selectedCameraId}
               onChange={(e) => onSwitchCamera(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '1rem',
-                padding: '0.75rem 1rem',
-                color: 'white',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm outline-none focus:border-indigo-500 transition-colors"
             >
               {videoInputDevices.length === 0 && <option value="">Default Camera</option>}
               {videoInputDevices.map((d, i) => (
-                <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#18181B', color: 'white' }}>
+                <option key={d.deviceId || i} value={d.deviceId} className="bg-zinc-900 text-white">
                   {d.label || `Camera ${i + 1}`}
                 </option>
               ))}
@@ -119,46 +76,32 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
 
           {/* Microphone Selection */}
           <div>
-            <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <Mic size={16} color="#34d399" /> Microphone
+            <label className="text-sm font-semibold text-white/90 flex items-center gap-2 mb-2">
+              <Mic size={16} className="text-emerald-400" /> Microphone
             </label>
             <select
               value={selectedMicId}
               onChange={(e) => onSwitchMicrophone(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '1rem',
-                padding: '0.75rem 1rem',
-                color: 'white',
-                fontSize: '0.875rem',
-                outline: 'none'
-              }}
+              className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm outline-none focus:border-emerald-500 transition-colors"
             >
               {audioInputDevices.length === 0 && <option value="">Default Microphone</option>}
               {audioInputDevices.map((d, i) => (
-                <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#18181B', color: 'white' }}>
+                <option key={d.deviceId || i} value={d.deviceId} className="bg-zinc-900 text-white">
                   {d.label || `Microphone ${i + 1}`}
                 </option>
               ))}
             </select>
 
             {/* Live Mic Test Meter */}
-            <div style={{ paddingTop: '0.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.25rem' }}>
+            <div className="pt-2">
+              <div className="flex justify-between text-xs text-white/50 mb-1">
                 <span>Input Level</span>
                 <span>{audioLevel}%</span>
               </div>
-              <div style={{ width: '100%', height: '0.5rem', background: 'rgba(255,255,255,0.1)', borderRadius: '999px', overflow: 'hidden' }}>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  style={{
-                    height: '100%',
-                    background: '#10b981',
-                    width: `${audioLevel}%`,
-                    transition: 'width 75ms ease-out',
-                    borderRadius: '999px'
-                  }}
+                  className="h-full bg-emerald-500 rounded-full transition-all duration-75 ease-out"
+                  style={{ width: `${audioLevel}%` }}
                 />
               </div>
             </div>
@@ -167,25 +110,16 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
           {/* Speaker Selection */}
           {audioOutputDevices.length > 0 && (
             <div>
-              <label style={{ fontSize: '0.875rem', fontWeight: 600, color: 'rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <Volume2 size={16} color="#c084fc" /> Speakers / Output
+              <label className="text-sm font-semibold text-white/90 flex items-center gap-2 mb-2">
+                <Volume2 size={16} className="text-purple-400" /> Speakers / Output
               </label>
               <select
                 value={selectedSpeakerId}
                 onChange={(e) => onSwitchAudioOutput(e.target.value)}
-                style={{
-                  width: '100%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '1rem',
-                  padding: '0.75rem 1rem',
-                  color: 'white',
-                  fontSize: '0.875rem',
-                  outline: 'none'
-                }}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl p-3 text-white text-sm outline-none focus:border-purple-500 transition-colors"
               >
                 {audioOutputDevices.map((d, i) => (
-                  <option key={d.deviceId || i} value={d.deviceId} style={{ background: '#18181B', color: 'white' }}>
+                  <option key={d.deviceId || i} value={d.deviceId} className="bg-zinc-900 text-white">
                     {d.label || `Speaker ${i + 1}`}
                   </option>
                 ))}
@@ -194,39 +128,23 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
           )}
 
           {/* Visual Effects */}
-          <div style={{ paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '1rem', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24' }}>
+          <div className="pt-2 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                   <Sparkles size={18} />
                 </div>
                 <div>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'white', margin: 0 }}>Background Soft Blur</h4>
-                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', margin: 0 }}>Blur room background</p>
+                  <h4 className="text-sm font-semibold text-white m-0">Background Soft Blur</h4>
+                  <p className="text-xs text-white/50 m-0">Blur room background</p>
                 </div>
               </div>
               <button
                 onClick={onToggleBlur}
-                style={{
-                  width: '3rem',
-                  height: '1.5rem',
-                  borderRadius: '999px',
-                  background: isBlurActive ? '#423FDE' : 'rgba(255,255,255,0.1)',
-                  border: 'none',
-                  position: 'relative',
-                  cursor: 'pointer',
-                  padding: '0.125rem'
-                }}
+                className={`w-12 h-6 rounded-full border-none relative cursor-pointer p-0.5 transition-colors ${isBlurActive ? 'bg-indigo-600' : 'bg-white/10'}`}
               >
                 <div
-                  style={{
-                    width: '1.25rem',
-                    height: '1.25rem',
-                    background: 'white',
-                    borderRadius: '50%',
-                    transform: isBlurActive ? 'translateX(1.5rem)' : 'translateX(0)',
-                    transition: 'transform 200ms ease'
-                  }}
+                  className={`w-5 h-5 bg-white rounded-full transition-transform duration-200 ease-in-out ${isBlurActive ? 'translate-x-6' : 'translate-x-0'}`}
                 />
               </button>
             </div>
@@ -234,22 +152,10 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="p-6 border-t border-white/10 bg-black/40 flex justify-end">
           <button
             onClick={onClose}
-            style={{
-              padding: '0.625rem 1.5rem',
-              borderRadius: '1rem',
-              background: '#423FDE',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
+            className="px-6 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm border-none cursor-pointer flex items-center gap-2 transition-colors"
           >
             <Check size={16} /> Done
           </button>
