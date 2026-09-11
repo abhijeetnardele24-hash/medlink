@@ -5,7 +5,7 @@ import type { Appointment } from '../types';
 
 export const useAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [unreadMessages, setUnreadMessages] = useState<any[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +26,7 @@ export const useAppointments = () => {
       if (msgRes.data) {
         setUnreadMessages(msgRes.data.data || []);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setError('Failed to fetch data.');
     } finally {

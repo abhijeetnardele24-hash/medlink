@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export const useICD10Search = () => {
   const [diagnosisQuery, setDiagnosisQuery] = useState('');
-  const [diagnosisResults, setDiagnosisResults] = useState<any[]>([]);
+  const [diagnosisResults, setDiagnosisResults] = useState<unknown[]>([]);
   const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(null);
   const [isSearchingDiagnosis, setIsSearchingDiagnosis] = useState(false);
 
