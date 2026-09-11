@@ -8,54 +8,23 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
-import type { Appointment } from '../types';
+import toast from 'react-hot-toast';
+import { useAppointments } from '../hooks/useAppointments';
+import { DashboardSkeleton } from '../components/Skeleton';
 
 export const Dashboard: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [unreadMessages, setUnreadMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState('');
-
-  const fetchAppointments = async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError('');
-
-    try {
-      const [apptRes, msgRes] = await Promise.all([
-        api.get('/appointments'),
-        api.get('/doctors/me/messages/unread')
-      ]);
-      if (apptRes.data) {
-        setAppointments(apptRes.data.data || []);
-      }
-      if (msgRes.data) {
-        setUnreadMessages(msgRes.data.data || []);
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError('Failed to fetch data.');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => { fetchAppointments(); }, []);
-
-  const handleAction = async (id: string, action: string, version: number) => {
-    try {
-      await api.patch(`/appointments/${id}`, { action, version });
-      fetchAppointments(true);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to update appointment.');
-    }
-  };
+  const {
+    appointments,
+    unreadMessages,
+    loading,
+    refreshing,
+    error,
+    fetchAppointments,
+    handleAction
+  } = useAppointments();
 
   const upcomingAppointments = appointments
     .filter(a => a.status === 'confirmed' || a.status === 'in_progress')
@@ -74,6 +43,10 @@ export const Dashboard: React.FC = () => {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } }
   };
+
+  if (loading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <motion.div 
@@ -169,11 +142,7 @@ export const Dashboard: React.FC = () => {
               </button>
             </div>
 
-            {loading ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
-              </div>
-            ) : upcomingAppointments.length === 0 ? (
+            {upcomingAppointments.length === 0 ? (
               <div className="text-center py-16 px-4">
                 <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} className="text-gray-400" />

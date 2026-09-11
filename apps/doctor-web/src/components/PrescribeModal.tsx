@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Search, Plus, CheckCircle, Package, AlertCircle } from 'lucide-react';
+import { useICD10Search } from '../hooks/useICD10Search';
 import { api } from '../lib/api';
+import toast from 'react-hot-toast';
 
 interface Medicine {
   id: string;
@@ -42,13 +44,25 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Diagnosis State (ICD-10)
-  const [diagnosisQuery, setDiagnosisQuery] = useState('');
-  const [diagnosisResults, setDiagnosisResults] = useState<any[]>([]);
-  const [selectedDiagnosis, setSelectedDiagnosis] = useState<{code: string, name: string} | null>(initialDiagnosis || null);
-  const [isSearchingDiagnosis, setIsSearchingDiagnosis] = useState(false);
+  // Diagnosis State (ICD-10) from custom hook
+  const {
+    diagnosisQuery,
+    setDiagnosisQuery,
+    diagnosisResults,
+    setDiagnosisResults,
+    selectedDiagnosis,
+    setSelectedDiagnosis,
+    isSearchingDiagnosis
+  } = useICD10Search();
 
-  // Debounced search
+  // Set initial diagnosis if provided
+  useEffect(() => {
+    if (initialDiagnosis) {
+      setSelectedDiagnosis(initialDiagnosis);
+    }
+  }, [initialDiagnosis, setSelectedDiagnosis]);
+
+  // Debounced search for medicines
   useEffect(() => {
     if (!searchQuery.trim()) {
       setSearchResults([]);
@@ -67,28 +81,6 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  // Debounced search for ICD-10 Diagnoses via ClinicalTables API
-  useEffect(() => {
-    if (!diagnosisQuery.trim()) {
-      setDiagnosisResults([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setIsSearchingDiagnosis(true);
-      try {
-        const res = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(diagnosisQuery)}`);
-        const data = await res.json();
-        // data format: [count, [codes], null, [[code, name], ...]]
-        setDiagnosisResults(data[3] || []);
-      } catch (err) {
-        console.error("Failed to fetch ICD-10 codes:", err);
-      } finally {
-        setIsSearchingDiagnosis(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [diagnosisQuery]);
 
   const addMedicine = (med: Medicine) => {
     if (medicines.some(m => m.medicineId === med.id)) return;
@@ -113,7 +105,7 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
 
   const handleSubmit = async () => {
     if (medicines.length === 0 && !instructions.trim() && !selectedDiagnosis) {
-      alert("Please add at least one medicine, diagnosis, or instructions.");
+      toast.error("Please add at least one medicine, diagnosis, or instructions.");
       return;
     }
     setSubmitting(true);
@@ -129,10 +121,11 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
         medicinesJson: medicines,
         instructionsText: finalInstructions
       });
+      toast.success("Prescription issued successfully!");
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.error || "Failed to issue prescription");
+      toast.error(err.response?.data?.error || "Failed to issue prescription");
     } finally {
       setSubmitting(false);
     }

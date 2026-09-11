@@ -13,10 +13,12 @@ import { Patients } from './pages/Patients';
 import { PatientDetail } from './pages/PatientDetail';
 import { Earnings } from './pages/Earnings';
 import { Analytics } from './pages/Analytics';
+import { Toaster } from 'react-hot-toast';
 import './index.css';
 function App() {
   return (
     <AuthProvider>
+      <Toaster position="top-right" />
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
