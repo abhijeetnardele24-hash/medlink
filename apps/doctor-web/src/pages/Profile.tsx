@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   User, BookOpen, Stethoscope, Briefcase, Phone, MapPin, 
-  Edit3, Check, X, Award, Globe, DollarSign, ShieldCheck, 
-  Save, AlertCircle 
+  Edit3, Check, DollarSign, ShieldCheck, AlertCircle 
 } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -97,12 +96,13 @@ export const Profile: React.FC = () => {
         consultationFee: data.consultationFee ?? 500,
         isPartTime: Boolean(data.isPartTime),
       });
-    } catch (err: any) {
-      if (err.response?.status === 404) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number, data?: { error?: string } } };
+      if (error.response?.status === 404) {
         // No profile yet, force edit mode so they can create it
         setIsEditing(true);
       } else {
-        setError(err.response?.data?.error || 'Failed to load profile');
+        setError(error.response?.data?.error || 'Failed to load profile');
       }
     } finally {
       setLoading(false);
@@ -110,6 +110,7 @@ export const Profile: React.FC = () => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProfile();
   }, []);
 
@@ -148,8 +149,9 @@ export const Profile: React.FC = () => {
       setIsEditing(false);
       await fetchProfile();
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to update profile.');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string, message?: string } } };
+      setError(error.response?.data?.error || error.response?.data?.message || 'Failed to update profile.');
     } finally {
       setSaving(false);
     }
