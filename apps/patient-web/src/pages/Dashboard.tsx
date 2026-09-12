@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
+import { usePatientDashboard } from '../hooks/usePatientDashboard';
 import { 
   HeartPulse, Calendar, Clock, MapPin, User, Stethoscope, 
   ArrowRight, Video, CheckCircle, AlertCircle, Activity,
@@ -8,63 +8,12 @@ import {
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
-interface Doctor {
-  id: string;
-  fullName: string;
-  speciality: string;
-  facilityName: string | null;
-  languagesSpoken: string[];
-  bio: string | null;
-}
-
-interface OpenSlot {
-  id: string;
-  startsAt: string;
-  endsAt: string;
-  supportedModes: string[];
-  status: string;
-  doctorId: string;
-  doctorName: string;
-  doctorSpeciality: string;
-  consultationFee?: number;
-  facilityName?: string | null;
-}
-
-interface Appointment {
-  id: string;
-  scheduledAt: string;
-  status: string;
-  concernCategory: string;
-  doctor?: { fullName: string; speciality: string };
-}
-
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [openSlots, setOpenSlots] = useState<OpenSlot[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { doctors, appointments, openSlots, loading } = usePatientDashboard();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [docRes, apptRes, slotRes] = await Promise.all([
-          api.get('/doctors'),
-          api.get('/appointments'),
-          api.get('/doctors/open-slots').catch(() => ({ data: { data: [] } }))
-        ]);
-        setDoctors(docRes.data.data || []);
-        setAppointments(apptRes.data.data || []);
-        setOpenSlots(slotRes.data.data || []);
-      } catch (err) {
-        console.error('Failed to fetch data', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+
 
   const upcomingAppts = appointments.filter(a => a.status === 'confirmed' || a.status === 'requested');
   const firstName = user?.displayName?.split(' ')[0] || 'there';
