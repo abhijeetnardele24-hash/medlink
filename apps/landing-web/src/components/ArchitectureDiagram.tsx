@@ -3,7 +3,7 @@ import { Smartphone, ShieldCheck, Activity, Video, Database, Stethoscope } from 
 
 export default function ArchitectureDiagram() {
   return (
-    <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 bg-transparent">
+    <div className="relative w-full aspect-video flex items-center justify-center p-4 bg-transparent">
       
       {/* Central Hub */}
       <motion.div 
@@ -17,15 +17,15 @@ export default function ArchitectureDiagram() {
 
       {/* Connection Lines */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-        <svg className="w-full h-full" viewBox="0 0 400 300" preserveAspectRatio="none">
+        <svg className="w-full h-full" viewBox="0 0 600 337" preserveAspectRatio="none">
           {/* Top Left */}
-          <path d="M 120 100 L 180 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          <path d="M 150 100 L 270 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
           {/* Top Right */}
-          <path d="M 280 100 L 220 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          <path d="M 450 100 L 330 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
           {/* Bottom Left */}
-          <path d="M 120 200 L 180 160" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          <path d="M 150 237 L 270 197" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
           {/* Bottom Right */}
-          <path d="M 280 200 L 220 160" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          <path d="M 450 237 L 330 197" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
         </svg>
       </div>
 
@@ -35,7 +35,7 @@ export default function ArchitectureDiagram() {
         initial={{ opacity: 0, x: -20, y: -20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="absolute top-[10%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+        className="absolute top-[15%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[35%] z-20"
       >
         <div className="flex flex-col items-center mb-3">
           <div className="text-brand-blue mb-1">
@@ -54,7 +54,7 @@ export default function ArchitectureDiagram() {
         initial={{ opacity: 0, x: 20, y: -20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="absolute top-[10%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+        className="absolute top-[15%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[35%] z-20"
       >
         <div className="flex flex-col items-center mb-3">
           <div className="text-brand-blue mb-1">
@@ -73,7 +73,7 @@ export default function ArchitectureDiagram() {
         initial={{ opacity: 0, x: -20, y: 20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="absolute bottom-[10%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+        className="absolute bottom-[15%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[35%] z-20"
       >
         <div className="flex flex-col items-center mb-3">
           <div className="text-brand-blue mb-1">
@@ -92,7 +92,7 @@ export default function ArchitectureDiagram() {
         initial={{ opacity: 0, x: 20, y: 20 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="absolute bottom-[10%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+        className="absolute bottom-[15%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[35%] z-20"
       >
         <div className="flex flex-col items-center mb-3">
           <div className="text-brand-blue mb-1">
