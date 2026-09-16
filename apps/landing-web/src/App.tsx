@@ -325,24 +325,24 @@ function App() {
 
       {/* NEW SECTION: Trust & Security Banner */}
       <section className="trust-banner">
-        <div className="relative z-10 max-w-5xl mx-auto px-4">
-          <Shield size={64} className="mx-auto mb-8 opacity-90 text-[var(--accent)]" />
-          <h2 className="font-luxury text-5xl md:text-6xl mb-6 text-white">{t('trust.title')}</h2>
-          <p className="text-xl text-white/80 max-w-3xl mx-auto mb-12 leading-relaxed">
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', margin: '0 auto' }}>
+          <Shield size={64} style={{ margin: '0 auto 2rem', opacity: 0.9, color: 'var(--accent)' }} />
+          <h2 className="font-luxury" style={{ fontSize: '3.5rem', marginBottom: '1.5rem', color: 'white' }}>{t('trust.title')}</h2>
+          <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.8)', maxWidth: '700px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
             {t('trust.subtitle')}
           </p>
-          <div className="flex gap-8 justify-center flex-wrap">
-            <div className="bg-white/10 border border-white/20 p-6 px-8 rounded-2xl backdrop-blur-md">
-              <div className="text-2xl font-bold text-white mb-1">{t('trust.hipaa')}</div>
-              <div className="text-sm text-white/70">{t('trust.compliant')}</div>
+          <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.hipaa')}</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.compliant')}</div>
             </div>
-            <div className="bg-white/10 border border-white/20 p-6 px-8 rounded-2xl backdrop-blur-md">
-              <div className="text-2xl font-bold text-white mb-1">{t('trust.iso')}</div>
-              <div className="text-sm text-white/70">{t('trust.certified')}</div>
+            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.iso')}</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.certified')}</div>
             </div>
-            <div className="bg-white/10 border border-white/20 p-6 px-8 rounded-2xl backdrop-blur-md">
-              <div className="text-2xl font-bold text-white mb-1">{t('trust.e2e')}</div>
-              <div className="text-sm text-white/70">{t('trust.encryption')}</div>
+            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.e2e')}</div>
+              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.encryption')}</div>
             </div>
           </div>
         </div>
@@ -371,40 +371,40 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[var(--bg-surface)] border-t border-[var(--border)] text-[var(--text-main)] px-16 pt-24 pb-12">
-        <div className="max-w-6xl mx-auto flex justify-between items-start border-b border-[var(--border)] pb-16 mb-12">
+      <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', color: 'var(--text-main)', padding: '6rem 4rem 3rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '4rem', marginBottom: '3rem' }}>
           <div>
-            <div className="flex items-center gap-3 mb-5">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.2rem' }}>
               <MedLinkLogo />
             </div>
-            <p className="text-[var(--text-muted)] max-w-sm text-base leading-relaxed">
+            <p style={{ color: 'var(--text-muted)', maxWidth: '350px', fontSize: '1.05rem', lineHeight: 1.6 }}>
               {t('footer.desc')}
             </p>
           </div>
-          <div className="flex gap-24">
+          <div style={{ display: 'flex', gap: '6rem' }}>
             <div>
-              <h4 className="font-luxury mb-6 text-lg">{t('footer.portals')}</h4>
-              <ul className="list-none flex flex-col gap-4">
-                <li><a href={PATIENT_URL} className="text-[var(--text-muted)] no-underline text-base transition-colors hover:text-[var(--accent)]">{t('footer.patientGateway')}</a></li>
-                <li><a href={DOCTOR_URL} className="text-[var(--text-muted)] no-underline text-base transition-colors hover:text-[var(--accent)]">{t('footer.doctorHub')}</a></li>
-                <li><a href={ADMIN_URL} className="text-[var(--text-muted)] no-underline text-base transition-colors hover:text-[var(--accent)]">{t('footer.adminConsole')}</a></li>
-                <li><a href={PHARMACY_URL} className="text-[var(--text-muted)] no-underline text-base transition-colors hover:text-[var(--accent)]">{t('footer.pharmacyPortal')}</a></li>
+              <h4 className="font-luxury" style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('footer.portals')}</h4>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <li><a href={PATIENT_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.patientGateway')}</a></li>
+                <li><a href={DOCTOR_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.doctorHub')}</a></li>
+                <li><a href={ADMIN_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.adminConsole')}</a></li>
+                <li><a href={PHARMACY_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.pharmacyPortal')}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-luxury mb-6 text-lg">{t('footer.company')}</h4>
-              <ul className="list-none flex flex-col gap-4">
-                <li><span className="text-[var(--text-muted)] cursor-pointer text-base transition-colors hover:text-[var(--accent)]">{t('footer.documentation')}</span></li>
-                <li><span className="text-[var(--text-muted)] cursor-pointer text-base transition-colors hover:text-[var(--accent)]">{t('footer.securityProtocol')}</span></li>
-                <li><span className="text-[var(--text-muted)] cursor-pointer text-base transition-colors hover:text-[var(--accent)]">{t('footer.contactSales')}</span></li>
+              <h4 className="font-luxury" style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('footer.company')}</h4>
+              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.documentation')}</span></li>
+                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.securityProtocol')}</span></li>
+                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.contactSales')}</span></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto flex justify-between text-[var(--text-muted)] text-sm">
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
           <span>{t('footer.copyright')}</span>
-          <span className="flex items-center gap-2 font-semibold">
-            <span className="w-2 h-2 rounded-full bg-[var(--success)]"></span> {t('footer.systemStatus')}
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
+            <span style={{width: 8, height: 8, borderRadius: '50%', background: 'var(--success)'}}></span> {t('footer.systemStatus')}
           </span>
         </div>
       </footer>
