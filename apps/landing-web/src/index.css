@@ -1,17 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  body {
-    @apply font-sans antialiased bg-surface-dark text-white;
+@theme {
+  --font-sans: 'Inter', sans-serif;
+  
+  --color-brand-blue: #3356f1;
+  --color-brand-hover: #1F49D4;
+  --color-brand-dark: #071233;
+  
+  /* Light theme colors (deepset.ai inspired) */
+  --color-surface-base: #ffffff;
+  --color-surface-light: #f8fafc;
+  --color-surface-beige: #faf9f6; /* Very light beige/off-white */
+  --color-surface-accent: #f1f5f9;
+  
+  --color-text-main: #071233;
+  --color-text-muted: #4e5271;
+  
+  --animate-marquee: marquee 60s linear infinite;
+  
+  @keyframes marquee {
+    0% { transform: translateX(0%); }
+    100% { transform: translateX(-50%); }
   }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  body {
+    background-color: var(--color-surface-base);
+    color: var(--color-text-main);
+    -webkit-font-smoothing: antialiased;
   }
+}
+
+@utility text-balance {
+  text-wrap: balance;
 }

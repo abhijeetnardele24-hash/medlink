@@ -1,255 +1,447 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Shield, Activity, Stethoscope, Clock, Lock, CheckCircle2, ChevronRight, Video, FileText, Globe } from 'lucide-react';
+import { Shield, Activity, Stethoscope, Clock, Lock, CheckCircle2, ChevronRight, Video, FileText, Globe, Code, Layers, Smartphone } from 'lucide-react';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
+import EcosystemDiagram from './components/EcosystemDiagram';
 
 function App() {
   const { scrollYProgress } = useScroll();
-  const yBackground = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
-
+  
   return (
-    <div className="min-h-screen bg-surface-dark text-white font-sans selection:bg-brand-blue selection:text-white">
+    <div className="min-h-screen bg-white text-text-main font-sans selection:bg-brand-blue selection:text-white">
       
       {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 bg-surface-dark/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+      <nav className="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-md border-b border-surface-accent transition-all duration-300">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center">
-              <Activity className="w-5 h-5 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="flex items-center text-text-main">
+              <Activity className="w-8 h-8" strokeWidth={2.5} />
             </div>
-            <span className="font-bold text-xl tracking-tight">MedLink Enterprise</span>
+            <span className="font-extrabold text-2xl tracking-tight text-text-main">MedLink</span>
+            <div className="h-7 w-px bg-slate-300 mx-2"></div>
+            <span className="font-medium text-xl tracking-tight text-slate-500">Enterprise</span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-            <a href="#" className="hover:text-white transition-colors">Platform</a>
-            <a href="#" className="hover:text-white transition-colors">Solutions</a>
-            <a href="#" className="hover:text-white transition-colors">Security</a>
-            <a href="#" className="hover:text-white transition-colors">Case Studies</a>
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-text-main">
+            {/* Products Dropdown */}
+            <div className="relative group py-6">
+              <a href="#" className="hover:text-brand-blue transition-colors flex items-center gap-1">
+                Products & Services <ChevronRight className="w-3 h-3 rotate-90 group-hover:-rotate-90 transition-transform"/>
+              </a>
+              <div className="absolute top-full left-0 w-[340px] bg-white border border-slate-100 shadow-2xl rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden p-3 flex flex-col gap-1">
+                <a href="http://localhost:5174" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
+                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
+                    <Stethoscope className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 font-medium text-text-main">Doctor Portal</div>
+                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </a>
+                
+                <a href="http://localhost:5175" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
+                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
+                    <Smartphone className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 font-medium text-text-main">Patient App</div>
+                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </a>
+
+                <a href="http://localhost:5176" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
+                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
+                    <Activity className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 font-medium text-text-main">Pharmacy Portal</div>
+                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </a>
+
+                <a href="http://localhost:5177" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
+                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 font-medium text-text-main">Coordinator Portal</div>
+                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
+                    <ChevronRight className="w-3 h-3" />
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            {/* Solutions Dropdown */}
+            <div className="relative group py-6">
+              <a href="#" className="hover:text-brand-blue transition-colors flex items-center gap-1">
+                Solutions <ChevronRight className="w-3 h-3 rotate-90 group-hover:-rotate-90 transition-transform"/>
+              </a>
+              <div className="absolute top-full left-0 w-56 bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-blue/5 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden">
+                <div className="p-2">
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Telepsychiatry</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Primary Care</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Post-Op Monitoring</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Enterprise EMR</a>
+                </div>
+              </div>
+            </div>
+
+            {/* Resources Dropdown */}
+            <div className="relative group py-6">
+              <a href="#" className="hover:text-brand-blue transition-colors flex items-center gap-1">
+                Resources <ChevronRight className="w-3 h-3 rotate-90 group-hover:-rotate-90 transition-transform"/>
+              </a>
+              <div className="absolute top-full left-0 w-56 bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-blue/5 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden">
+                <div className="p-2">
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Documentation</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">API Reference</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Case Studies</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Blog</a>
+                </div>
+              </div>
+            </div>
+
+            {/* Company Dropdown */}
+            <div className="relative group py-6">
+              <a href="#" className="hover:text-brand-blue transition-colors flex items-center gap-1">
+                Company <ChevronRight className="w-3 h-3 rotate-90 group-hover:-rotate-90 transition-transform"/>
+              </a>
+              <div className="absolute top-full right-0 w-48 bg-white/80 backdrop-blur-xl border border-white/20 shadow-xl shadow-brand-blue/5 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0 z-50 overflow-hidden">
+                <div className="p-2">
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">About Us</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Careers</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Contact Sales</a>
+                  <a href="#" className="block px-4 py-2 hover:bg-surface-light rounded-md text-text-main hover:text-brand-blue transition-colors">Partners</a>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <a href="#" className="hidden md:block text-sm font-medium hover:text-white transition-colors">Log in</a>
-            <button className="bg-brand-blue hover:bg-brand-hover text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(51,86,241,0.4)]">
-              Book Demo
+            <a href="http://localhost:5174/login" className="text-sm font-medium text-text-main hover:text-brand-blue transition-colors">
+              Log in
+            </a>
+            <button className="bg-brand-blue hover:bg-brand-hover text-white px-5 py-2.5 rounded text-sm font-medium transition-colors shadow-lg shadow-brand-blue/20">
+              Sign up
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
-        {/* Glow effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-blue/20 rounded-full blur-[120px] pointer-events-none" />
-        
-        <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="max-w-2xl"
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-semibold uppercase tracking-wider mb-6">
-                <span className="w-2 h-2 rounded-full bg-brand-blue animate-pulse" />
-                MedLink Enterprise 2.0
-              </div>
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1]">
-                The Sovereign <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-emerald-400">Telemedicine</span> Platform.
-              </h1>
-              <p className="text-lg md:text-xl text-slate-400 mb-8 max-w-lg leading-relaxed text-balance">
-                Deploy production healthcare infrastructure with full control. Build highly secure, zero-latency video consultation pipelines trusted by global hospitals.
-              </p>
-              
-              <div className="flex flex-wrap items-center gap-4">
-                <button className="bg-brand-blue hover:bg-brand-hover text-white px-6 py-3.5 rounded-lg font-medium transition-all shadow-[0_0_20px_rgba(51,86,241,0.4)] flex items-center gap-2 group">
-                  Start Building
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button className="px-6 py-3.5 rounded-lg font-medium border border-slate-700 hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Read Docs
-                </button>
-              </div>
-            </motion.div>
 
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              className="relative hidden lg:block"
-            >
-              <ArchitectureDiagram />
-            </motion.div>
-          </div>
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden flex flex-col lg:flex-row items-stretch">
+        
+        {/* Left Content */}
+        <div className="w-full lg:w-1/2 pt-20 pb-20 px-6 lg:pl-24 lg:pr-12 flex flex-col justify-center">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="max-w-xl"
+          >
+            <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 text-text-main leading-[1.1]">
+              Sovereign Telemedicine starts with <span className="text-brand-blue">MedLink</span>
+            </h1>
+            <p className="text-lg text-text-muted mb-8 leading-relaxed text-balance">
+              Most telehealth platforms make choices for you - on infrastructure, models, and data boundaries. MedLink doesn't. Build, run, and govern healthcare pipelines on your own terms, in any environment.
+            </p>
+            
+            <div className="flex flex-wrap items-center gap-4">
+              <button className="bg-brand-blue hover:bg-brand-hover text-white px-6 py-3 rounded font-medium transition-all flex items-center gap-2 group shadow-lg shadow-brand-blue/20">
+                Sign up for free
+              </button>
+              <button className="px-6 py-3 rounded font-medium bg-surface-accent hover:bg-slate-200 text-text-main transition-colors flex items-center gap-2">
+                Explore Platform
+              </button>
+            </div>
+            
+            <div className="mt-8 flex items-center gap-2 text-sm text-text-muted">
+              <div className="w-6 h-6 rounded-full bg-brand-blue text-white flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              Trusted by 100+ Hospitals
+            </div>
+          </motion.div>
+        </div>
+        
+        {/* Right Content - Diagram area with faint grid bg */}
+        <div className="w-full lg:w-1/2 bg-[#f4f7ff] relative p-8 lg:p-16 flex items-center justify-center border-l border-blue-100">
+          <div className="absolute inset-0 bg-[radial-gradient(#93a5ff_1.5px,transparent_1.5px)] [background-size:24px_24px] opacity-40"></div>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative z-10 w-full"
+          >
+            <ArchitectureDiagram />
+          </motion.div>
         </div>
       </section>
 
-      {/* Marquee Section */}
-      <div className="border-y border-slate-800 bg-slate-900/50 py-8 overflow-hidden relative">
-        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-surface-dark to-transparent z-10" />
-        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-surface-dark to-transparent z-10" />
-        
-        <p className="text-center text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">Trusted by leading healthcare providers</p>
-        <div className="flex w-fit animate-marquee">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex items-center gap-16 px-8">
-              <span className="text-xl font-bold text-slate-600">Mayo Clinic</span>
-              <span className="text-xl font-bold text-slate-600">Cleveland Clinic</span>
-              <span className="text-xl font-bold text-slate-600">Johns Hopkins</span>
-              <span className="text-xl font-bold text-slate-600">Mount Sinai</span>
-              <span className="text-xl font-bold text-slate-600">Kaiser Permanente</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Feature Zig Zag Sections */}
-      <section className="py-32 relative">
+      {/* Feature Grid Section */}
+      <section className="py-24 border-t border-surface-accent bg-white">
         <div className="max-w-7xl mx-auto px-6">
           
-          {/* Feature 1 */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-40">
-            <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className="order-2 lg:order-1"
-            >
-              <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-8 flex items-center justify-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-brand-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <Video className="w-32 h-32 text-brand-blue opacity-80 group-hover:scale-110 transition-transform duration-700" />
-              </div>
-            </motion.div>
+          <div className="max-w-2xl mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-text-main leading-tight">
+              Why organizations<br/>choose MedLink
+            </h2>
+            <p className="text-lg text-text-muted">
+              The open platform to build, run, and govern secure healthcare pipelines and applications.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-px bg-surface-accent border border-surface-accent">
             
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-              className="order-1 lg:order-2"
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Zero-Latency Virtual Care.</h2>
-              <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-                Build real-time consultation experiences with our optimized WebRTC relays. MedLink's infrastructure ensures crystal-clear HD video and audio, even on low-bandwidth networks, ensuring equitable access to care.
-              </p>
-              <ul className="space-y-4">
-                {['Sub-50ms global latency', 'Adaptive bitrate streaming', 'Automatic reconnection handling'].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
-                    <span className="text-slate-300">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-
-          {/* Feature 2 */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-40">
-            <motion.div 
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">HIPAA Compliant by Default.</h2>
-              <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-                Security isn't an afterthought. The MedLink Enterprise platform wraps every data packet in military-grade encryption. We provide BAA signing and full audit trails out of the box.
-              </p>
-              <ul className="space-y-4">
-                {['End-to-end AES-256 encryption', 'SOC 2 Type II & HIPAA certified', 'Granular role-based access control (RBAC)'].map((item, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-6 h-6 text-brand-blue shrink-0" />
-                    <span className="text-slate-300">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-100px" }}
-            >
-              <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-8 flex items-center justify-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                <Lock className="w-32 h-32 text-emerald-400 opacity-80 group-hover:scale-110 transition-transform duration-700" />
+            {/* Box 1 */}
+            <div className="bg-white p-8 flex flex-col relative group">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                <Code className="w-5 h-5" />
               </div>
-            </motion.div>
-          </div>
+              <h3 className="font-semibold text-lg mb-3">Open Source Foundation</h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Build on transparent, auditable code and open standards. Healthcare primitives – streaming, relays, EHR connectors – are yours to own, swap, and extend. No lock-in.
+              </p>
+            </div>
 
+            {/* Box 2 */}
+            <div className="bg-white p-8 flex flex-col relative group">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                <Layers className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Context-Engineered Care</h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Your video pipelines behave the way you designed them to. Define what they know, what they can do, and how they route. Every step is explicit and inspectable.
+              </p>
+            </div>
+
+            {/* Box 3 */}
+            <div className="bg-white p-8 flex flex-col relative group">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                <Shield className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Sovereign by Design</h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Your infrastructure, your data, your compliance posture. Deploy wherever your requirements demand – cloud or self-hosted – with audit logs, RBAC, and data lineage built in.
+              </p>
+            </div>
+
+            {/* Box 4 */}
+            <div className="bg-white p-8 flex flex-col relative group">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
+                <Activity className="w-5 h-5" />
+              </div>
+              <h3 className="font-semibold text-lg mb-3">Proven in Production</h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Ship systems that survive contact with real patients, real data, and real scale. From first pilot to governed, versioned, observable systems – without rebuilding.
+              </p>
+            </div>
+            
+          </div>
         </div>
       </section>
 
-      {/* Trust Banner */}
-      <section className="py-24 relative overflow-hidden bg-brand-dark border-y border-brand-blue/20">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <Shield className="w-16 h-16 text-brand-blue mx-auto mb-8" />
-          <h2 className="text-4xl font-bold mb-6">Ready to upgrade your infrastructure?</h2>
-          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
-            Join the hundreds of healthcare providers who have migrated to MedLink Enterprise for unparalleled stability and security.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <button className="bg-brand-blue hover:bg-brand-hover text-white px-8 py-4 rounded-lg font-medium text-lg transition-all shadow-[0_0_20px_rgba(51,86,241,0.4)]">
-              Talk to Sales
-            </button>
+      {/* Feature List Section */}
+      <section className="py-24 bg-surface-beige border-t border-surface-accent">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-start">
+            
+            <div className="sticky top-32">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-main leading-tight">
+                Control today.<br/>Advantage tomorrow.
+              </h2>
+              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-brand-blue leading-tight">
+                Why Sovereign Healthcare wins
+              </h2>
+              
+              <div className="flex flex-wrap items-center gap-4">
+                <button className="bg-brand-blue hover:bg-brand-hover text-white px-6 py-3 rounded font-medium transition-all shadow-lg shadow-brand-blue/20">
+                  Start Building
+                </button>
+                <button className="px-6 py-3 rounded font-medium bg-surface-accent hover:bg-slate-200 text-text-main transition-colors">
+                  Explore Platform
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-12">
+              
+              <div className="border-b border-slate-200 pb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
+                    <Activity className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-semibold text-xl">1. Performance</h3>
+                </div>
+                <p className="text-text-muted pl-11">
+                  Tune video encoding, WebRTC relays, and routing around the workload instead of settling for defaults.
+                </p>
+              </div>
+
+              <div className="border-b border-slate-200 pb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-semibold text-xl">2. Cost</h3>
+                </div>
+                <p className="text-text-muted pl-11">
+                  Optimize compute, providers, and deployment footprints with transparent architecture choices.
+                </p>
+              </div>
+
+              <div className="border-b border-slate-200 pb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
+                    <Video className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-semibold text-xl">3. Innovation</h3>
+                </div>
+                <p className="text-text-muted pl-11">
+                  Adopt new codecs and components without rebuilding applications around another platform.
+                </p>
+              </div>
+
+              <div className="pb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
+                    <Shield className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-semibold text-xl">4. Resilience</h3>
+                </div>
+                <p className="text-text-muted pl-11">
+                  Keep critical telehealth workflows portable, observable, and aligned with internal compliance.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Ecosystem Section */}
+      <section className="py-24 bg-white border-t border-surface-accent">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-3 text-brand-blue leading-tight">
+              Build & run on MedLink
+            </h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-text-main leading-tight">
+              Your platform. Your ecosystem.
+            </h2>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-10">
+            {/* Left Cards */}
+            <div className="w-full lg:w-2/5 flex flex-col gap-4">
+              
+              <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
+                <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
+                  <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
+                    <Code className="w-4 h-4" />
+                  </div>
+                  MedLink Open Source
+                </div>
+                <p className="text-text-muted text-sm leading-relaxed">Compose telemedicine pipelines using any models, tools, and architectures.</p>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Modular</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Flexible</span>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
+                <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
+                  <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
+                    <Layers className="w-4 h-4" />
+                  </div>
+                  MedLink Enterprise Platform
+                </div>
+                <p className="text-text-muted text-sm leading-relaxed">Build, evaluate, deploy, and govern healthcare applications at scale.</p>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Build</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Test</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Deploy</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Govern</span>
+                </div>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
+                <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
+                  <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
+                    <Globe className="w-4 h-4" />
+                  </div>
+                  Deploy Anywhere
+                </div>
+                <p className="text-text-muted text-sm leading-relaxed">Run in the environment you choose, with strict data boundaries.</p>
+                <div className="flex gap-2 mt-1">
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Cloud</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Self-Hosted</span>
+                </div>
+              </div>
+              
+            </div>
+
+            {/* Right Diagram */}
+            <div className="w-full lg:w-3/5 border border-slate-200 rounded-xl bg-white relative overflow-hidden">
+              <EcosystemDiagram />
+            </div>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-surface-dark border-t border-slate-800 pt-20 pb-10">
+      <footer className="bg-white border-t border-slate-200 pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
+            
             <div className="col-span-2 lg:col-span-2">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center text-text-main">
+                  <Activity className="w-7 h-7" strokeWidth={2.5} />
                 </div>
-                <span className="font-bold text-xl tracking-tight">MedLink</span>
+                <span className="font-extrabold text-xl tracking-tight text-text-main">MedLink</span>
+                <div className="h-6 w-px bg-slate-300 mx-1"></div>
+                <span className="font-medium text-lg tracking-tight text-slate-500">Enterprise</span>
               </div>
-              <p className="text-slate-400 text-sm max-w-xs">
-                The sovereign telemedicine platform for modern healthcare organizations. Secure, scalable, and built for the future of care.
-              </p>
             </div>
             
             <div>
-              <h4 className="font-semibold text-white mb-6">Product</h4>
-              <ul className="space-y-4 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Video Consultations</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Patient Portal</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">EMR Integration</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Security Architecture</a></li>
+              <h4 className="font-semibold text-text-main mb-4 text-sm">Products</h4>
+              <ul className="space-y-3 text-sm text-text-muted">
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Enterprise Platform</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Cloud Relays</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Open Source</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-6">Resources</h4>
-              <ul className="space-y-4 text-sm text-slate-400">
+              <h4 className="font-semibold text-text-main mb-4 text-sm">Resources</h4>
+              <ul className="space-y-3 text-sm text-text-muted">
                 <li><a href="#" className="hover:text-brand-blue transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">API Reference</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Case Studies</a></li>
                 <li><a href="#" className="hover:text-brand-blue transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Case Studies</a></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-6">Company</h4>
-              <ul className="space-y-4 text-sm text-slate-400">
-                <li><a href="#" className="hover:text-brand-blue transition-colors">About Us</a></li>
+              <h4 className="font-semibold text-text-main mb-4 text-sm">Company</h4>
+              <ul className="space-y-3 text-sm text-text-muted">
+                <li><a href="#" className="hover:text-brand-blue transition-colors">About</a></li>
                 <li><a href="#" className="hover:text-brand-blue transition-colors">Careers</a></li>
                 <li><a href="#" className="hover:text-brand-blue transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Partners</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-slate-500 text-sm">
-              © 2026 MedLink Technologies Inc. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6 text-sm text-slate-500">
-              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-white transition-colors">HIPAA Compliance</a>
+          <div className="border-t border-slate-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-text-muted">
+            <p>© 2026 MedLink Technologies Inc. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <a href="#" className="hover:text-brand-blue transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-brand-blue transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-brand-blue transition-colors">Imprint</a>
             </div>
           </div>
         </div>

@@ -1,105 +1,120 @@
 import { motion } from 'framer-motion';
-import { Smartphone, Server, Monitor, ShieldCheck, Activity, Video } from 'lucide-react';
+import { Smartphone, ShieldCheck, Activity, Video, Database, Stethoscope } from 'lucide-react';
 
 export default function ArchitectureDiagram() {
   return (
-    <div className="relative w-full max-w-4xl mx-auto h-[400px] flex items-center justify-between p-8">
-      {/* Background connecting lines */}
-      <div className="absolute inset-0 flex items-center justify-center -z-10">
-        <svg className="w-full h-full opacity-20" viewBox="0 0 1000 400" preserveAspectRatio="none">
-          <path d="M 150 200 L 500 100 L 850 200" fill="none" stroke="#3356f1" strokeWidth="4" strokeDasharray="10 10" className="animate-pulse" />
-          <path d="M 150 200 L 500 300 L 850 200" fill="none" stroke="#3356f1" strokeWidth="4" strokeDasharray="10 10" className="animate-pulse" />
-          <path d="M 500 100 L 500 300" fill="none" stroke="#3356f1" strokeWidth="4" strokeDasharray="10 10" />
+    <div className="relative w-full aspect-[4/3] flex items-center justify-center p-8 bg-transparent">
+      
+      {/* Central Hub */}
+      <motion.div 
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="w-24 h-24 bg-brand-blue rounded-2xl flex items-center justify-center text-white z-20 shadow-lg relative"
+      >
+        <Activity size={40} />
+      </motion.div>
+
+      {/* Connection Lines */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <svg className="w-full h-full" viewBox="0 0 400 300" preserveAspectRatio="none">
+          {/* Top Left */}
+          <path d="M 120 100 L 180 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          {/* Top Right */}
+          <path d="M 280 100 L 220 140" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          {/* Bottom Left */}
+          <path d="M 120 200 L 180 160" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
+          {/* Bottom Right */}
+          <path d="M 280 200 L 220 160" fill="none" stroke="#cbd5e1" strokeWidth="2" strokeDasharray="4 4" />
         </svg>
       </div>
 
-      {/* Node 1: Patient App */}
+      {/* Nodes */}
+      {/* Node 1: Patient App (Top Left) */}
       <motion.div 
-        initial={{ opacity: 0, x: -50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        className="flex flex-col items-center gap-4 bg-surface-accent p-6 rounded-2xl border border-slate-700 w-48 shadow-2xl relative z-10"
+        initial={{ opacity: 0, x: -20, y: -20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="absolute top-[10%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
       >
-        <div className="w-16 h-16 bg-brand-blue/20 rounded-xl flex items-center justify-center text-brand-blue">
-          <Smartphone size={32} />
+        <div className="flex flex-col items-center mb-3">
+          <div className="text-brand-blue mb-1">
+            <Smartphone size={20} />
+          </div>
+          <span className="font-semibold text-sm">Patient App</span>
         </div>
-        <div className="text-center">
-          <h3 className="font-semibold text-white">Patient App</h3>
-          <p className="text-xs text-slate-400 mt-1">iOS, Android, Web</p>
+        <div className="flex gap-2 justify-center">
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> iOS</span>
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> Android</span>
         </div>
       </motion.div>
 
-      {/* Node 2: Central Server / Infrastructure */}
-      <div className="flex flex-col gap-12 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: -50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-col items-center gap-4 bg-brand-blue/10 p-6 rounded-2xl border border-brand-blue/30 w-56 shadow-[0_0_30px_rgba(51,86,241,0.2)] backdrop-blur-sm"
-        >
-          <div className="w-16 h-16 bg-brand-blue rounded-xl flex items-center justify-center text-white shadow-lg">
-            <ShieldCheck size={32} />
-          </div>
-          <div className="text-center">
-            <h3 className="font-semibold text-white">HIPAA Gateway</h3>
-            <p className="text-xs text-brand-blue/80 mt-1">End-to-End Encryption</p>
-          </div>
-        </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4 }}
-          className="flex flex-col items-center gap-4 bg-surface-accent p-6 rounded-2xl border border-slate-700 w-56 shadow-2xl backdrop-blur-sm"
-        >
-          <div className="w-16 h-16 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400">
-            <Video size={32} />
-          </div>
-          <div className="text-center">
-            <h3 className="font-semibold text-white">WebRTC Relays</h3>
-            <p className="text-xs text-slate-400 mt-1">Sub-50ms Latency</p>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Node 3: Doctor Dashboard */}
+      {/* Node 2: Doctor Portal (Top Right) */}
       <motion.div 
-        initial={{ opacity: 0, x: 50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.6 }}
-        className="flex flex-col items-center gap-4 bg-surface-accent p-6 rounded-2xl border border-slate-700 w-48 shadow-2xl relative z-10"
+        initial={{ opacity: 0, x: 20, y: -20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="absolute top-[10%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
       >
-        <div className="w-16 h-16 bg-brand-blue/20 rounded-xl flex items-center justify-center text-brand-blue">
-          <Monitor size={32} />
+        <div className="flex flex-col items-center mb-3">
+          <div className="text-brand-blue mb-1">
+            <Stethoscope size={20} />
+          </div>
+          <span className="font-semibold text-sm">Doctor Portal</span>
         </div>
-        <div className="text-center">
-          <h3 className="font-semibold text-white">Doctor Portal</h3>
-          <p className="text-xs text-slate-400 mt-1">EMR Integrated</p>
+        <div className="flex gap-2 justify-center">
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> Web</span>
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> EMR</span>
         </div>
       </motion.div>
 
-      {/* Moving Particles */}
+      {/* Node 3: WebRTC Relays (Bottom Left) */}
       <motion.div 
-        className="absolute w-3 h-3 bg-brand-blue rounded-full shadow-[0_0_10px_#3356f1] z-20"
-        animate={{ 
-          x: [-350, 0, 350],
-          y: [0, -100, 0],
-          opacity: [0, 1, 0]
-        }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-      />
+        initial={{ opacity: 0, x: -20, y: 20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="absolute bottom-[10%] left-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+      >
+        <div className="flex flex-col items-center mb-3">
+          <div className="text-brand-blue mb-1">
+            <Video size={20} />
+          </div>
+          <span className="font-semibold text-sm">WebRTC Relays</span>
+        </div>
+        <div className="flex gap-2 justify-center">
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> Cloud</span>
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> Edge</span>
+        </div>
+      </motion.div>
+
+      {/* Node 4: HIPAA Gateway (Bottom Right) */}
       <motion.div 
-        className="absolute w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_10px_#34d399] z-20"
-        animate={{ 
-          x: [350, 0, -350],
-          y: [0, 100, 0],
-          opacity: [0, 1, 0]
-        }}
-        transition={{ duration: 3, repeat: Infinity, ease: "linear", delay: 1.5 }}
-      />
+        initial={{ opacity: 0, x: 20, y: 20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+        className="absolute bottom-[10%] right-[5%] bg-white border border-blue-200 rounded-xl p-4 shadow-sm w-[40%] z-20"
+      >
+        <div className="flex flex-col items-center mb-3">
+          <div className="text-brand-blue mb-1">
+            <ShieldCheck size={20} />
+          </div>
+          <span className="font-semibold text-sm">Security Gateway</span>
+        </div>
+        <div className="flex gap-2 justify-center flex-wrap">
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> AES-256</span>
+          <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-100 flex items-center gap-1"><CheckCircleIcon /> Audit</span>
+        </div>
+      </motion.div>
+
     </div>
+  );
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
   );
 }
