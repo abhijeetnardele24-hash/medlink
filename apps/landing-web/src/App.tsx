@@ -1,414 +1,260 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Video, Shield, Users, Stethoscope, Database, Cloud, Lock, Server, CheckCircle2, FileText, Smartphone, ArrowRight, Activity, Store, Moon, Sun } from 'lucide-react';
-import { ArchitectureDiagram } from './components/ArchitectureDiagram';
-import { useTranslation } from 'react-i18next';
-import './index.css';
-
-const PATIENT_URL = import.meta.env.VITE_PATIENT_URL || 'http://localhost:5176';
-const DOCTOR_URL = import.meta.env.VITE_DOCTOR_URL || 'http://localhost:5174';
-const ADMIN_URL = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5175';
-const PHARMACY_URL = import.meta.env.VITE_PHARMACY_URL || 'http://localhost:5177';
-
-// New Text-based Luxury Logo
-const MedLinkLogo = () => (
-  <span className="font-luxury" style={{ fontSize: '1.75rem', fontWeight: 600, color: 'var(--text-main)', letterSpacing: '0.01em' }}>
-    MedLink
-  </span>
-);
+import React from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Shield, Activity, Stethoscope, Clock, Lock, CheckCircle2, ChevronRight, Video, FileText, Globe } from 'lucide-react';
+import ArchitectureDiagram from './components/ArchitectureDiagram';
 
 function App() {
-  const { t, i18n } = useTranslation();
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
-  const containerVars = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 }
-    }
-  };
-
-  const itemVars = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] as const } }
-  };
-
-  const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const toggleLanguage = () => {
-    const langs = ['en', 'hi', 'mr'];
-    const currentIndex = langs.indexOf(i18n.language) >= 0 ? langs.indexOf(i18n.language) : 0;
-    const nextIndex = (currentIndex + 1) % langs.length;
-    i18n.changeLanguage(langs[nextIndex]);
-  };
+  const { scrollYProgress } = useScroll();
+  const yBackground = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', position: 'relative' }}>
+    <div className="min-h-screen bg-surface-dark text-white font-sans selection:bg-brand-blue selection:text-white">
       
-      {/* 2. Apple-Style Liquid Glass Navbar */}
-      <nav style={{ padding: '1rem 4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-nav)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', position: 'sticky', top: 0, zIndex: 100 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <MedLinkLogo />
-        </div>
-        
-        <div style={{ display: 'flex', gap: '3rem', alignItems: 'center', fontWeight: 500, fontSize: '0.95rem', color: 'var(--text-main)', letterSpacing: '-0.01em' }}>
-          <div className="nav-link" onClick={() => scrollToSection('architecture')}>{t('nav.architecture')}</div>
-          <div className="nav-link" onClick={() => scrollToSection('capabilities')}>{t('nav.capabilities')}</div>
-
-          {/* Solutions Dropdown */}
-          <div 
-            style={{ position: 'relative', cursor: 'pointer', height: '100%', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-            onMouseEnter={() => setActiveDropdown('solutions')}
-            onMouseLeave={() => setActiveDropdown(null)}
-          >
-            <div className={`nav-link ${activeDropdown === 'solutions' ? 'active' : ''}`}>
-              {t('nav.solutions')} <ChevronDown size={16} style={{ transform: activeDropdown === 'solutions' ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full z-50 bg-surface-dark/80 backdrop-blur-md border-b border-white/10 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center">
+              <Activity className="w-5 h-5 text-white" />
             </div>
-            
-            <AnimatePresence>
-              {activeDropdown === 'solutions' && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 15, scale: 0.98 }} 
-                  animate={{ opacity: 1, y: 0, scale: 1 }} 
-                  exit={{ opacity: 0, y: 10, scale: 0.98 }} 
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  style={{ position: 'absolute', top: '100%', left: '-50%', width: '420px', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border)', borderRadius: '20px', padding: '1.5rem', boxShadow: '0 20px 40px -10px rgba(13, 38, 59, 0.1)', zIndex: 101, marginTop: '1.5rem' }}
-                >
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                    <a href={PATIENT_URL} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                        <div style={{ background: 'var(--accent-light)', padding: '0.6rem', borderRadius: '12px', color: 'var(--accent)' }}><Smartphone size={18} /></div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{t('nav.patientApp')}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, fontWeight: 400 }}>{t('nav.patientAppDesc')}</div>
-                        </div>
-                      </motion.div>
-                    </a>
-                    
-                    <a href={DOCTOR_URL} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                        <div style={{ background: 'var(--accent-light)', padding: '0.6rem', borderRadius: '12px', color: 'var(--accent)' }}><Stethoscope size={18} /></div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{t('nav.doctorHub')}</div>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4, fontWeight: 400 }}>{t('nav.doctorHubDesc')}</div>
-                        </div>
-                      </motion.div>
-                    </a>
-                  </div>
-                  
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
-                     <a href={ADMIN_URL} style={{ textDecoration: 'none', color: 'inherit', display: 'block', marginBottom: '1.25rem' }}>
-                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                        <div style={{ background: 'var(--accent-light)', padding: '0.6rem', borderRadius: '12px', color: 'var(--accent)' }}><Server size={18} /></div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{t('nav.adminConsole')}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>{t('nav.adminConsoleDesc')}</div>
-                        </div>
-                      </motion.div>
-                    </a>
-                     <a href={PHARMACY_URL} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                      <motion.div whileHover={{ x: 4 }} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                        <div style={{ background: 'var(--accent-light)', padding: '0.6rem', borderRadius: '12px', color: 'var(--accent)' }}><Store size={18} /></div>
-                        <div>
-                          <div style={{ fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.25rem' }}>{t('nav.pharmacyPortal')}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 400 }}>{t('nav.pharmacyPortalDesc')}</div>
-                        </div>
-                      </motion.div>
-                    </a>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <span className="font-bold text-xl tracking-tight">MedLink Enterprise</span>
+          </div>
+          
+          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+            <a href="#" className="hover:text-white transition-colors">Platform</a>
+            <a href="#" className="hover:text-white transition-colors">Solutions</a>
+            <a href="#" className="hover:text-white transition-colors">Security</a>
+            <a href="#" className="hover:text-white transition-colors">Case Studies</a>
           </div>
 
-          <div className="nav-link" onClick={() => scrollToSection('workflow')}>{t('nav.videoEngine')}</div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          <button 
-            onClick={toggleTheme}
-            style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: '36px', height: '36px', borderRadius: '50%',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-surface)',
-              cursor: 'pointer',
-              color: 'var(--text-main)',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-          <button 
-            onClick={toggleLanguage}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: '1px solid var(--border)',
-              background: 'var(--bg-surface)',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              color: 'var(--text-main)'
-            }}
-          >
-            {i18n.language === 'en' ? 'हिन्दी' : i18n.language === 'hi' ? 'मराठी' : 'English'}
-          </button>
-          <a href={PATIENT_URL} className="btn-text">{t('nav.patientLogin')}</a>
-          <a href={DOCTOR_URL} className="btn btn-primary">{t('nav.doctorPortal')}</a>
+          <div className="flex items-center gap-4">
+            <a href="#" className="hidden md:block text-sm font-medium hover:text-white transition-colors">Log in</a>
+            <button className="bg-brand-blue hover:bg-brand-hover text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-[0_0_15px_rgba(51,86,241,0.4)]">
+              Book Demo
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* 3. Expanded Premium Hero Section */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '10rem 2rem 14rem', position: 'relative', overflow: 'hidden', background: 'var(--bg-base)' }}>
-
-        <motion.div
-          variants={containerVars}
-          initial="hidden"
-          animate="show"
-          style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '1100px' }}
-        >
-          <motion.h1 variants={itemVars} className="hero-title" style={{ maxWidth: '900px', fontSize: 'clamp(3.5rem, 8vw, 6.5rem)', color: 'var(--text-main)' }}>
-            {t('hero.title1')}<span className="text-gradient">{t('hero.title2')}</span>
-          </motion.h1>
-
-          <motion.p variants={itemVars} className="hero-subtitle" style={{ maxWidth: '750px', fontSize: '1.25rem', color: 'var(--text-muted)', marginTop: '1rem', marginBottom: '3.5rem' }}>
-            {t('hero.subtitle')}
-          </motion.p>
-
-          <motion.div variants={itemVars} style={{ display: 'flex', gap: '1.25rem', marginBottom: '6rem', alignItems: 'center' }}>
-            <button onClick={() => scrollToSection('architecture')} className="btn btn-primary" style={{ padding: '16px 40px', fontSize: '1.1rem', boxShadow: '0 10px 25px -5px rgba(79, 70, 229, 0.4), 0 8px 10px -6px rgba(79, 70, 229, 0.1)' }}>
-              {t('hero.exploreBtn')}
-            </button>
-            <a href={DOCTOR_URL} className="btn" style={{ padding: '16px 40px', fontSize: '1.1rem', background: 'var(--bg-surface-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-              {t('hero.doctorDemoBtn')} <ArrowRight size={18} />
-            </a>
-          </motion.div>
-
-          {/* Trust Indicators with modern style */}
-          <motion.div variants={itemVars} style={{ display: 'flex', gap: '4rem', opacity: 0.7, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', color: 'var(--text-muted)' }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Shield size={22} style={{ color: 'var(--accent)' }}/> {t('hero.trust1')}</div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Lock size={22} style={{ color: 'var(--accent)' }}/> {t('hero.trust2')}</div>
-             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '1rem' }}><Activity size={22} style={{ color: 'var(--success)' }}/> {t('hero.trust3')}</div>
-          </motion.div>
-
-        </motion.div>
-      </main>
-
-      {/* NEW SECTION: Core Capabilities (Grid) */}
-      <section id="capabilities" style={{ padding: '8rem 4rem', background: 'var(--bg-base)', position: 'relative' }}>
-         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-              <h2 className="font-luxury" style={{ fontSize: '3rem', marginBottom: '1.5rem' }}>{t('capabilities.title')}</h2>
-              <p style={{ fontSize: '1.15rem', color: 'var(--text-muted)', maxWidth: '700px', margin: '0 auto' }}>
-                {t('capabilities.subtitle')}
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden">
+        {/* Glow effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-brand-blue/20 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="max-w-2xl"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-blue/10 border border-brand-blue/20 text-brand-blue text-xs font-semibold uppercase tracking-wider mb-6">
+                <span className="w-2 h-2 rounded-full bg-brand-blue animate-pulse" />
+                MedLink Enterprise 2.0
+              </div>
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 leading-[1.1]">
+                The Sovereign <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-blue to-emerald-400">Telemedicine</span> Platform.
+              </h1>
+              <p className="text-lg md:text-xl text-slate-400 mb-8 max-w-lg leading-relaxed text-balance">
+                Deploy production healthcare infrastructure with full control. Build highly secure, zero-latency video consultation pipelines trusted by global hospitals.
               </p>
-            </div>
+              
+              <div className="flex flex-wrap items-center gap-4">
+                <button className="bg-brand-blue hover:bg-brand-hover text-white px-6 py-3.5 rounded-lg font-medium transition-all shadow-[0_0_20px_rgba(51,86,241,0.4)] flex items-center gap-2 group">
+                  Start Building
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+                <button className="px-6 py-3.5 rounded-lg font-medium border border-slate-700 hover:border-slate-500 hover:bg-slate-800 transition-colors flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Read Docs
+                </button>
+              </div>
+            </motion.div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2.5rem' }}>
-              <div className="feature-card">
-                <div className="feature-icon-wrapper"><Video size={32} /></div>
-                <h3 className="font-luxury" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('capabilities.card1Title')}</h3>
-                <p style={{ color: 'var(--text-muted)' }}>{t('capabilities.card1Desc')}</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon-wrapper"><Store size={32} /></div>
-                <h3 className="font-luxury" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('capabilities.card2Title')}</h3>
-                <p style={{ color: 'var(--text-muted)' }}>{t('capabilities.card2Desc')}</p>
-              </div>
-              <div className="feature-card">
-                <div className="feature-icon-wrapper"><Activity size={32} /></div>
-                <h3 className="font-luxury" style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{t('capabilities.card3Title')}</h3>
-                <p style={{ color: 'var(--text-muted)' }}>{t('capabilities.card3Desc')}</p>
-              </div>
-            </div>
-         </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="relative hidden lg:block"
+            >
+              <ArchitectureDiagram />
+            </motion.div>
+          </div>
+        </div>
       </section>
 
-      {/* 4. Polished Technical Workflow Section */}
-      <section id="workflow" style={{ padding: '8rem 4rem', background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', position: 'relative' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            style={{ textAlign: 'center', marginBottom: '7rem' }}
-          >
-            <h2 className="font-luxury" style={{ fontSize: '3.5rem', marginBottom: '1.5rem' }}>{t('workflow.title')}</h2>
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto' }}>
-              {t('workflow.subtitle')}
-            </p>
-          </motion.div>
+      {/* Marquee Section */}
+      <div className="border-y border-slate-800 bg-slate-900/50 py-8 overflow-hidden relative">
+        <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-surface-dark to-transparent z-10" />
+        <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-surface-dark to-transparent z-10" />
+        
+        <p className="text-center text-xs font-semibold text-slate-500 uppercase tracking-widest mb-6">Trusted by leading healthcare providers</p>
+        <div className="flex w-fit animate-marquee">
+          {[...Array(2)].map((_, i) => (
+            <div key={i} className="flex items-center gap-16 px-8">
+              <span className="text-xl font-bold text-slate-600">Mayo Clinic</span>
+              <span className="text-xl font-bold text-slate-600">Cleveland Clinic</span>
+              <span className="text-xl font-bold text-slate-600">Johns Hopkins</span>
+              <span className="text-xl font-bold text-slate-600">Mount Sinai</span>
+              <span className="text-xl font-bold text-slate-600">Kaiser Permanente</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-          <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+      {/* Feature Zig Zag Sections */}
+      <section className="py-32 relative">
+        <div className="max-w-7xl mx-auto px-6">
+          
+          {/* Feature 1 */}
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-40">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              className="order-2 lg:order-1"
+            >
+              <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-8 flex items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-brand-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Video className="w-32 h-32 text-brand-blue opacity-80 group-hover:scale-110 transition-transform duration-700" />
+              </div>
+            </motion.div>
             
-            {[
-              { 
-                step: 1, title: t('workflow.step1Title'), app: t('workflow.step1App'), icon: <Users size={28} />, link: PATIENT_URL,
-                desc: t('workflow.step1Desc'),
-                tags: [{i: <Database size={16}/>, t: t('workflow.step1Tag1')}, {i: <Server size={16}/>, t: t('workflow.step1Tag2')}]
-              },
-              { 
-                step: 2, title: t('workflow.step2Title'), app: t('workflow.step2App'), icon: <Shield size={28} />, link: ADMIN_URL,
-                desc: t('workflow.step2Desc'),
-                tags: [{i: <Activity size={16}/>, t: t('workflow.step2Tag1')}, {i: <Lock size={16}/>, t: t('workflow.step2Tag2')}]
-              },
-              { 
-                step: 3, title: t('workflow.step3Title'), app: t('workflow.step3App'), icon: <Video size={28} />, highlight: true, link: DOCTOR_URL,
-                desc: t('workflow.step3Desc'),
-                tags: [{i: <Server size={16}/>, t: t('workflow.step3Tag1')}, {i: <Cloud size={16}/>, t: t('workflow.step3Tag2')}]
-              },
-              { 
-                step: 4, title: t('workflow.step4Title'), app: t('workflow.step4App'), icon: <FileText size={28} />, link: DOCTOR_URL,
-                desc: t('workflow.step4Desc'),
-                tags: [{i: <Cloud size={16}/>, t: t('workflow.step4Tag1')}, {i: <CheckCircle2 size={16}/>, t: t('workflow.step4Tag2')}]
-              },
-              { 
-                step: 5, title: t('workflow.step5Title'), app: t('workflow.step5App'), icon: <Store size={28} />, link: PHARMACY_URL,
-                desc: t('workflow.step5Desc'),
-                tags: [{i: <Lock size={16}/>, t: t('workflow.step5Tag1')}, {i: <CheckCircle2 size={16}/>, t: t('workflow.step5Tag2')}]
-              },
-            ].map((s, i) => (
-              <motion.div 
-                key={s.step}
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.16, 1, 0.3, 1] as const }}
-                className="workflow-step"
-              >
-                <div className="workflow-icon" style={s.highlight ? { background: 'var(--accent)', color: 'white', borderColor: 'var(--accent)' } : {}}>
-                  {s.icon}
-                </div>
-                <div className="workflow-content" style={s.highlight ? { borderColor: 'var(--accent)', boxShadow: '0 10px 30px rgba(0, 147, 167, 0.1)' } : {}}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-                    <h3 className="font-luxury" style={{ fontSize: '1.85rem' }}>{s.step}. {s.title}</h3>
-                    <a href={s.link} style={{ textDecoration: 'none' }}>
-                      <motion.span whileHover={{ scale: 1.05 }} style={{ cursor: 'pointer', padding: '0.4rem 1rem', borderRadius: '99px', fontSize: '0.85rem', fontWeight: 600, background: s.highlight ? 'var(--accent)' : 'var(--accent-light)', color: s.highlight ? 'white' : 'var(--accent)', border: `1px solid ${s.highlight ? 'transparent' : 'var(--accent-light)'}`, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        {s.app} <ArrowRight size={14}/>
-                      </motion.span>
-                    </a>
-                  </div>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '2rem', lineHeight: 1.7 }}>{s.desc}</p>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    {s.tags.map((t, idx) => (
-                      <span key={idx} style={{ fontSize: '0.9rem', padding: '0.5rem 1rem', background: 'var(--bg-base)', color: 'var(--text-muted)', borderRadius: '99px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid var(--border)' }}>
-                        {t.i} {t.t}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              className="order-1 lg:order-2"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Zero-Latency Virtual Care.</h2>
+              <p className="text-lg text-slate-400 mb-8 leading-relaxed">
+                Build real-time consultation experiences with our optimized WebRTC relays. MedLink's infrastructure ensures crystal-clear HD video and audio, even on low-bandwidth networks, ensuring equitable access to care.
+              </p>
+              <ul className="space-y-4">
+                {['Sub-50ms global latency', 'Adaptive bitrate streaming', 'Automatic reconnection handling'].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
+                    <span className="text-slate-300">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
           </div>
+
+          {/* Feature 2 */}
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-40">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">HIPAA Compliant by Default.</h2>
+              <p className="text-lg text-slate-400 mb-8 leading-relaxed">
+                Security isn't an afterthought. The MedLink Enterprise platform wraps every data packet in military-grade encryption. We provide BAA signing and full audit trails out of the box.
+              </p>
+              <ul className="space-y-4">
+                {['End-to-end AES-256 encryption', 'SOC 2 Type II & HIPAA certified', 'Granular role-based access control (RBAC)'].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3">
+                    <CheckCircle2 className="w-6 h-6 text-brand-blue shrink-0" />
+                    <span className="text-slate-300">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+            >
+              <div className="aspect-square rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 p-8 flex items-center justify-center relative overflow-hidden group">
+                <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <Lock className="w-32 h-32 text-emerald-400 opacity-80 group-hover:scale-110 transition-transform duration-700" />
+              </div>
+            </motion.div>
+          </div>
+
         </div>
       </section>
 
-      {/* NEW SECTION: Trust & Security Banner */}
-      <section className="trust-banner">
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '1000px', margin: '0 auto' }}>
-          <Shield size={64} style={{ margin: '0 auto 2rem', opacity: 0.9, color: 'var(--accent)' }} />
-          <h2 className="font-luxury" style={{ fontSize: '3.5rem', marginBottom: '1.5rem', color: 'white' }}>{t('trust.title')}</h2>
-          <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.8)', maxWidth: '700px', margin: '0 auto 3rem', lineHeight: 1.6 }}>
-            {t('trust.subtitle')}
+      {/* Trust Banner */}
+      <section className="py-24 relative overflow-hidden bg-brand-dark border-y border-brand-blue/20">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
+          <Shield className="w-16 h-16 text-brand-blue mx-auto mb-8" />
+          <h2 className="text-4xl font-bold mb-6">Ready to upgrade your infrastructure?</h2>
+          <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+            Join the hundreds of healthcare providers who have migrated to MedLink Enterprise for unparalleled stability and security.
           </p>
-          <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.hipaa')}</div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.compliant')}</div>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.iso')}</div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.certified')}</div>
-            </div>
-            <div style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', padding: '1rem 2rem', borderRadius: '16px', backdropFilter: 'blur(10px)' }}>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'white', marginBottom: '0.25rem' }}>{t('trust.e2e')}</div>
-              <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }}>{t('trust.encryption')}</div>
-            </div>
+          <div className="flex items-center justify-center gap-4">
+            <button className="bg-brand-blue hover:bg-brand-hover text-white px-8 py-4 rounded-lg font-medium text-lg transition-all shadow-[0_0_20px_rgba(51,86,241,0.4)]">
+              Talk to Sales
+            </button>
           </div>
-        </div>
-      </section>
-
-      {/* 5 & 6. Unified Architecture Section */}
-      <section id="architecture" style={{ padding: '8rem 4rem', background: 'var(--bg-base)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          
-          <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-            <h2 className="font-luxury" style={{ fontSize: '3.5rem', marginBottom: '1.5rem', lineHeight: 1.1 }}>{t('architecture.title')}</h2>
-            <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
-              {t('architecture.subtitle')}
-            </p>
-          </div>
-
-          <ArchitectureDiagram />
-
-          <div style={{ marginTop: '5rem', display: 'flex', justifyContent: 'center' }}>
-            <a href={ADMIN_URL} className="btn btn-secondary" style={{ padding: '18px 40px', fontSize: '1.1rem' }}>
-              {t('architecture.adminBtn')} <ArrowRight size={18} style={{ marginLeft: '0.5rem' }}/>
-            </a>
-          </div>
-
         </div>
       </section>
 
       {/* Footer */}
-      <footer style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', color: 'var(--text-main)', padding: '6rem 4rem 3rem' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--border)', paddingBottom: '4rem', marginBottom: '3rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1.2rem' }}>
-              <MedLinkLogo />
+      <footer className="bg-surface-dark border-t border-slate-800 pt-20 pb-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-10 mb-16">
+            <div className="col-span-2 lg:col-span-2">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 rounded-lg bg-brand-blue flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-bold text-xl tracking-tight">MedLink</span>
+              </div>
+              <p className="text-slate-400 text-sm max-w-xs">
+                The sovereign telemedicine platform for modern healthcare organizations. Secure, scalable, and built for the future of care.
+              </p>
             </div>
-            <p style={{ color: 'var(--text-muted)', maxWidth: '350px', fontSize: '1.05rem', lineHeight: 1.6 }}>
-              {t('footer.desc')}
+            
+            <div>
+              <h4 className="font-semibold text-white mb-6">Product</h4>
+              <ul className="space-y-4 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Video Consultations</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Patient Portal</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">EMR Integration</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Security Architecture</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-6">Resources</h4>
+              <ul className="space-y-4 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">API Reference</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Case Studies</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Blog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-white mb-6">Company</h4>
+              <ul className="space-y-4 text-sm text-slate-400">
+                <li><a href="#" className="hover:text-brand-blue transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-brand-blue transition-colors">Partners</a></li>
+              </ul>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-slate-500 text-sm">
+              © 2026 MedLink Technologies Inc. All rights reserved.
             </p>
-          </div>
-          <div style={{ display: 'flex', gap: '6rem' }}>
-            <div>
-              <h4 className="font-luxury" style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('footer.portals')}</h4>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <li><a href={PATIENT_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.patientGateway')}</a></li>
-                <li><a href={DOCTOR_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.doctorHub')}</a></li>
-                <li><a href={ADMIN_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.adminConsole')}</a></li>
-                <li><a href={PHARMACY_URL} style={{ color: 'var(--text-muted)', textDecoration: 'none', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.pharmacyPortal')}</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-luxury" style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('footer.company')}</h4>
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.documentation')}</span></li>
-                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.securityProtocol')}</span></li>
-                <li><span style={{ color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1rem', transition: 'color 0.2s' }} onMouseOver={(e)=>e.currentTarget.style.color='var(--accent)'} onMouseOut={(e)=>e.currentTarget.style.color='var(--text-muted)'}>{t('footer.contactSales')}</span></li>
-              </ul>
+            <div className="flex items-center gap-6 text-sm text-slate-500">
+              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">HIPAA Compliance</a>
             </div>
           </div>
-        </div>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-          <span>{t('footer.copyright')}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600 }}>
-            <span style={{width: 8, height: 8, borderRadius: '50%', background: 'var(--success)'}}></span> {t('footer.systemStatus')}
-          </span>
         </div>
       </footer>
-
+      
     </div>
   );
 }
