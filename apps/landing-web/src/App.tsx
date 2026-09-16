@@ -525,23 +525,17 @@ function App() {
                 <div className="h-6 w-px bg-slate-300 mx-1"></div>
                 <span className="font-medium text-lg tracking-tight text-slate-500">Enterprise</span>
               </div>
+              <p className="text-sm text-text-muted leading-relaxed max-w-xs">
+                An open telehealth platform for doctors, patients, and hospital systems.
+              </p>
             </div>
             
             <div>
               <h4 className="font-semibold text-text-main mb-4 text-sm">Products</h4>
               <ul className="space-y-3 text-sm text-text-muted">
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Enterprise Platform</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Cloud Relays</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Open Source</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-text-main mb-4 text-sm">Resources</h4>
-              <ul className="space-y-3 text-sm text-text-muted">
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Case Studies</a></li>
+                <li><a href="http://localhost:5174" className="hover:text-brand-blue transition-colors">Doctor Portal</a></li>
+                <li><a href="http://localhost:5175" className="hover:text-brand-blue transition-colors">Patient App</a></li>
+                <li><a href="http://localhost:5176" className="hover:text-brand-blue transition-colors">Pharmacy Portal</a></li>
               </ul>
             </div>
 
@@ -549,7 +543,6 @@ function App() {
               <h4 className="font-semibold text-text-main mb-4 text-sm">Company</h4>
               <ul className="space-y-3 text-sm text-text-muted">
                 <li><a href="#" className="hover:text-brand-blue transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Careers</a></li>
                 <li><a href="#" className="hover:text-brand-blue transition-colors">Contact</a></li>
               </ul>
             </div>
@@ -560,7 +553,6 @@ function App() {
             <div className="flex items-center gap-6">
               <a href="#" className="hover:text-brand-blue transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-brand-blue transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-brand-blue transition-colors">Imprint</a>
             </div>
           </div>
         </div>
