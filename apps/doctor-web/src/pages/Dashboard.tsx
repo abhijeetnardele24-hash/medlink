@@ -259,7 +259,7 @@ export const Dashboard: React.FC = () => {
                 className="p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors flex items-start gap-3 border border-transparent hover:border-gray-100"
                 onClick={() => {
                   if (unreadMessages.length > 0) {
-                    navigate(`/consultation/${unreadMessages[0].encounterId}`);
+                    navigate(`/consultation/${(unreadMessages[0] as any).encounterId}`);
                   }
                 }}
               >

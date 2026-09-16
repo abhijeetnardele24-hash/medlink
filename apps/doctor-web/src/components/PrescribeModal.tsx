@@ -269,7 +269,7 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
                         ) : diagnosisResults.length === 0 ? (
                           <div className="p-3 text-center text-white/50 text-sm">No codes found.</div>
                         ) : (
-                          diagnosisResults.map((res, idx) => (
+                          diagnosisResults.map((res: any, idx: number) => (
                             <button
                               key={idx}
                               onClick={() => {

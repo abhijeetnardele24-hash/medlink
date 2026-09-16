@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { 
   User, BookOpen, Stethoscope, Briefcase, Phone, MapPin, 
-  Edit3, Check, DollarSign, ShieldCheck, AlertCircle 
+  Edit3, Check, DollarSign, ShieldCheck, AlertCircle, X, Save 
 } from 'lucide-react';
 import { api } from '../lib/api';
 
