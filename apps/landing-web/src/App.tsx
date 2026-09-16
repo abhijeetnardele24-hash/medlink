@@ -282,7 +282,7 @@ function App() {
                   {'        '}&lt;<span className="text-blue-400">VideoRoom</span> <br/>
                   {'          '}<span className="text-cyan-300">encounterId</span>={'{encounterId}'} <br/>
                   {'          '}<span className="text-cyan-300">recording</span>={'{true}'} <br/>
-                  {'        '/}&gt;<br/>
+                  {'        '}/&gt;<br/>
                   {'        '}&lt;<span className="text-blue-400">Prescribe</span> <span className="text-cyan-300">context</span>={'{encounterId}'} /&gt;<br/>
                   {'      '}&lt;/<span className="text-blue-400">div</span>&gt;<br/>
                   {'    '}&lt;/<span className="text-blue-400">MedLinkProvider</span>&gt;<br/>
