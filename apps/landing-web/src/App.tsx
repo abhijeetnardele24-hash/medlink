@@ -441,16 +441,16 @@ function App() {
         </div>
       </section>
 
-      {/* Ecosystem Section */}
+      {/* Platform Suite Section */}
       <section className="py-24 bg-white border-t border-surface-accent">
         <div className="max-w-7xl mx-auto px-6">
           <div className="mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-3 text-brand-blue leading-tight">
-              Build & run on MedLink
+            <h2 className="text-4xl md:text-5xl font-semibold mb-3 text-text-main leading-tight">
+              One platform. Every role in the care journey.
             </h2>
-            <h2 className="text-4xl md:text-5xl font-bold text-text-main leading-tight">
-              Your platform. Your ecosystem.
-            </h2>
+            <p className="text-lg text-text-muted max-w-2xl">
+              MedLink delivers purpose-built portals for each participant in a clinical workflow — connected, real-time, and governed under a single platform.
+            </p>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-10">
@@ -460,44 +460,43 @@ function App() {
               <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
                 <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
                   <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
-                    <Code className="w-4 h-4" />
+                    <Stethoscope className="w-4 h-4" />
                   </div>
-                  MedLink Open Source
+                  Doctor Portal
                 </div>
-                <p className="text-text-muted text-sm leading-relaxed">Compose telemedicine pipelines using any models, tools, and architectures.</p>
+                <p className="text-text-muted text-sm leading-relaxed">Conduct video consultations, write prescriptions, manage patient records, and track appointment history — from a single clinical dashboard.</p>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Modular</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Flexible</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Consultations</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Prescriptions</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">EHR</span>
                 </div>
               </div>
 
               <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
                 <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
                   <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
-                    <Layers className="w-4 h-4" />
+                    <Smartphone className="w-4 h-4" />
                   </div>
-                  MedLink Enterprise Platform
+                  Patient App
                 </div>
-                <p className="text-text-muted text-sm leading-relaxed">Build, evaluate, deploy, and govern healthcare applications at scale.</p>
+                <p className="text-text-muted text-sm leading-relaxed">Book appointments, join video visits, view prescriptions, and receive follow-up care — all accessible from a mobile-first patient interface.</p>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Build</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Test</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Deploy</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Govern</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Appointments</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Video Visits</span>
                 </div>
               </div>
 
               <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
                 <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
                   <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
-                    <Globe className="w-4 h-4" />
+                    <Activity className="w-4 h-4" />
                   </div>
-                  Deploy Anywhere
+                  Pharmacy Portal
                 </div>
-                <p className="text-text-muted text-sm leading-relaxed">Run in the environment you choose, with strict data boundaries.</p>
+                <p className="text-text-muted text-sm leading-relaxed">Receive digital prescriptions from verified doctors, manage dispensing queues, and maintain a real-time inventory — integrated into the MedLink clinical workflow.</p>
                 <div className="flex gap-2 mt-1">
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Cloud</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Self-Hosted</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Dispensing</span>
+                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Inventory</span>
                 </div>
               </div>
               
