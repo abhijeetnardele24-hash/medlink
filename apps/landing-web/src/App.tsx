@@ -271,7 +271,7 @@ function App() {
               Real-time telemedicine,<br/>built for <span className="text-brand-blue">clinical teams</span>
             </h1>
             <p className="text-base text-text-muted mb-8 leading-relaxed max-w-md">
-              MedLink is an open telehealth platform for doctors, patients, and hospital systems. Conduct secure video consultations, manage prescriptions, and coordinate care — from one unified platform you control.
+              MedLink is a clinical telemedicine platform that connects patients, physicians, and pharmacists through a unified, role-based care delivery system — with end-to-end encrypted video consultations, digital prescription issuance, and real-time appointment management.
             </p>
             
             <div className="flex flex-wrap items-center gap-3">
@@ -304,11 +304,11 @@ function App() {
         <div className="max-w-7xl mx-auto px-6">
           
           <div className="max-w-2xl mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-text-main leading-tight">
-              Why organizations<br/>choose MedLink
+            <h2 className="text-4xl md:text-5xl font-semibold mb-4 text-text-main leading-tight">
+              Built for clinical-grade<br/>care delivery
             </h2>
             <p className="text-lg text-text-muted">
-              The open platform to build, run, and govern secure healthcare pipelines and applications.
+              A vertically integrated telehealth system purpose-built for multi-role clinical workflows — not adapted from a generic video conferencing stack.
             </p>
           </div>
 
@@ -317,22 +317,22 @@ function App() {
             {/* Box 1 */}
             <div className="bg-white p-8 flex flex-col relative group">
               <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
-                <Code className="w-5 h-5" />
+                <Video className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-3">Open Source Foundation</h3>
+              <h3 className="font-semibold text-lg mb-3">End-to-End Encrypted Consultations</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Build on transparent, auditable code and open standards. Healthcare primitives – streaming, relays, EHR connectors – are yours to own, swap, and extend. No lock-in.
+                WebRTC-based video sessions with AES-256 media encryption, adaptive bitrate control, and session recording — routed through dedicated TURN/STUN relay infrastructure.
               </p>
             </div>
 
             {/* Box 2 */}
             <div className="bg-white p-8 flex flex-col relative group">
               <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
-                <Layers className="w-5 h-5" />
+                <FileText className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-3">Context-Engineered Care</h3>
+              <h3 className="font-semibold text-lg mb-3">Digital Prescription Workflow</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Your video pipelines behave the way you designed them to. Define what they know, what they can do, and how they route. Every step is explicit and inspectable.
+                Physicians issue digitally authenticated prescriptions directly within the consultation session. Prescriptions are routed to the Pharmacy Portal in real time with tamper-evident audit trails.
               </p>
             </div>
 
@@ -341,9 +341,9 @@ function App() {
               <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
                 <Shield className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-3">Sovereign by Design</h3>
+              <h3 className="font-semibold text-lg mb-3">Role-Based Access Control</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Your infrastructure, your data, your compliance posture. Deploy wherever your requirements demand – cloud or self-hosted – with audit logs, RBAC, and data lineage built in.
+                Discrete portals for doctors, patients, and pharmacists — each scoped to their clinical function. Patient health records are never exposed across role boundaries without explicit authorization.
               </p>
             </div>
 
@@ -352,9 +352,9 @@ function App() {
               <div className="w-10 h-10 rounded-lg bg-blue-50 text-brand-blue flex items-center justify-center mb-6 border border-blue-100 group-hover:bg-brand-blue group-hover:text-white transition-colors">
                 <Activity className="w-5 h-5" />
               </div>
-              <h3 className="font-semibold text-lg mb-3">Proven in Production</h3>
+              <h3 className="font-semibold text-lg mb-3">Real-Time Clinical State Sync</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Ship systems that survive contact with real patients, real data, and real scale. From first pilot to governed, versioned, observable systems – without rebuilding.
+                Appointment status, prescription issuance, and availability updates propagate across all connected portals in real time via a REST + WebSocket event bus — no polling, no stale state.
               </p>
             </div>
             
@@ -362,76 +362,76 @@ function App() {
         </div>
       </section>
 
-      {/* Feature List Section */}
+      {/* Clinical Architecture Section */}
       <section className="py-24 bg-surface-beige border-t border-surface-accent">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-start">
             
             <div className="sticky top-32">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-text-main leading-tight">
-                Control today.<br/>Advantage tomorrow.
+              <h2 className="text-4xl md:text-5xl font-semibold mb-4 text-text-main leading-tight">
+                How MedLink structures<br/>a clinical encounter
               </h2>
-              <h2 className="text-4xl md:text-5xl font-bold mb-8 text-brand-blue leading-tight">
-                Why Sovereign Healthcare wins
-              </h2>
+              <p className="text-lg text-text-muted mb-8 leading-relaxed">
+                Every MedLink session follows a defined encounter lifecycle — from appointment scheduling through consultation, prescription issuance, and pharmacy dispensing — with each transition tracked and auditable.
+              </p>
               
-              <div className="flex flex-wrap items-center gap-4">
-                <button className="bg-brand-blue hover:bg-brand-hover text-white px-6 py-3 rounded font-medium transition-all shadow-lg shadow-brand-blue/20">
-                  Start Building
+              <div className="flex flex-wrap items-center gap-3">
+                <button className="bg-brand-blue hover:bg-brand-hover text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all shadow-sm">
+                  Request a Demo
                 </button>
-                <button className="px-6 py-3 rounded font-medium bg-surface-accent hover:bg-slate-200 text-text-main transition-colors">
-                  Explore Platform
+                <button className="px-5 py-2.5 rounded-md text-sm font-medium bg-surface-accent hover:bg-slate-200 text-text-main transition-colors border border-slate-200">
+                  View Architecture
                 </button>
               </div>
             </div>
 
-            <div className="flex flex-col gap-12">
+            <div className="flex flex-col gap-10">
               
               <div className="border-b border-slate-200 pb-8">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
-                    <Activity className="w-4 h-4" />
+                    <Clock className="w-4 h-4" />
                   </div>
-                  <h3 className="font-semibold text-xl">1. Performance</h3>
+                  <h3 className="font-semibold text-lg">Appointment Scheduling & Slot Management</h3>
                 </div>
-                <p className="text-text-muted pl-11">
-                  Tune video encoding, WebRTC relays, and routing around the workload instead of settling for defaults.
+                <p className="text-text-muted pl-11 text-sm leading-relaxed">
+                  Patients book time slots against a physician's published availability calendar. The scheduling engine enforces conflict detection and sends confirmation notifications across all parties in the encounter.
                 </p>
               </div>
 
               <div className="border-b border-slate-200 pb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
-                    <Globe className="w-4 h-4" />
-                  </div>
-                  <h3 className="font-semibold text-xl">2. Cost</h3>
-                </div>
-                <p className="text-text-muted pl-11">
-                  Optimize compute, providers, and deployment footprints with transparent architecture choices.
-                </p>
-              </div>
-
-              <div className="border-b border-slate-200 pb-8">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
                     <Video className="w-4 h-4" />
                   </div>
-                  <h3 className="font-semibold text-xl">3. Innovation</h3>
+                  <h3 className="font-semibold text-lg">Encrypted WebRTC Video Consultation</h3>
                 </div>
-                <p className="text-text-muted pl-11">
-                  Adopt new codecs and components without rebuilding applications around another platform.
+                <p className="text-text-muted pl-11 text-sm leading-relaxed">
+                  Consultation rooms are provisioned on-demand with peer-to-peer WebRTC sessions. Media traversal is handled through a STUN/TURN relay layer, with adaptive codec negotiation for variable network conditions.
+                </p>
+              </div>
+
+              <div className="border-b border-slate-200 pb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-semibold text-lg">In-Session Digital Prescription Issuance</h3>
+                </div>
+                <p className="text-text-muted pl-11 text-sm leading-relaxed">
+                  Physicians compose and submit prescriptions from within the active consultation. Each prescription carries a physician identity token and is pushed directly to the patient's record and the assigned pharmacy queue.
                 </p>
               </div>
 
               <div className="pb-8">
-                <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-3 mb-3">
                   <div className="w-8 h-8 rounded border border-blue-200 bg-white text-brand-blue flex items-center justify-center">
                     <Shield className="w-4 h-4" />
                   </div>
-                  <h3 className="font-semibold text-xl">4. Resilience</h3>
+                  <h3 className="font-semibold text-lg">Auditable Encounter Record</h3>
                 </div>
-                <p className="text-text-muted pl-11">
-                  Keep critical telehealth workflows portable, observable, and aligned with internal compliance.
+                <p className="text-text-muted pl-11 text-sm leading-relaxed">
+                  Every encounter event — session join, prescription write, status transition — is persisted to an immutable audit log. Records are accessible per-patient across all authorized clinical roles.
                 </p>
               </div>
 
