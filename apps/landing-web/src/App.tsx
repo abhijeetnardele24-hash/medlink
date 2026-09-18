@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Shield, Activity, Stethoscope, Clock, Lock, CheckCircle2, ChevronRight, Video, FileText, Globe, Code, Layers, Smartphone, BookOpen, Users, Award, Phone, Brain } from 'lucide-react';
 import ArchitectureDiagram from './components/ArchitectureDiagram';
 import EcosystemDiagram from './components/EcosystemDiagram';
@@ -525,7 +526,7 @@ function App() {
                 <span className="font-medium text-lg tracking-tight text-slate-500">Enterprise</span>
               </div>
               <p className="text-sm text-text-muted leading-relaxed max-w-xs">
-                An open telehealth platform for doctors, patients, and hospital systems.
+                A clinical telemedicine platform connecting patients, physicians, and pharmacists through role-scoped portals.
               </p>
             </div>
             
@@ -541,8 +542,8 @@ function App() {
             <div>
               <h4 className="font-semibold text-text-main mb-4 text-sm">Company</h4>
               <ul className="space-y-3 text-sm text-text-muted">
-                <li><a href="#" className="hover:text-brand-blue transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-brand-blue transition-colors">Contact</a></li>
+                <li><Link to="/about" className="hover:text-brand-blue transition-colors">About</Link></li>
+                <li><a href="mailto:contact@medlink.health" className="hover:text-brand-blue transition-colors">Contact</a></li>
               </ul>
             </div>
           </div>
