@@ -43,6 +43,7 @@ export const Consultation: React.FC = () => {
     isConnected,
     error,
     connectionQuality,
+    remoteConnectionQuality,
     startCall,
     endMeetingReason,
 
@@ -247,18 +248,34 @@ export const Consultation: React.FC = () => {
             </div>
             <p className="text-white/60 text-xs flex items-center gap-2 mt-0.5">
               {isConnected ? (
-                <>
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      connectionQuality === 'good'
-                        ? 'bg-emerald-500'
-                        : connectionQuality === 'poor'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
-                    }`}
-                  />
-                  <span>E2E Encrypted ({connectionQuality.toUpperCase()})</span>
-                </>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        connectionQuality === 'good'
+                          ? 'bg-emerald-500'
+                          : connectionQuality === 'poor'
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      }`}
+                    />
+                    <span>Local: {connectionQuality.toUpperCase()}</span>
+                  </div>
+                  {remoteConnectionQuality && (
+                    <div className="flex items-center gap-2 border-l border-white/20 pl-4">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          remoteConnectionQuality === 'good'
+                            ? 'bg-emerald-500'
+                            : remoteConnectionQuality === 'poor'
+                            ? 'bg-amber-500'
+                            : 'bg-red-500'
+                        }`}
+                      />
+                      <span>Patient: {remoteConnectionQuality.toUpperCase()}</span>
+                    </div>
+                  )}
+                </div>
               ) : (
                 'Connecting to secure medical gateway...'
               )}

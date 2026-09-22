@@ -27,6 +27,7 @@ export const useWebRTC = (encounterId: string | null) => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionQuality, setConnectionQuality] = useState<'good' | 'poor' | 'audio-only'>('good');
+  const [remoteConnectionQuality, setRemoteConnectionQuality] = useState<'good' | 'poor' | 'audio-only' | null>(null);
   const [endMeetingReason, setEndMeetingReason] = useState<string | null>(null);
 
   // Hardware Controls
@@ -277,6 +278,12 @@ export const useWebRTC = (encounterId: string | null) => {
 
         socket.on('end-meeting-all', ({ reason }) => {
           setEndMeetingReason(reason || "Meeting has concluded");
+        });
+
+        socket.on('network-mode-change', ({ mode, role }) => {
+          if (role === 'patient') {
+            setRemoteConnectionQuality(mode);
+          }
         });
 
       } catch (err) {
@@ -697,6 +704,7 @@ export const useWebRTC = (encounterId: string | null) => {
     isConnected,
     error,
     connectionQuality,
+    remoteConnectionQuality,
     startCall,
     endMeetingReason,
 

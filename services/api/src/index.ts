@@ -230,6 +230,12 @@ io.on("connection", (socket) => {
     socket.to(encounterId).emit("media-state-change", { isAudioMuted, isVideoOff, participantId });
   });
 
+  // Adaptive Network Consultation Mode Change
+  socket.on("network-mode-change", ({ encounterId, mode, role }) => {
+    if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
+    socket.to(encounterId).emit("network-mode-change", { mode, role });
+  });
+
   socket.on("disconnect", () => {
     console.log(`[Socket.io] Disconnected: ${socket.id}`);
   });

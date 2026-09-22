@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Smile, Paperclip, Mic, Square } from 'lucide-react';
 import { api } from '../lib/api';
 import { socketRef } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
@@ -22,9 +22,15 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
   const [remoteTyping, setRemoteTyping] = useState(false);
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
   const [reactionsMap, setReactionsMap] = useState<Record<string, Record<string, number>>>({});
+  
+  // Audio recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentUserId = auth?.currentUser?.uid || 'test-id';
 
@@ -101,6 +107,20 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, remoteTyping]);
 
+  const sendPayload = async (body: string) => {
+    try {
+      await syncManager.enqueueMessage(encounterId, currentUserId, body);
+      if (navigator.onLine) {
+        socketRef.current?.emit('message', {
+          encounterId,
+          message: { id: crypto.randomUUID(), senderId: currentUserId, body, createdAt: new Date().toISOString() }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send message payload', error);
+    }
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim()) return;
@@ -111,17 +131,7 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     socketRef.current?.emit('typing', { encounterId, isTyping: false, senderId: currentUserId });
 
-    try {
-      await syncManager.enqueueMessage(encounterId, currentUserId, body);
-      if (navigator.onLine) {
-        socketRef.current?.emit('message', {
-          encounterId,
-          message: { id: crypto.randomUUID(), senderId: currentUserId, body, createdAt: new Date().toISOString() }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to send message', error);
-    }
+    await sendPayload(body);
   };
 
   const handleTyping = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,30 +165,96 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
     setHoveredMsgId(null);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Convert file to Base64
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const base64String = event.target?.result as string;
+      await sendPayload(base64String);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.onload = async (event) => {
+          const base64String = event.target?.result as string;
+          await sendPayload(base64String);
+        };
+        reader.readAsDataURL(audioBlob);
+        
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone', err);
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
   const formatMessageTime = (ts?: number) => {
     if (!ts) return '';
     return new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
+  const renderMessageBody = (body: string) => {
+    if (body.startsWith('data:image/')) {
+      return <img src={body} alt="Attached image" className="max-w-full rounded-lg max-h-64 object-contain mt-1" />;
+    }
+    if (body.startsWith('data:audio/')) {
+      return (
+        <audio controls className="w-full mt-1 max-w-[200px] h-10">
+          <source src={body} type="audio/webm" />
+          Your browser does not support the audio element.
+        </audio>
+      );
+    }
+    return <p>{body}</p>;
+  };
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'rgba(24,24,27,0.92)', backdropFilter: 'blur(20px)', borderRadius: '1.5rem', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', overflow: 'hidden', fontFamily: 'Inter, sans-serif' }}>
+    <div className="flex flex-col h-full bg-neutral-900/90 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden font-['Inter',sans-serif]">
       {/* Header */}
-      <div style={{ padding: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
         <div>
-          <h3 style={{ color: 'white', margin: 0, fontSize: '1rem', fontWeight: 700 }}>In-Meeting Chat</h3>
-          <p style={{ margin: 0, fontSize: '0.6875rem', color: 'rgba(255,255,255,0.5)' }}>Direct encrypted messages</p>
+          <h3 className="text-white font-bold text-base">In-Meeting Messages</h3>
+          <p className="text-[11px] text-white/50">Messages are synced securely</p>
         </div>
       </div>
 
-      {/* Message List */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {/* Message Stream */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg: any) => {
           const isMe = msg.senderId === currentUserId;
           const msgReactions = reactionsMap[msg.id] || {};
 
           if (msg.isSystemEvent) {
             return (
-              <div key={msg.id} style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.75rem', fontStyle: 'italic', margin: '0.25rem 0', background: 'rgba(255,255,255,0.05)', padding: '0.25rem 0.75rem', borderRadius: '999px', alignSelf: 'center' }}>
+              <div key={msg.id} className="text-center text-xs text-neutral-400 italic my-2 bg-white/5 py-1 px-3 rounded-full mx-auto max-w-xs border border-white/5">
                 {msg.body}
               </div>
             );
@@ -187,74 +263,47 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
           return (
             <div
               key={msg.id}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: isMe ? 'flex-end' : 'flex-start', position: 'relative' }}
+              className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} group relative`}
               onMouseEnter={() => setHoveredMsgId(msg.id)}
               onMouseLeave={() => setHoveredMsgId(null)}
             >
-              <div style={{
-                maxWidth: '85%',
-                padding: '0.625rem 1rem',
-                borderRadius: '1rem',
-                borderBottomRightRadius: isMe ? 0 : '1rem',
-                borderBottomLeftRadius: !isMe ? 0 : '1rem',
-                background: isMe ? '#423FDE' : 'rgba(255,255,255,0.08)',
-                color: 'white',
-                fontSize: '0.875rem',
-                lineHeight: 1.4,
-                boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)'
-              }}>
-                <p style={{ margin: 0 }}>{msg.body}</p>
-                <span style={{ fontSize: '0.625rem', display: 'block', textAlign: 'right', marginTop: '0.25rem', color: isMe ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)' }}>
+              {/* Message Bubble */}
+              <div
+                className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed relative ${
+                  isMe
+                    ? 'bg-blue-600 text-white rounded-br-none shadow-lg shadow-blue-600/20'
+                    : 'bg-neutral-800 text-neutral-100 rounded-bl-none border border-white/5'
+                }`}
+              >
+                {renderMessageBody(msg.body)}
+                <span className={`text-[10px] block text-right mt-1 ${isMe ? 'text-blue-200' : 'text-neutral-400'}`}>
                   {formatMessageTime(msg.createdAt)}
                 </span>
               </div>
 
-              {/* Reaction Badges */}
+              {/* Emoji Reactions List on Message */}
               {Object.keys(msgReactions).length > 0 && (
-                <div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.25rem' }}>
+                <div className={`flex items-center gap-1 mt-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
                   {Object.entries(msgReactions).map(([emoji, count]) => (
                     <span
                       key={emoji}
-                      style={{
-                        background: 'rgba(0,0,0,0.6)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        fontSize: '0.75rem',
-                        padding: '0.125rem 0.5rem',
-                        borderRadius: '999px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem',
-                        color: 'white'
-                      }}
+                      className="bg-black/60 border border-white/10 text-xs px-2 py-0.5 rounded-full flex items-center gap-1 text-white shadow-sm"
                     >
                       <span>{emoji}</span>
-                      <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.7)' }}>{count}</span>
+                      <span className="text-[10px] font-bold text-white/70">{count}</span>
                     </span>
                   ))}
                 </div>
               )}
 
-              {/* Reaction Picker on Hover */}
+              {/* Hover Reaction Picker Button */}
               {hoveredMsgId === msg.id && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-1.75rem',
-                  right: isMe ? 0 : 'auto',
-                  left: !isMe ? 0 : 'auto',
-                  background: '#18181B',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '999px',
-                  padding: '0.25rem 0.5rem',
-                  display: 'flex',
-                  gap: '0.25rem',
-                  zIndex: 20,
-                  boxShadow: '0 10px 15px -3px rgba(0,0,0,0.3)'
-                }}>
+                <div className={`absolute -top-7 ${isMe ? 'right-0' : 'left-0'} bg-neutral-900 border border-white/10 rounded-full px-2 py-1 flex items-center gap-1 shadow-2xl z-20 animate-in fade-in zoom-in-90 duration-150`}>
                   {CHAT_REACTION_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
                       onClick={() => handleReactToMessage(msg.id, emoji)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', padding: '0.125rem' }}
+                      className="hover:scale-125 transition-transform text-sm p-0.5"
                     >
                       {emoji}
                     </button>
@@ -266,39 +315,67 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
         })}
 
         {remoteTyping && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic', background: 'rgba(255,255,255,0.05)', padding: '0.375rem 0.75rem', borderRadius: '1rem', width: 'fit-content' }}>
-            <span>Doctor is typing...</span>
+          <div className="flex items-center gap-2 text-xs text-neutral-400 italic bg-neutral-800/80 px-3 py-1.5 rounded-2xl w-fit border border-white/5 animate-pulse">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
+            <span>Participant is typing...</span>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={handleSend} style={{ padding: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.4)', display: 'flex', gap: '0.5rem' }}>
+      {/* Input Box */}
+      <form onSubmit={handleSend} className="p-3 border-t border-white/10 bg-black/40 flex items-center gap-2">
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="p-2 text-white/50 hover:text-white transition-colors"
+        >
+          <Paperclip size={18} />
+        </button>
+
+        {isRecording ? (
+          <button
+            type="button"
+            onClick={stopRecording}
+            className="p-2 text-red-500 animate-pulse hover:text-red-400 transition-colors"
+          >
+            <Square size={18} fill="currentColor" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={startRecording}
+            className="p-2 text-white/50 hover:text-white transition-colors"
+          >
+            <Mic size={18} />
+          </button>
+        )}
+
         <input
           type="text"
           value={newMessage}
           onChange={handleTyping}
-          placeholder="Send a message..."
-          style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '999px', padding: '0.625rem 1rem', color: 'white', fontSize: '0.875rem', outline: 'none' }}
+          placeholder={isRecording ? "Recording audio..." : "Send a message to everyone..."}
+          disabled={isRecording}
+          className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500 transition-colors disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={!newMessage.trim()}
-          style={{
-            width: '2.5rem',
-            height: '2.5rem',
-            borderRadius: '50%',
-            background: newMessage.trim() ? '#423FDE' : 'rgba(255,255,255,0.05)',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            cursor: newMessage.trim() ? 'pointer' : 'default'
-          }}
+          className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-all shrink-0 ${
+            newMessage.trim()
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700'
+              : 'bg-white/5 text-white/30 cursor-not-allowed'
+          }`}
         >
-          <Send size={16} />
+          <Send size={18} />
         </button>
       </form>
     </div>

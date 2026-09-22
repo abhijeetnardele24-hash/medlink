@@ -664,6 +664,17 @@ export const useWebRTC = (encounterId: string | null) => {
     return () => clearInterval(interval);
   }, [isConnected]);
 
+  // Emit network mode change to the other peer via signaling server
+  useEffect(() => {
+    if (isConnected && socketRef.current && encounterId) {
+      socketRef.current.emit('network-mode-change', {
+        encounterId,
+        mode: connectionQuality,
+        role: 'patient'
+      });
+    }
+  }, [connectionQuality, isConnected, encounterId]);
+
   return {
     localStream,
     remoteStream,
