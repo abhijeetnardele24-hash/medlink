@@ -29,7 +29,7 @@ import encountersRouter from "./routes/encounters.routes";
 import prescriptionsRouter from "./routes/prescriptions.routes";
 import webhooksRouter from "./routes/webhooks.routes";
 import webrtcRouter from "./routes/webrtc.routes";
-import consentsRouter from "./routes/consents.routes";
+
 import medicinesRouter from "./routes/medicines.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
 import syncRouter from "./routes/sync.routes";
@@ -152,7 +152,7 @@ export function createServer(): Express {
   v1Router.use("/patients", patientsRouter);
   v1Router.use("/prescriptions", prescriptionsRouter); // Has own auth checks
   v1Router.use("/webrtc", webrtcRouter);
-  v1Router.use("/consents", authenticate, consentsRouter);
+
   v1Router.use("/medicines", medicinesRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
