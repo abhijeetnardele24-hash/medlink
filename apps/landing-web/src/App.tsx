@@ -49,26 +49,6 @@ function App() {
                     <ChevronRight className="w-3 h-3" />
                   </div>
                 </a>
-
-                <a href="http://localhost:5176" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
-                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 font-medium text-text-main">Pharmacy Portal</div>
-                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
-                    <ChevronRight className="w-3 h-3" />
-                  </div>
-                </a>
-
-                <a href="http://localhost:5177" target="_blank" rel="noreferrer" className="flex items-center gap-4 px-3 py-3 hover:bg-blue-50 rounded-lg group/link transition-colors">
-                  <div className="w-10 h-10 rounded-md bg-brand-blue flex items-center justify-center text-white shrink-0 shadow-sm">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div className="flex-1 font-medium text-text-main">Coordinator Portal</div>
-                  <div className="w-5 h-5 rounded-full border border-brand-blue flex items-center justify-center text-brand-blue opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all">
-                    <ChevronRight className="w-3 h-3" />
-                  </div>
-                </a>
               </div>
             </div>
 
@@ -160,7 +140,7 @@ function App() {
               Real-time telemedicine,<br/>built for <span className="text-brand-blue">clinical teams</span>
             </h1>
             <p className="text-base text-text-muted mb-8 leading-relaxed max-w-md">
-              MedLink is a clinical telemedicine platform that connects patients, physicians, and pharmacists through a unified, role-based care delivery system — with end-to-end encrypted video consultations, digital prescription issuance, and real-time appointment management.
+              MedLink is a clinical telemedicine platform that connects patients and physicians through a unified, role-based care delivery system — with end-to-end encrypted video consultations, digital prescription issuance, and real-time appointment management.
             </p>
             
             <div className="flex flex-wrap items-center gap-3">
@@ -221,7 +201,7 @@ function App() {
               </div>
               <h3 className="font-semibold text-lg mb-3">Digital Prescription Workflow</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Physicians issue digitally authenticated prescriptions directly within the consultation session. Prescriptions are routed to the Pharmacy Portal in real time with tamper-evident audit trails.
+                Physicians issue digitally authenticated prescriptions directly within the consultation session. Prescriptions are routed directly to the patient's record in real time with tamper-evident audit trails.
               </p>
             </div>
 
@@ -232,7 +212,7 @@ function App() {
               </div>
               <h3 className="font-semibold text-lg mb-3">Role-Based Access Control</h3>
               <p className="text-text-muted text-sm leading-relaxed">
-                Discrete portals for doctors, patients, and pharmacists — each scoped to their clinical function. Patient health records are never exposed across role boundaries without explicit authorization.
+                Discrete portals for doctors and patients — each scoped to their clinical function. Patient health records are never exposed across role boundaries without explicit authorization.
               </p>
             </div>
 
@@ -261,7 +241,7 @@ function App() {
                 How MedLink structures<br/>a clinical encounter
               </h2>
               <p className="text-lg text-text-muted mb-8 leading-relaxed">
-                Every MedLink session follows a defined encounter lifecycle — from appointment scheduling through consultation, prescription issuance, and pharmacy dispensing — with each transition tracked and auditable.
+                Every MedLink session follows a defined encounter lifecycle — from appointment scheduling through consultation and prescription issuance — with each transition tracked and auditable.
               </p>
               
               <div className="flex flex-wrap items-center gap-3">
@@ -308,7 +288,7 @@ function App() {
                   <h3 className="font-semibold text-lg">In-Session Digital Prescription Issuance</h3>
                 </div>
                 <p className="text-text-muted pl-11 text-sm leading-relaxed">
-                  Physicians compose and submit prescriptions from within the active consultation. Each prescription carries a physician identity token and is pushed directly to the patient's record and the assigned pharmacy queue.
+                  Physicians compose and submit prescriptions from within the active consultation. Each prescription carries a physician identity token and is pushed directly to the patient's record.
                 </p>
               </div>
 
@@ -374,20 +354,6 @@ function App() {
                   <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Video Visits</span>
                 </div>
               </div>
-
-              <div className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-white flex flex-col gap-3">
-                <div className="flex items-center gap-3 font-semibold text-text-main text-lg mb-1">
-                  <div className="w-8 h-8 rounded bg-brand-blue text-white flex items-center justify-center">
-                    <Activity className="w-4 h-4" />
-                  </div>
-                  Pharmacy Portal
-                </div>
-                <p className="text-text-muted text-sm leading-relaxed">Receive digital prescriptions from verified doctors, manage dispensing queues, and maintain a real-time inventory — integrated into the MedLink clinical workflow.</p>
-                <div className="flex gap-2 mt-1">
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Dispensing</span>
-                  <span className="text-xs font-medium bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded">Inventory</span>
-                </div>
-              </div>
               
             </div>
 
@@ -414,7 +380,7 @@ function App() {
                 <span className="font-medium text-lg tracking-tight text-slate-500">Enterprise</span>
               </div>
               <p className="text-sm text-text-muted leading-relaxed max-w-xs">
-                A clinical telemedicine platform connecting patients, physicians, and pharmacists through role-scoped portals.
+                A clinical telemedicine platform connecting patients and physicians through role-scoped portals.
               </p>
             </div>
             
@@ -423,7 +389,6 @@ function App() {
               <ul className="space-y-3 text-sm text-text-muted">
                 <li><a href="http://localhost:5174" className="hover:text-brand-blue transition-colors">Doctor Portal</a></li>
                 <li><a href="http://localhost:5175" className="hover:text-brand-blue transition-colors">Patient App</a></li>
-                <li><a href="http://localhost:5176" className="hover:text-brand-blue transition-colors">Pharmacy Portal</a></li>
               </ul>
             </div>
 

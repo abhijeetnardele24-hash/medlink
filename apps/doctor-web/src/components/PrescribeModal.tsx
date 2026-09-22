@@ -3,6 +3,7 @@ import { X, Search, Plus, CheckCircle, Package, AlertCircle } from 'lucide-react
 import { useICD10Search } from '../hooks/useICD10Search';
 import { api } from '../lib/api';
 import toast from 'react-hot-toast';
+import { syncManager } from '../lib/sync/SyncManager';
 
 interface Medicine {
   id: string;
@@ -116,13 +117,23 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
     }
 
     try {
-      await api.post(`/encounters/${encounterId}/prescriptions`, {
+      const payload = {
         doctorId,
         medicinesJson: medicines,
         instructionsText: finalInstructions
-      });
-      toast.success("Prescription issued successfully!");
-      onSuccess();
+      };
+
+      if (!navigator.onLine) {
+        // Enqueue offline
+        await syncManager.enqueueOperation('prescription', 'CREATE', { encounterId, ...payload });
+        toast.success("Offline: Prescription queued for sync.");
+        onSuccess();
+      } else {
+        // Online: Direct API call
+        await api.post(`/encounters/${encounterId}/prescriptions`, payload);
+        toast.success("Prescription issued successfully!");
+        onSuccess();
+      }
     } catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.error || "Failed to issue prescription");

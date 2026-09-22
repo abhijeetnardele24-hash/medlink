@@ -3,7 +3,7 @@ import { getDb } from "../db";
 import { messages } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { eq, gt, or, inArray, and } from "drizzle-orm";
-import { encounters, appointments, patients, doctors, users } from "../db/schema";
+import { encounters, appointments, patients, doctors, users, prescriptions } from "../db/schema";
 import { logger } from "../logger";
 
 const router = Router();
@@ -98,6 +98,104 @@ router.post("/push", async (req: Request, res: Response): Promise<void> => {
           }).returning({ id: messages.id });
 
           results.push({ idempotencyKey, status: "success", serverId: inserted[0].id });
+        } catch (err: any) {
+          logger.error({ err, op }, "Failed to process sync operation");
+          results.push({ idempotencyKey, status: "error", error: err.message });
+        }
+      } else if (entityType === "prescription" && action === "CREATE") {
+        try {
+          const { encounterId, doctorId, medicinesJson, instructionsText } = payload;
+          
+          if (!idempotencyKey) {
+            results.push({ status: "error", error: "Missing idempotencyKey" });
+            continue;
+          }
+
+          // Authorize the encounterId for push
+          const authorizedIds = await getAuthorizedEncounterIds(db, res.locals.user.uid, [encounterId]);
+          if (authorizedIds.length === 0) {
+            results.push({ idempotencyKey, status: "error", error: "Not authorized to access this encounter" });
+            continue;
+          }
+
+          // Check if already processed (Idempotency: 1 prescription per encounter)
+          const existing = await db
+            .select({ id: prescriptions.id })
+            .from(prescriptions)
+            .where(eq(prescriptions.encounterId, encounterId))
+            .limit(1);
+
+          if (existing.length > 0) {
+            results.push({ idempotencyKey, status: "success", serverId: existing[0].id });
+            continue;
+          }
+
+          // Insert new prescription
+          const inserted = await db.insert(prescriptions).values({
+            encounterId,
+            doctorId,
+            medicinesJson,
+            instructionsText,
+            status: "issued",
+            issuedAt: new Date(),
+          }).returning({ id: prescriptions.id });
+
+          // Also update encounter status
+          await db.update(encounters)
+            .set({ status: "ended", endedAt: new Date(), updatedAt: new Date() })
+            .where(eq(encounters.id, encounterId));
+
+          results.push({ idempotencyKey, status: "success", serverId: inserted[0].id });
+        } catch (err: any) {
+          logger.error({ err, op }, "Failed to process sync operation");
+          results.push({ idempotencyKey, status: "error", error: err.message });
+        }
+      } else if (entityType === "appointment" && action === "CREATE") {
+        try {
+          const { doctorId, slotId, scheduledAt, concernCategory, preferredMode } = payload;
+          
+          if (!idempotencyKey) {
+            results.push({ status: "error", error: "Missing idempotencyKey" });
+            continue;
+          }
+
+          const [patient] = await db
+            .select({ id: patients.id })
+            .from(patients)
+            .where(eq(patients.userId, res.locals.user.uid))
+            .limit(1);
+            
+          if (!patient) {
+            results.push({ idempotencyKey, status: "error", error: "Patient profile not found" });
+            continue;
+          }
+
+          // Check if already processed (Idempotency by slotId)
+          const existing = await db
+            .select({ id: appointments.id })
+            .from(appointments)
+            .where(eq(appointments.slotId, slotId))
+            .limit(1);
+
+          if (existing.length > 0) {
+            results.push({ idempotencyKey, status: "success", serverId: existing[0].id });
+            continue;
+          }
+
+          const [appointment] = await db
+            .insert(appointments)
+            .values({
+              patientId: patient.id,
+              doctorId,
+              slotId,
+              scheduledAt: new Date(scheduledAt),
+              concernCategory,
+              preferredMode,
+              status: "requested",
+            })
+            .returning({ id: appointments.id });
+
+          results.push({ idempotencyKey, status: "success", serverId: appointment.id });
         } catch (err: any) {
           logger.error({ err, op }, "Failed to process sync operation");
           results.push({ idempotencyKey, status: "error", error: err.message });

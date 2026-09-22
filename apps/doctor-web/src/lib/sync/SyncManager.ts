@@ -45,6 +45,28 @@ class SyncManager {
   }
 
   /**
+   * Enqueues a generic operation for offline sending.
+   */
+  async enqueueOperation(entityType: string, action: string, payload: any) {
+    const id = crypto.randomUUID();
+    const now = Date.now();
+
+    // Write to outbox
+    await syncDb.outbox.put({
+      id,
+      entityType,
+      action,
+      payload,
+      timestamp: now,
+      status: 'pending',
+      retryCount: 0
+    });
+
+    // Trigger background sync
+    this.sync();
+  }
+
+  /**
    * Syncs the outbox with the server.
    */
   async sync(encounterIds: string[] = []) {

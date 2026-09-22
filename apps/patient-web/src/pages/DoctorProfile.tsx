@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { syncManager } from '../lib/sync/SyncManager';
 import { User, MapPin, Clock, ArrowLeft, CalendarPlus, AlertCircle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -84,14 +85,26 @@ export const DoctorProfile: React.FC = () => {
 
     try {
       const slot = slots.find((s: Slot) => s.id === selectedSlot);
-      const apptRes = await api.post('/appointments', {
+      const payload = {
         doctorId: id,
         slotId: selectedSlot,
         scheduledAt: slot?.startsAt,
         concernCategory: concern,
         preferredMode: 'video'
-      });
+      };
 
+      if (!navigator.onLine) {
+        // Offline: Enqueue appointment and bypass payment gateway
+        await syncManager.enqueueOperation('appointment', 'CREATE', payload);
+        setBookingSuccess(true);
+        setTimeout(() => {
+          navigate('/');
+        }, 1800);
+        return;
+      }
+
+      // Online: Direct API call
+      const apptRes = await api.post('/appointments', payload);
       const appointmentId = apptRes.data.id;
 
       // Create Payment Order (₹1 Demo Order)
