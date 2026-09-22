@@ -33,7 +33,6 @@ import webhooksRouter from "./routes/webhooks.routes";
 import webrtcRouter from "./routes/webrtc.routes";
 import consentsRouter from "./routes/consents.routes";
 import medicinesRouter from "./routes/medicines.routes";
-import pharmacyRouter from "./routes/pharmacy.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
 import syncRouter from "./routes/sync.routes";
 import patientsRouter from "./routes/patients.routes";
@@ -159,7 +158,6 @@ export function createServer(): Express {
   v1Router.use("/webrtc", webrtcRouter);
   v1Router.use("/consents", authenticate, consentsRouter);
   v1Router.use("/medicines", medicinesRouter);
-  v1Router.use("/pharmacy", pharmacyRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
   v1Router.use("/webhooks", webhooksRouter);

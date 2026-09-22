@@ -2,8 +2,8 @@ import Dexie, { type Table } from 'dexie';
 
 export interface OutboxEntry {
   id: string; // Idempotency key
-  entityType: 'message';
-  action: 'CREATE';
+  entityType: string;
+  action: string;
   payload: any;
   timestamp: number;
   status: 'pending' | 'syncing' | 'failed_conflict' | 'failed_error';
