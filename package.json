@@ -1,0 +1,17 @@
+{
+  "name": "medlink-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:api\" \"npm run worker:api\" \"npm run dev:patient\" \"npm run dev:doctor\" \"npm run dev:landing\"",
+    "dev:api": "npm run dev --prefix services/api",
+    "worker:api": "npm run worker --prefix services/api",
+    "dev:patient": "npm run dev --prefix apps/patient-web",
+    "dev:doctor": "npm run dev --prefix apps/doctor-web",
+    "dev:landing": "npm run dev --prefix apps/landing-web",
+    "install:all": "npm install && npm install --prefix services/api && npm install --prefix apps/patient-web && npm install --prefix apps/doctor-web && npm install --prefix apps/landing-web"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
