@@ -34,9 +34,6 @@ export const Layout: React.FC = () => {
           <NavLink to="/medical-records" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <FileText size={20} /> Medical Records
           </NavLink>
-          <NavLink to="/consents" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <ShieldCheck size={20} /> Consents
-          </NavLink>
         </nav>
 
         <div className="py-8 px-4 border-t border-[var(--border)]">
