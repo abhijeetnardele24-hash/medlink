@@ -23,10 +23,7 @@ import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
 import { PrescribeModal } from '../components/PrescribeModal';
 import { MeetingControls } from '../components/MeetingControls';
-import { WhiteboardModal } from '../components/WhiteboardModal';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
-import { FloatingReactions } from '../components/FloatingReactions';
-import { RecordingPreviewModal } from '../components/RecordingPreviewModal';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 
@@ -60,25 +57,6 @@ export const Consultation: React.FC = () => {
     startScreenShare,
     stopScreenShare,
 
-    isRecording,
-    isPaused,
-    recordingDuration,
-    recordingBlob,
-    startRecording,
-    pauseRecording,
-    resumeRecording,
-    stopRecording,
-    clearRecording,
-
-    isHandRaised,
-    remoteHandRaised,
-    toggleRaiseHand,
-    reactions,
-    sendReaction,
-    whiteboardStrokes,
-    sendWhiteboardStroke,
-    clearWhiteboard,
-
     audioInputDevices,
     videoInputDevices,
     audioOutputDevices,
@@ -96,10 +74,8 @@ export const Consultation: React.FC = () => {
   // UI States
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isPrescribeOpen, setIsPrescribeOpen] = useState(false);
-  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBlurActive, setIsBlurActive] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -145,36 +121,6 @@ export const Consultation: React.FC = () => {
     return `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Cloud upload recording
-  const handleUploadCloudRecording = async () => {
-    if (!recordingBlob || !id) return;
-    setIsUploading(true);
-
-    try {
-      const token = await auth?.currentUser?.getIdToken();
-      const formData = new FormData();
-      formData.append('recording', recordingBlob, `recording_${id}.webm`);
-
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
-      const res = await fetch(`${API_URL}/encounters/${id}/recording`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error('Upload failed');
-
-      alert('Recording securely stored in Cloud Storage!');
-    } catch (err) {
-      console.error(err);
-      alert('Failed to upload recording to cloud.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   if (error) {
     return (
       <div className="flex-1 min-h-screen bg-[#0A0A0A] p-8 flex items-center justify-center">
@@ -194,9 +140,6 @@ export const Consultation: React.FC = () => {
 
   return (
     <div className="flex-1 bg-[#0A0A0A] relative flex flex-col h-screen overflow-hidden select-none">
-      {/* Floating Reactions Layer */}
-      <FloatingReactions reactions={reactions} />
-
       {/* Main Video Presentation / Remote Participant */}
       <div className="absolute inset-0 z-0 bg-neutral-950 flex items-center justify-center">
         {remoteStream && !remoteVideoOff ? (
@@ -285,13 +228,6 @@ export const Consultation: React.FC = () => {
 
         {/* Top Badges & Notifications */}
         <div className="pointer-events-auto flex items-center gap-3">
-          {/* Hand Raise Alert */}
-          {remoteHandRaised && (
-            <div className="flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 text-amber-300 px-4 py-2 rounded-2xl animate-bounce shadow-lg">
-              <Hand size={18} className="text-amber-400" />
-              <span className="text-xs font-bold">Patient raised hand</span>
-            </div>
-          )}
 
           {/* Screen Share Alert */}
           {(isScreenSharing || remoteScreenSharing) && (
@@ -301,26 +237,6 @@ export const Consultation: React.FC = () => {
                 {isScreenSharing ? 'You are sharing your screen' : 'Patient is sharing screen'}
               </span>
             </div>
-          )}
-
-          {/* Recording Badge */}
-          {isRecording && (
-            <div className="flex items-center gap-2 bg-red-500/20 border border-red-500/40 text-red-400 px-4 py-2 rounded-2xl font-bold animate-pulse shadow-lg">
-              <div className="w-2.5 h-2.5 bg-red-500 rounded-full" />
-              <span className="text-xs font-mono">REC {formatTimer(recordingDuration)}</span>
-            </div>
-          )}
-
-          {/* Cloud Upload Action */}
-          {recordingBlob && !isRecording && (
-            <button
-              onClick={handleUploadCloudRecording}
-              disabled={isUploading}
-              className="px-4 py-2 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all"
-            >
-              {isUploading ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
-              <span>{isUploading ? 'Uploading Cloud Backup...' : 'Save to Cloud'}</span>
-            </button>
           )}
         </div>
       </div>
@@ -369,21 +285,6 @@ export const Consultation: React.FC = () => {
           audioLevel={audioLevel}
           isScreenSharing={isScreenSharing}
           onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
-          isRecording={isRecording}
-          isPaused={isPaused}
-          recordingDuration={recordingDuration}
-          onStartRecording={startRecording}
-          onPauseRecording={pauseRecording}
-          onResumeRecording={resumeRecording}
-          onStopRecording={stopRecording}
-          hasRecordingReady={Boolean(recordingBlob)}
-          onUploadCloud={handleUploadCloudRecording}
-          isUploadingCloud={isUploading}
-          isHandRaised={isHandRaised}
-          onToggleRaiseHand={toggleRaiseHand}
-          onSendReaction={sendReaction}
-          onToggleWhiteboard={() => setIsWhiteboardOpen(!isWhiteboardOpen)}
-          isWhiteboardOpen={isWhiteboardOpen}
           onToggleSettings={() => setIsSettingsOpen(true)}
           isChatOpen={isChatOpen}
           onToggleChat={() => setIsChatOpen(!isChatOpen)}
@@ -401,15 +302,6 @@ export const Consultation: React.FC = () => {
         </div>
       )}
 
-      {/* Collaborative Whiteboard Modal */}
-      <WhiteboardModal
-        isOpen={isWhiteboardOpen}
-        onClose={() => setIsWhiteboardOpen(false)}
-        strokes={whiteboardStrokes}
-        onSendStroke={sendWhiteboardStroke}
-        onClear={clearWhiteboard}
-      />
-
       {/* Device & Hardware Settings Modal */}
       <DeviceSettingsModal
         isOpen={isSettingsOpen}
@@ -426,14 +318,6 @@ export const Consultation: React.FC = () => {
         audioLevel={audioLevel}
         isBlurActive={isBlurActive}
         onToggleBlur={() => setIsBlurActive(!isBlurActive)}
-      />
-
-      {/* Recording Preview Modal */}
-      <RecordingPreviewModal
-        isOpen={!!recordingBlob}
-        onClose={clearRecording}
-        recordingBlob={recordingBlob}
-        encounterId={id || null}
       />
 
       {/* Prescribe Modal */}

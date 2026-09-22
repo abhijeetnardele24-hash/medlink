@@ -17,10 +17,7 @@ import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
 import { MeetingControls } from '../components/MeetingControls';
-import { WhiteboardModal } from '../components/WhiteboardModal';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
-import { FloatingReactions } from '../components/FloatingReactions';
-import { RecordingPreviewModal } from '../components/RecordingPreviewModal';
 import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
@@ -49,26 +46,6 @@ export const Consultation: React.FC = () => {
     startScreenShare,
     stopScreenShare,
 
-    isRecording,
-    isPaused,
-    recordingDuration,
-    recordingBlob,
-    startRecording,
-    pauseRecording,
-    resumeRecording,
-    stopRecording,
-    clearRecording,
-    remoteRecordingActive,
-
-    isHandRaised,
-    remoteHandRaised,
-    toggleRaiseHand,
-    reactions,
-    sendReaction,
-    whiteboardStrokes,
-    sendWhiteboardStroke,
-    clearWhiteboard,
-
     audioInputDevices,
     videoInputDevices,
     audioOutputDevices,
@@ -81,7 +58,6 @@ export const Consultation: React.FC = () => {
   } = useWebRTC(id || null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [isWhiteboardOpen, setIsWhiteboardOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBlurActive, setIsBlurActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -151,9 +127,6 @@ export const Consultation: React.FC = () => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden', userSelect: 'none' }}>
-      {/* Floating Reactions Layer */}
-      <FloatingReactions reactions={reactions} />
-
       {/* Main Video Feed / Remote Participant */}
       <div style={{ position: 'absolute', inset: 0, background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {remoteStream && !remoteVideoOff ? (
@@ -222,31 +195,8 @@ export const Consultation: React.FC = () => {
           </div>
         </div>
 
-        {/* Badges & Alerts */}
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          {/* Hand Raise Alert */}
-          {remoteHandRaised && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(245,158,11,0.2)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700 }}>
-              <Hand size={16} />
-              <span>Doctor raised hand</span>
-            </div>
-          )}
-
-          {/* Screen Share Alert */}
-          {(isScreenSharing || remoteScreenSharing) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(66,63,222,0.2)', border: '1px solid rgba(66,63,222,0.4)', color: '#a5b4fc', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600 }}>
-              <ScreenShare size={16} />
-              <span>{isScreenSharing ? 'You are sharing your screen' : 'Doctor is presenting screen'}</span>
-            </div>
-          )}
-
-          {/* Recording Badge */}
-          {(isRecording || remoteRecordingActive) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(239,68,68,0.2)', border: '1px solid rgba(239,68,68,0.4)', color: '#f87171', padding: '0.5rem 1rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700 }}>
-              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              <span style={{ fontFamily: 'monospace' }}>REC {isRecording ? formatTimer(recordingDuration) : 'IN PROGRESS'}</span>
-            </div>
-          )}
+          {/* Badges & Alerts */}
+          <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
         </div>
       </div>
 
@@ -309,40 +259,12 @@ export const Consultation: React.FC = () => {
           audioLevel={audioLevel}
           isScreenSharing={isScreenSharing}
           onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
-          isRecording={isRecording}
-          isPaused={isPaused}
-          recordingDuration={recordingDuration}
-          onStartRecording={startRecording}
-          onPauseRecording={pauseRecording}
-          onResumeRecording={resumeRecording}
-          onStopRecording={stopRecording}
-          isHandRaised={isHandRaised}
-          onToggleRaiseHand={toggleRaiseHand}
-          onSendReaction={sendReaction}
-          onToggleWhiteboard={() => setIsWhiteboardOpen(!isWhiteboardOpen)}
-          isWhiteboardOpen={isWhiteboardOpen}
           onToggleSettings={() => setIsSettingsOpen(true)}
           isChatOpen={isChatOpen}
           onToggleChat={() => setIsChatOpen(!isChatOpen)}
           onEndCall={() => navigate('/')}
         />
       </div>
-
-      {/* In-Call Chat Sidebar */}
-      {isChatOpen && id && (
-        <div style={{ position: 'absolute', right: '2rem', top: '5.5rem', bottom: '7rem', width: '24rem', zIndex: 30 }}>
-          <ChatBox encounterId={id} />
-        </div>
-      )}
-
-      {/* Whiteboard Modal */}
-      <WhiteboardModal
-        isOpen={isWhiteboardOpen}
-        onClose={() => setIsWhiteboardOpen(false)}
-        strokes={whiteboardStrokes}
-        onSendStroke={sendWhiteboardStroke}
-        onClear={clearWhiteboard}
-      />
 
       {/* Hardware Settings Modal */}
       <DeviceSettingsModal
@@ -360,14 +282,6 @@ export const Consultation: React.FC = () => {
         audioLevel={audioLevel}
         isBlurActive={isBlurActive}
         onToggleBlur={() => setIsBlurActive(!isBlurActive)}
-      />
-
-      {/* Recording Preview Modal */}
-      <RecordingPreviewModal
-        isOpen={!!recordingBlob}
-        onClose={clearRecording}
-        recordingBlob={recordingBlob}
-        encounterId={id || null}
       />
     </div>
   );

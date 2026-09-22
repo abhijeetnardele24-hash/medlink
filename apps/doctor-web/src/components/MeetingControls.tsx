@@ -5,18 +5,10 @@ import {
   Video,
   VideoOff,
   ScreenShare,
-  StopCircle,
-  Edit3,
-  Smile,
-  Hand,
-  Radio,
   Settings,
   MessageSquare,
   FileText,
   PhoneOff,
-  Pause,
-  Play,
-  Download,
   MoreVertical
 } from 'lucide-react';
 
@@ -31,25 +23,6 @@ interface MeetingControlsProps {
   // Screen Share
   isScreenSharing: boolean;
   onToggleScreenShare: () => void;
-
-  // Recording
-  isRecording: boolean;
-  isPaused: boolean;
-  recordingDuration: number;
-  onStartRecording: () => void;
-  onPauseRecording: () => void;
-  onResumeRecording: () => void;
-  onStopRecording: () => void;
-  hasRecordingReady?: boolean;
-  onUploadCloud?: () => void;
-  isUploadingCloud?: boolean;
-
-  // Interactive Tools
-  isHandRaised: boolean;
-  onToggleRaiseHand: () => void;
-  onSendReaction: (emoji: string) => void;
-  onToggleWhiteboard: () => void;
-  isWhiteboardOpen: boolean;
 
   // Settings & Chat & Modals
   onToggleSettings: () => void;
@@ -71,21 +44,6 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
   audioLevel,
   isScreenSharing,
   onToggleScreenShare,
-  isRecording,
-  isPaused,
-  recordingDuration,
-  onStartRecording,
-  onPauseRecording,
-  onResumeRecording,
-  onStopRecording,
-  hasRecordingReady,
-  onUploadCloud,
-  isUploadingCloud,
-  isHandRaised,
-  onToggleRaiseHand,
-  onSendReaction,
-  onToggleWhiteboard,
-  isWhiteboardOpen,
   onToggleSettings,
   isChatOpen,
   onToggleChat,
@@ -105,23 +63,6 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
 
   return (
     <div className="relative flex items-center justify-center pointer-events-auto">
-      {/* Floating Emoji Picker */}
-      {showEmojiPicker && (
-        <div className="absolute bottom-20 bg-neutral-900/95 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 duration-200 z-50">
-          {EMOJIS.map((emoji) => (
-            <button
-              key={emoji}
-              onClick={() => {
-                onSendReaction(emoji);
-                setShowEmojiPicker(false);
-              }}
-              className="text-2xl hover:scale-130 active:scale-95 transition-transform p-1.5 rounded-xl hover:bg-white/10"
-            >
-              {emoji}
-            </button>
-          ))}
-        </div>
-      )}
 
       {/* Doctor End Options Modal Popup */}
       {showEndOptions && (
@@ -197,90 +138,7 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
         >
           <ScreenShare size={20} />
         </button>
-
-        {/* 4. Whiteboard */}
-        <button
-          onClick={onToggleWhiteboard}
-          title="Open Collaborative Whiteboard"
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-            isWhiteboardOpen
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/30 border border-purple-400'
-              : 'bg-white/10 text-white hover:bg-white/20 border border-white/5'
-          }`}
-        >
-          <Edit3 size={20} />
-        </button>
-
-        {/* 5. Reactions */}
-        <button
-          onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-          title="Send Emoji Reaction"
-          className="w-12 h-12 rounded-2xl bg-white/10 text-white hover:bg-white/20 border border-white/5 flex items-center justify-center transition-all"
-        >
-          <Smile size={20} />
-        </button>
-
-        {/* 6. Raise Hand */}
-        <button
-          onClick={onToggleRaiseHand}
-          title={isHandRaised ? 'Lower Hand' : 'Raise Hand'}
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-            isHandRaised
-              ? 'bg-amber-500 text-black font-bold shadow-lg shadow-amber-500/30'
-              : 'bg-white/10 text-white hover:bg-white/20 border border-white/5'
-          }`}
-        >
-          <Hand size={20} />
-        </button>
-
         <div className="w-px h-8 bg-white/10 mx-1" />
-
-        {/* 7. Recording Controls (Local Instant Download + Cloud) */}
-        {!isRecording ? (
-          <button
-            onClick={onStartRecording}
-            title="Start Meeting Recording (Auto-saves to your local computer)"
-            className="h-12 px-4 rounded-2xl bg-white/10 hover:bg-red-500/20 hover:text-red-400 text-white border border-white/5 flex items-center gap-2 transition-all group"
-          >
-            <div className="w-3 h-3 rounded-full bg-red-500 group-hover:animate-ping" />
-            <span className="text-xs font-semibold">Record</span>
-          </button>
-        ) : (
-          <div className="flex items-center gap-1.5 bg-red-500/20 border border-red-500/30 px-3 py-1.5 rounded-2xl">
-            <div className="flex items-center gap-2 mr-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-xs font-mono font-bold text-red-400">
-                {formatTime(recordingDuration)}
-              </span>
-            </div>
-
-            {isPaused ? (
-              <button
-                onClick={onResumeRecording}
-                title="Resume Recording"
-                className="p-1.5 rounded-xl hover:bg-white/10 text-white"
-              >
-                <Play size={15} />
-              </button>
-            ) : (
-              <button
-                onClick={onPauseRecording}
-                title="Pause Recording"
-                className="p-1.5 rounded-xl hover:bg-white/10 text-white"
-              >
-                <Pause size={15} />
-              </button>
-            )}
-
-            <button
-              onClick={onStopRecording}
-              title="Stop & Save to Local Computer"
-              className="p-1.5 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold transition-colors"
-            >
-              <StopCircle size={16} />
-            </button>
-          </div>
-        )}
 
         {/* 8. Hardware Device Settings */}
         <button

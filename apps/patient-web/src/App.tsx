@@ -6,7 +6,6 @@ import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
 import { DoctorProfile } from './pages/DoctorProfile';
 import { History } from './pages/History';
-import { Consents } from './pages/Consents';
 import { HealthProfile } from './pages/HealthProfile';
 import { MedicalRecords } from './pages/MedicalRecords';
 import { Consultation } from './pages/Consultation';
@@ -30,7 +29,6 @@ function App() {
               <Route path="/history" element={<History />} />
               <Route path="/profile" element={<HealthProfile />} />
               <Route path="/medical-records" element={<MedicalRecords />} />
-              <Route path="/consents" element={<Consents />} />
             </Route>
             {/* Consultation is full screen, no sidebar */}
             <Route path="/consultation/:id" element={<Consultation />} />
