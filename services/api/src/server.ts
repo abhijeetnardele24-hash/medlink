@@ -25,9 +25,7 @@ import healthRouter from "./routes/health.routes";
 import authRouter from "./routes/auth.routes";
 import doctorsRouter from "./routes/doctors.routes";
 import appointmentsRouter from "./routes/appointments.routes";
-import adminRouter from "./routes/admin.routes";
 import encountersRouter from "./routes/encounters.routes";
-import recommendationsRouter from "./routes/recommendations.routes";
 import prescriptionsRouter from "./routes/prescriptions.routes";
 import webhooksRouter from "./routes/webhooks.routes";
 import webrtcRouter from "./routes/webrtc.routes";
@@ -153,8 +151,6 @@ export function createServer(): Express {
   v1Router.use("/encounters", authenticate, encountersRouter);
   v1Router.use("/patients", patientsRouter);
   v1Router.use("/prescriptions", prescriptionsRouter); // Has own auth checks
-  v1Router.use("/recommendations", recommendationsRouter); // Can be called by unauthenticated users during search
-  v1Router.use("/admin", authenticate, requireRole("coordinator"), adminRouter);
   v1Router.use("/webrtc", webrtcRouter);
   v1Router.use("/consents", authenticate, consentsRouter);
   v1Router.use("/medicines", medicinesRouter);

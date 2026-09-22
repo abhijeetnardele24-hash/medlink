@@ -7,12 +7,9 @@ import { Dashboard } from './pages/Dashboard';
 import { DoctorProfile } from './pages/DoctorProfile';
 import { History } from './pages/History';
 import { Consents } from './pages/Consents';
-import { Consultation } from './pages/Consultation';
-import { PharmacyStorefront } from './pages/PharmacyStorefront';
-import { PharmacyOrders } from './pages/PharmacyOrders';
 import { HealthProfile } from './pages/HealthProfile';
 import { MedicalRecords } from './pages/MedicalRecords';
-import { Triage } from './pages/Triage';
+import { Consultation } from './pages/Consultation';
 import { Layout } from './components/Layout';
 import { IncomingCallModal } from './components/IncomingCallModal';
 import './index.css';
@@ -34,9 +31,6 @@ function App() {
               <Route path="/profile" element={<HealthProfile />} />
               <Route path="/medical-records" element={<MedicalRecords />} />
               <Route path="/consents" element={<Consents />} />
-              <Route path="/pharmacy" element={<PharmacyStorefront />} />
-              <Route path="/pharmacy-orders" element={<PharmacyOrders />} />
-              <Route path="/triage" element={<Triage />} />
             </Route>
             {/* Consultation is full screen, no sidebar */}
             <Route path="/consultation/:id" element={<Consultation />} />

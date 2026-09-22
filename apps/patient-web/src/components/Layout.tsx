@@ -28,9 +28,6 @@ export const Layout: React.FC = () => {
           <NavLink to="/history" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Clock size={20} /> Appt History
           </NavLink>
-          <NavLink to="/triage" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <HeartPulse size={20} /> Intake & Triage
-          </NavLink>
           <NavLink to="/profile" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <User size={20} /> Health Profile
           </NavLink>
@@ -39,12 +36,6 @@ export const Layout: React.FC = () => {
           </NavLink>
           <NavLink to="/consents" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <ShieldCheck size={20} /> Consents
-          </NavLink>
-          <NavLink to="/pharmacy" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <Package size={20} /> Pharmacy
-          </NavLink>
-          <NavLink to="/pharmacy-orders" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
-            <ShoppingBag size={20} /> Pharmacy Orders
           </NavLink>
         </nav>
 
