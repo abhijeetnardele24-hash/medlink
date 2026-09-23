@@ -246,15 +246,7 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-6">Action Items</h3>
             <div className="space-y-3">
-              <div className="p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors flex items-start gap-3 border border-transparent hover:border-gray-100">
-                <div className="p-2 bg-purple-100 text-purple-600 rounded-lg shrink-0">
-                  <FileSignature size={18} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">Sign Prescriptions</h4>
-                  <p className="text-xs text-gray-500 mt-0.5">0 pending pharmacy orders require your digital signature.</p>
-                </div>
-              </div>
+
               <div 
                 className="p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors flex items-start gap-3 border border-transparent hover:border-gray-100"
                 onClick={() => {

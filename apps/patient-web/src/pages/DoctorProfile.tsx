@@ -61,6 +61,8 @@ export const DoctorProfile: React.FC = () => {
         const slotParam = searchParams.get('slotId');
         if (slotParam && availableSlots.some((s: any) => s.id === slotParam)) {
           setSelectedSlot(slotParam);
+        } else if (availableSlots.length > 0) {
+          setSelectedSlot(availableSlots[0].id);
         }
       } catch (err) {
         console.error("Failed to fetch doctor", err);
@@ -107,63 +109,23 @@ export const DoctorProfile: React.FC = () => {
       const apptRes = await api.post('/appointments', payload);
       const appointmentId = apptRes.data.id;
 
-      // Create Payment Order (₹1 Demo Order)
-      const paymentRes = await api.post(`/appointments/${appointmentId}/create-payment`);
-      const order = paymentRes.data.order;
-      const razorpayKey = paymentRes.data.keyId || "rzp_test_TO2oEBhVR4tpzl";
-
-      // Open Razorpay Checkout with ₹1 live QR / UPI prompt
-      const options = {
-        key: razorpayKey,
-        amount: order.amount || 100, // 100 paise = ₹1
-        currency: order.currency || "INR",
-        name: "MedLink Telehealth",
-        description: `Consultation Booking (₹1 Demo QR) · Dr. ${doctor?.fullName || ''}`,
-        order_id: order.id,
-        handler: async function (response: any) {
-          try {
-            await api.post(`/appointments/${appointmentId}/verify-payment`, {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
-            });
-            setBookingSuccess(true);
-            setTimeout(() => {
-              navigate('/');
-            }, 1800);
-          } catch (verifyErr) {
-            console.error(verifyErr);
-            setError('Payment verification failed.');
-            setBooking(false);
-          }
-        },
-        prefill: {
-          name: user?.displayName || "Patient",
-          email: user?.email || "patient@medlink.com",
-          contact: "9876543210"
-        },
-        theme: {
-          color: "#2563eb"
-        },
-        modal: {
-          ondismiss: function() {
-            setBooking(false);
-          }
-        }
-      };
-
-      if (window.Razorpay) {
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response: any){
-          setError(`Payment Failed: ${response.error?.description || 'Transaction cancelled or failed.'}`);
+      // Create Payment Order (Mocking the process for testing)
+      // This bypasses Razorpay entirely and uses our mock endpoint
+      
+      // We simulate a short delay for the fake payment processing
+      setTimeout(async () => {
+        try {
+          await api.post(`/appointments/${appointmentId}/mock-payment`);
+          setBookingSuccess(true);
+          setTimeout(() => {
+            navigate('/');
+          }, 1800);
+        } catch (verifyErr) {
+          console.error(verifyErr);
+          setError('Mock Payment verification failed.');
           setBooking(false);
-        });
-        rzp.open();
-      } else {
-        // Fallback if Razorpay script took time to load
-        alert('Razorpay payment gateway is loading. Please try again in 2 seconds.');
-        setBooking(false);
-      }
+        }
+      }, 1000);
 
     } catch (err: any) {
       console.error(err);
@@ -229,7 +191,7 @@ export const DoctorProfile: React.FC = () => {
             <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
               <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>{t('booking.consultationFee')}</div>
               <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--text-main)' }}>₹{doctor?.consultationFee}</div>
-              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>Demo QR: ₹1 for testing</div>
+              <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600 }}>Fake Payment: ₹1 (Testing)</div>
             </div>
           </div>
 
@@ -317,7 +279,7 @@ export const DoctorProfile: React.FC = () => {
             <div style={{ marginBottom: '1.5rem', padding: '0.85rem 1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '10px', border: '1px solid rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <Sparkles size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
               <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Demo Verification: Clicking confirm will open Razorpay with a <strong>₹1 live UPI QR code</strong> for instant verification.
+                <strong>Mock Payment Enabled:</strong> Clicking confirm will simulate a ₹1 payment instantly without opening Razorpay.
               </span>
             </div>
 

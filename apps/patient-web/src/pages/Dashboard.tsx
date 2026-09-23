@@ -38,12 +38,19 @@ export const Dashboard: React.FC = () => {
       {/* Stats Strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.25rem', marginBottom: '2.5rem' }}>
         {[
-          { label: 'Total Appointments', value: appointments.length, icon: <Calendar size={22} color="var(--accent)" />, accent: 'var(--accent)' },
-          { label: 'Upcoming', value: upcomingAppts.length, icon: <Clock size={22} color="#10b981" />, accent: '#10b981' },
-          { label: 'Open Slots Now', value: openSlots.length, icon: <Zap size={22} color="#f59e0b" />, accent: '#f59e0b' },
-          { label: 'Doctors Available', value: doctors.length, icon: <Stethoscope size={22} color="#6366f1" />, accent: '#6366f1' },
+          { label: 'Total Appointments', value: appointments.length, icon: <Calendar size={22} color="var(--accent)" />, accent: 'var(--accent)', action: () => navigate('/history') },
+          { label: 'Upcoming', value: upcomingAppts.length, icon: <Clock size={22} color="#10b981" />, accent: '#10b981', action: () => document.getElementById('section-upcoming')?.scrollIntoView({ behavior: 'smooth' }) },
+          { label: 'Open Slots Now', value: openSlots.length, icon: <Zap size={22} color="#f59e0b" />, accent: '#f59e0b', action: () => document.getElementById('section-slots')?.scrollIntoView({ behavior: 'smooth' }) },
+          { label: 'Doctors Available', value: doctors.length, icon: <Stethoscope size={22} color="#6366f1" />, accent: '#6366f1', action: () => document.getElementById('section-doctors')?.scrollIntoView({ behavior: 'smooth' }) },
         ].map(stat => (
-          <div key={stat.label} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div 
+            key={stat.label} 
+            className="glass-panel" 
+            onClick={stat.action}
+            style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', cursor: 'pointer', transition: 'all 0.2s ease' }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.08)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
+          >
             <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: `${stat.accent}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {stat.icon}
             </div>
@@ -55,8 +62,61 @@ export const Dashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Appointments Section */}
+      <div id="section-upcoming" style={{ marginBottom: '3rem', scrollMarginTop: '2rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Calendar size={22} color="var(--accent)" /> Your Appointments
+        </h2>
+
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><div className="spinner" /></div>
+        ) : upcomingAppts.length === 0 ? (
+          <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Calendar size={56} style={{ margin: '0 auto 1.25rem', opacity: 0.15 }} />
+            <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No upcoming appointments</h3>
+            <p style={{ marginBottom: '1.5rem' }}>Browse our specialist doctors or book an open slot above.</p>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            {upcomingAppts.map(appt => {
+              const cfg = statusConfig[appt.status] || statusConfig['requested'];
+              return (
+                <div key={appt.id} className="glass-panel" style={{ padding: '1.5rem', borderTop: `3px solid ${cfg.color}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
+                      {appt.concernCategory.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                    </div>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: cfg.bg, color: cfg.color, fontWeight: 600 }}>
+                      {cfg.icon} {cfg.label}
+                    </span>
+                  </div>
+
+                  {appt.doctor && (
+                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <User size={14} /> Dr. {appt.doctor.fullName} · {appt.doctor.speciality}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                    <Clock size={14} />
+                    {new Date(appt.scheduledAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </div>
+
+                  {appt.status === 'confirmed' && (
+                    <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                      <Video size={16} /> Join Video Consultation
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+
       {/* Quick Action Cards Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem', marginBottom: '3rem' }}>
+      <div id="section-slots" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.25rem', marginBottom: '3rem', scrollMarginTop: '2rem' }}>
         {/* Card 1: Find a Doctor */}
         <div className="glass-panel" style={{ padding: '1.75rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
@@ -166,78 +226,10 @@ export const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Actions Strip */}
-      <div style={{ marginBottom: '3rem' }}>
-        <div className="glass-panel" style={{ padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.5 20.5L3 13l7.5-7.5"/><path d="M14 3v8h8"/><path d="M3 13h18l-7.5 7.5"/><path d="M3 13v-3a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/></svg>
-            </div>
-            <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.25rem' }}>Pharmacy Storefront</h2>
-              <p style={{ color: 'var(--text-muted)' }}>Order medicines directly with your digital prescriptions.</p>
-            </div>
-          </div>
-          <Link to="/pharmacy" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
-            Shop Medicines <ArrowRight size={18} />
-          </Link>
-        </div>
-      </div>
 
-      {/* Appointments Section */}
-      <div style={{ marginBottom: '3rem' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Calendar size={22} color="var(--accent)" /> Your Appointments
-        </h2>
-
-        {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><div className="spinner" /></div>
-        ) : upcomingAppts.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-            <Calendar size={56} style={{ margin: '0 auto 1.25rem', opacity: 0.15 }} />
-            <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No upcoming appointments</h3>
-            <p style={{ marginBottom: '1.5rem' }}>Browse our specialist doctors or book an open slot above.</p>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
-            {upcomingAppts.map(appt => {
-              const cfg = statusConfig[appt.status] || statusConfig['requested'];
-              return (
-                <div key={appt.id} className="glass-panel" style={{ padding: '1.5rem', borderTop: `3px solid ${cfg.color}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
-                      {appt.concernCategory.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                    </div>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: cfg.bg, color: cfg.color, fontWeight: 600 }}>
-                      {cfg.icon} {cfg.label}
-                    </span>
-                  </div>
-
-                  {appt.doctor && (
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <User size={14} /> Dr. {appt.doctor.fullName} · {appt.doctor.speciality}
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                    <Clock size={14} />
-                    {new Date(appt.scheduledAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </div>
-
-                  {appt.status === 'confirmed' && (
-                    <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                      <Video size={16} /> Join Video Consultation
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
 
       {/* Doctors Section */}
-      <div>
+      <div id="section-doctors" style={{ scrollMarginTop: '2rem' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Stethoscope size={22} color="var(--accent)" /> All Specialist Doctors
         </h2>

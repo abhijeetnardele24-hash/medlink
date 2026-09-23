@@ -71,6 +71,9 @@ export const History: React.FC = () => {
           <Activity color="var(--accent)" /> Medical History
         </h1>
         <p style={{ color: 'var(--text-muted)' }}>View your past consultations, clinical notes, and prescriptions.</p>
+        <div style={{ marginTop: '0.75rem', padding: '0.75rem 1rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '8px', border: '1px solid rgba(37, 99, 235, 0.15)', fontSize: '0.85rem', color: 'var(--text-main)' }}>
+          <strong>Note:</strong> Your newly booked, upcoming appointments are shown on your <Link to="/" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>Main Dashboard (Appointments tab)</Link>. They will only appear here in History <em>after</em>{' '}the doctor has completed the consultation.
+        </div>
       </div>
 
       {loading ? (

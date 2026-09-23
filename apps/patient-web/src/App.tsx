@@ -9,6 +9,7 @@ import { History } from './pages/History';
 import { HealthProfile } from './pages/HealthProfile';
 import { MedicalRecords } from './pages/MedicalRecords';
 import { Consultation } from './pages/Consultation';
+import { Triage } from './pages/Triage';
 import { Layout } from './components/Layout';
 import { IncomingCallModal } from './components/IncomingCallModal';
 import './index.css';
@@ -27,6 +28,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/doctor/:id" element={<DoctorProfile />} />
               <Route path="/history" element={<History />} />
+              <Route path="/triage" element={<Triage />} />
               <Route path="/profile" element={<HealthProfile />} />
               <Route path="/medical-records" element={<MedicalRecords />} />
             </Route>

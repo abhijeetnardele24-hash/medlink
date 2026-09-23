@@ -317,6 +317,101 @@ router.get("/open-slots", async (req: Request, res: Response): Promise<void> => 
   res.json({ data: slots });
 });
 
+// ─── GET /doctors/recommend ───────────────────────────────────────────────────
+
+router.get("/recommend", async (req: Request, res: Response): Promise<void> => {
+  const query = (req.query.query as string || "").toLowerCase();
+  
+  if (!query) {
+    res.status(400).json({ error: "Missing query parameter" });
+    return;
+  }
+
+  let recommendedSpeciality = "General Physician";
+
+  if (query.match(/\b(heart|chest|blood pressure|cardiac|hypertension|arrhythmia|cholesterol|palpitation)\b/)) {
+    recommendedSpeciality = "Cardiologist";
+  } else if (query.match(/\b(skin|rash|acne|pimple|hair|nail|dermatology|eczema|psoriasis|melanoma|hives)\b/)) {
+    recommendedSpeciality = "Dermatologist";
+  } else if (query.match(/\b(headache|migraine|brain|nerve|dizzy|seizure|stroke|numbness|epilepsy|memory)\b/)) {
+    recommendedSpeciality = "Neurologist";
+  } else if (query.match(/\b(child|baby|kid|infant|pediatric|vaccine|growth|toddler|measles)\b/)) {
+    recommendedSpeciality = "Pediatrician";
+  } else if (query.match(/\b(bone|joint|muscle|fracture|arthritis|knee|back|spine|orthopedic)\b/)) {
+    recommendedSpeciality = "Orthopedist";
+  } else if (query.match(/\b(stomach|abdomen|liver|digestion|acid|ulcer|gastric|intestine|bowel)\b/)) {
+    recommendedSpeciality = "Gastroenterologist";
+  } else if (query.match(/\b(eye|vision|blind|cataract|glaucoma|retina)\b/)) {
+    recommendedSpeciality = "Ophthalmologist";
+  } else if (query.match(/\b(tooth|teeth|gum|dental|dentist|cavity|jaw)\b/)) {
+    recommendedSpeciality = "Dentist";
+  } else if (query.match(/\b(ear|nose|throat|ent|hearing|sinus|tonsil)\b/)) {
+    recommendedSpeciality = "ENT Specialist";
+  } else if (query.match(/\b(mental|depress|anxiety|stress|psychiatrist|bipolar|schizophrenia)\b/)) {
+    recommendedSpeciality = "Psychiatrist";
+  } else if (query.match(/\b(women|period|pregnancy|maternity|gynecologist|uterus|ovary)\b/)) {
+    recommendedSpeciality = "Gynecologist";
+  }
+
+  // Fetch doctors with this speciality
+  const db = getDb();
+  const doctorsList = await db
+    .select({
+      id: doctors.id,
+      fullName: doctors.fullName,
+      speciality: doctors.speciality,
+      facilityName: doctors.facilityName,
+      languagesSpoken: doctors.languagesSpoken,
+      supportedModes: doctors.supportedModes,
+      consultationFee: doctors.consultationFee,
+      bio: doctors.bio,
+    })
+    .from(doctors)
+    .where(
+      and(
+        eq(doctors.verificationStatus, "verified"),
+        eq(doctors.speciality, recommendedSpeciality)
+      )
+    )
+    .limit(10);
+
+  // If no doctors found for specific speciality, fallback to General Physician
+  if (doctorsList.length === 0 && recommendedSpeciality !== "General Physician") {
+    const generalDoctors = await db
+      .select({
+        id: doctors.id,
+        fullName: doctors.fullName,
+        speciality: doctors.speciality,
+        facilityName: doctors.facilityName,
+        languagesSpoken: doctors.languagesSpoken,
+        supportedModes: doctors.supportedModes,
+        consultationFee: doctors.consultationFee,
+        bio: doctors.bio,
+      })
+      .from(doctors)
+      .where(
+        and(
+          eq(doctors.verificationStatus, "verified"),
+          eq(doctors.speciality, "General Physician")
+        )
+      )
+      .limit(10);
+      
+    res.json({
+      recommendationReason: `Based on your symptoms, we recommend seeing a ${recommendedSpeciality}, but currently none are available. Here are General Physicians who can help.`,
+      speciality: "General Physician",
+      data: generalDoctors
+    });
+    return;
+  }
+
+  res.json({
+    recommendationReason: `Based on your symptoms, we recommend seeing a ${recommendedSpeciality}.`,
+    speciality: recommendedSpeciality,
+    data: doctorsList
+  });
+});
+
 // ─── GET /doctors/:id ─────────────────────────────────────────────────────────
 
 router.get("/:id", async (req: Request, res: Response): Promise<void> => {

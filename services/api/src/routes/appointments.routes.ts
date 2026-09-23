@@ -584,4 +584,34 @@ router.post(
   }
 );
 
+// ─── POST /appointments/:id/mock-payment (For College Project Testing) ──────────
+
+router.post(
+  "/:id/mock-payment",
+  authenticate,
+  requireRole("patient"),
+  async (_req: Request, res: Response): Promise<void> => {
+    const id = _req.params.id as string;
+    const { uid } = res.locals.user;
+
+    // Direct DB update to bypass Razorpay verification safely
+    await getDb().transaction(async (tx) => {
+      const [appt] = await tx
+        .update(appointments)
+        .set({ status: "confirmed", updatedAt: new Date() })
+        .where(eq(appointments.id, id))
+        .returning();
+
+      if (appt?.slotId) {
+        await tx
+          .update(availabilitySlots)
+          .set({ status: "booked", updatedAt: new Date() })
+          .where(eq(availabilitySlots.id, appt.slotId));
+      }
+    });
+
+    res.json({ success: true, message: "Mock payment verified successfully" });
+  }
+);
+
 export default router;
