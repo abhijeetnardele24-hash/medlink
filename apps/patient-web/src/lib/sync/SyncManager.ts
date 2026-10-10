@@ -118,7 +118,7 @@ class SyncManager {
   private async pushOutbox() {
     const pending = await syncDb.outbox
       .where('status')
-      .anyOf('pending', 'failed_error')
+      .anyOf('pending', 'failed_error', 'syncing')
       .toArray();
 
     if (pending.length === 0) return;

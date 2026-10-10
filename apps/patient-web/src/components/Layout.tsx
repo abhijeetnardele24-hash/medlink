@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { HeartPulse, Calendar, Clock, User, LogOut, ShieldCheck, Package, ShoppingBag, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationCenter } from './NotificationCenter';
+import { NetworkSyncIndicator } from './NetworkSyncIndicator';
 
 export const Layout: React.FC = () => {
   const { logout, user } = useAuth();
@@ -56,6 +57,7 @@ export const Layout: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto relative flex flex-col">
         <header className="h-16 border-b border-[var(--border)] flex items-center justify-end px-8 bg-[var(--bg-surface)]">
+          <NetworkSyncIndicator />
           <NotificationCenter />
         </header>
         <div className="flex-1 p-0">

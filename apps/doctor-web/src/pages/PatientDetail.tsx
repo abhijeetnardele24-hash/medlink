@@ -137,7 +137,7 @@ export const PatientDetail: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '2rem', textAlign: 'center' }}>
+        <div style={{ display: 'flex', gap: '2rem', textAlign: 'center', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent)' }}>{appointments.length}</div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Appointments</div>
@@ -146,6 +146,16 @@ export const PatientDetail: React.FC = () => {
             <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#10b981' }}>{encounters.length}</div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Consultations</div>
           </div>
+          <button 
+            onClick={() => {
+              const nextAppt = appointments.find(a => a.status === 'confirmed');
+              if (nextAppt) navigate(`/consultation/${nextAppt.id}`);
+              else navigate('/');
+            }}
+            className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}
+          >
+            <Video size={18} /> Start Consultation
+          </button>
         </div>
       </div>
 

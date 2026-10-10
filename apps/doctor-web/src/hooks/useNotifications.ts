@@ -13,6 +13,9 @@ export interface Notification {
   metadataJson?: any;
 }
 
+export let sharedNotificationSocket: Socket | null = null;
+let socketSubscribers = 0;
+
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -40,27 +43,38 @@ export const useNotifications = () => {
   }, [notifications]);
 
   useEffect(() => {
-    let newSocket: Socket | null = null;
-    const initSocket = async () => {
-      if (!user) return;
-      try {
-        const token = await user.getIdToken();
-        newSocket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
-          auth: { token },
-        });
+    if (!user) return;
+    
+    socketSubscribers++;
 
-        newSocket.on('notification', (notification: Notification) => {
+    if (!sharedNotificationSocket) {
+      user.getIdToken().then(token => {
+        if (!sharedNotificationSocket) {
+          sharedNotificationSocket = io(import.meta.env.VITE_API_URL || "http://localhost:3000", {
+            auth: { token },
+          });
+        }
+        
+        sharedNotificationSocket.on('notification', (notification: Notification) => {
           setNotifications(prev => [notification, ...prev]);
         });
-      } catch (e) {
-        // Ignore token errors
-      }
-    };
-
-    initSocket();
+      });
+    } else {
+      // If already created by another subscriber, just add listener
+      sharedNotificationSocket.on('notification', (notification: Notification) => {
+        setNotifications(prev => [notification, ...prev]);
+      });
+    }
 
     return () => {
-      if (newSocket) newSocket.disconnect();
+      socketSubscribers--;
+      if (sharedNotificationSocket) {
+        sharedNotificationSocket.off('notification');
+        if (socketSubscribers <= 0) {
+          sharedNotificationSocket.disconnect();
+          sharedNotificationSocket = null;
+        }
+      }
     };
   }, [user]);
 

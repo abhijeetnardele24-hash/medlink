@@ -42,7 +42,7 @@ export const Triage: React.FC = () => {
           Find the Right Doctor
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.15rem', maxWidth: '600px', margin: '0 auto' }}>
-          Describe your symptoms or health concern, and our engine will instantly match you with the appropriate specialist.
+          Tell us what you need help with and browse doctors by specialty and availability.
         </p>
       </div>
 
@@ -129,9 +129,14 @@ export const Triage: React.FC = () => {
                     </p>
                   </div>
 
-                  <Link to={`/doctor/${doctor.id}`} className="btn btn-secondary" style={{ textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    Book Appointment <ArrowRight size={16} />
-                  </Link>
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                    <Link to={`/doctor/${doctor.id}`} className="btn btn-secondary" style={{ flex: 1, textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem' }}>
+                      View Profile
+                    </Link>
+                    <Link to={`/doctor/${doctor.id}`} className="btn btn-primary" style={{ flex: 1, textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.875rem', gap: '0.25rem' }}>
+                      Book <ArrowRight size={14} />
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

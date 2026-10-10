@@ -192,3 +192,68 @@ flowchart LR
 - **Base64 Media Encapsulation**: Files are stored securely inside Postgres rather than public-facing object buckets.
 - **Immutable Clinical Audit**: All prescription authorizations and diagnostic record views generate auditable event records.
 - **Automated Verification**: Release pipelines enforce static type safety, route schema validation, and test suite execution prior to deployment.
+
+---
+
+## 7. Two Laptop Same Wi-Fi Setup
+
+To demonstrate the WebRTC consultation across two laptops (e.g., Laptop 1 acting as the Backend + PostgreSQL + Patient, and Laptop 2 acting as the Doctor), follow these instructions. Both laptops must be connected to the **SAME Wi-Fi network**.
+
+### Step 1: Find Laptop 1's LAN IP
+On Laptop 1 (the Mac hosting the backend), open a terminal and run:
+```bash
+ipconfig getifaddr en0
+```
+*(If on Windows, use `ipconfig`. If on Linux, use `hostname -I`)*.
+Let's assume this returns `192.168.1.100`.
+
+### Step 2: Configure Backend (`services/api/.env`)
+Ensure your backend `.env` is correctly configured for local development. Since the Doctor will connect from their own `localhost`, the default `CORS_ORIGINS` (which includes `http://localhost:5173`) will work perfectly.
+
+### Step 3: Configure Patient Frontend (`apps/patient-web/.env.local`)
+On **Laptop 1**, ensure the Patient app connects to the API via localhost (or the LAN IP):
+```env
+VITE_API_URL=http://localhost:3000
+```
+
+### Step 4: Start Laptop 1 (Backend + Patient)
+Start the backend (it listens on `0.0.0.0` on port 3000):
+```bash
+cd services/api
+npm install
+npm run dev
+```
+
+Start the patient frontend (Vite listens on `0.0.0.0` on port 5176):
+```bash
+cd apps/patient-web
+npm install
+npm run dev
+```
+
+### Step 5: Configure Doctor Frontend on Laptop 2
+Your friend only needs the `apps/doctor-web` folder (or the whole repo) on **Laptop 2**.
+Create/update `apps/doctor-web/.env.local` to point to Laptop 1's backend using the LAN IP:
+```env
+VITE_API_URL=http://192.168.1.100:3000
+```
+
+### Step 6: Start Laptop 2 (Doctor)
+Start the doctor frontend:
+```bash
+cd apps/doctor-web
+npm install
+npm run dev
+```
+
+### Accessing the Portals
+
+**1. Laptop 1 (Backend & Patient)**
+- **Frontend URL**: Open `http://localhost:5176` in your browser to access the Patient Portal.
+- **Backend/API URL**: Runs locally on `http://localhost:3000`.
+
+**2. Laptop 2 (Doctor)**
+- **Frontend URL**: Open `http://localhost:5173` in the browser on Laptop 2. Because Vite runs locally on Laptop 2, opening `localhost` ensures Firebase Authentication works automatically without needing any Authorized Domain updates!
+- **Backend/API URL**: Connects remotely to Laptop 1's backend at `http://192.168.1.100:3000`.
+
+When a consultation is started, WebRTC will securely negotiate the peer-to-peer connection over the LAN!

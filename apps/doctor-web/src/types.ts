@@ -42,6 +42,7 @@ export interface Appointment {
   doctorId: string;
   slotId: string | null;
   scheduledAt: string;
+  endsAt?: string;
   status: 'draft' | 'queued_offline' | 'requested' | 'pending_doctor' | 'confirmed' | 'in_progress' | 'completed' | 'rescheduled' | 'rejected' | 'cancelled' | 'missed' | 'follow_up_needed';
   concernCategory: string;
   preferredMode: 'video' | 'audio' | 'async_chat' | 'offline' | null;

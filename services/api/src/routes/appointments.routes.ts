@@ -225,6 +225,7 @@ router.get(
         doctorId: appointments.doctorId,
         slotId: appointments.slotId,
         scheduledAt: appointments.scheduledAt,
+        endsAt: availabilitySlots.endsAt,
         status: appointments.status,
         concernCategory: appointments.concernCategory,
         preferredMode: appointments.preferredMode,
@@ -259,6 +260,7 @@ router.get(
       .leftJoin(doctors, eq(appointments.doctorId, doctors.id))
       .leftJoin(patients, eq(appointments.patientId, patients.id))
       .leftJoin(users, eq(patients.userId, users.id))
+      .leftJoin(availabilitySlots, eq(appointments.slotId, availabilitySlots.id))
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .limit(limit)
       .offset(offset)
@@ -278,13 +280,17 @@ router.get(
     const id = _req.params.id as string;
 
     const rows = await getDb()
-      .select()
+      .select({
+        appointment: appointments,
+        endsAt: availabilitySlots.endsAt
+      })
       .from(appointments)
+      .leftJoin(availabilitySlots, eq(appointments.slotId, availabilitySlots.id))
       .where(eq(appointments.id, id))
       .limit(1);
 
     if (rows.length === 0) throw new NotFoundError("Appointment");
-    const appt = rows[0]!;
+    const appt = { ...rows[0].appointment, endsAt: rows[0].endsAt };
 
     // Ownership check: patient sees own, doctor sees assigned, coordinator/admin see all
     if (role === "patient") {

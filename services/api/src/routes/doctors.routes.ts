@@ -16,7 +16,7 @@
 
 import { Router, type Request, type Response } from "express";
 import Razorpay from "razorpay";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, sql, or, ilike } from "drizzle-orm";
 import { getDb } from "../db";
 import { doctors, availabilitySlots, users, paymentRecords, payoutRecords, doctorPayoutMethods, appointments, doctorVerifications, messages, encounters, patients } from "../db/schema";
 import { authenticate } from "../middleware/auth";
@@ -353,8 +353,10 @@ router.get("/recommend", async (req: Request, res: Response): Promise<void> => {
     recommendedSpeciality = "Gynecologist";
   }
 
-  // Fetch doctors with this speciality
+  // Search doctors based on fuzzy match against name, bio, speciality, OR the inferred recommendedSpeciality
   const db = getDb();
+  const searchQuery = `%${query}%`;
+  
   const doctorsList = await db
     .select({
       id: doctors.id,
@@ -370,13 +372,18 @@ router.get("/recommend", async (req: Request, res: Response): Promise<void> => {
     .where(
       and(
         eq(doctors.verificationStatus, "verified"),
-        eq(doctors.speciality, recommendedSpeciality)
+        or(
+          eq(doctors.speciality, recommendedSpeciality),
+          ilike(doctors.fullName, searchQuery),
+          ilike(doctors.bio, searchQuery),
+          ilike(doctors.speciality, searchQuery)
+        )
       )
     )
-    .limit(10);
+    .limit(20);
 
-  // If no doctors found for specific speciality, fallback to General Physician
-  if (doctorsList.length === 0 && recommendedSpeciality !== "General Physician") {
+  // If absolutely no doctors found, fallback to General Physician
+  if (doctorsList.length === 0) {
     const generalDoctors = await db
       .select({
         id: doctors.id,
@@ -398,7 +405,7 @@ router.get("/recommend", async (req: Request, res: Response): Promise<void> => {
       .limit(10);
       
     res.json({
-      recommendationReason: `Based on your symptoms, we recommend seeing a ${recommendedSpeciality}, but currently none are available. Here are General Physicians who can help.`,
+      recommendationReason: `No exact matches found for your query. Based on symptoms, we recommend a ${recommendedSpeciality}, but here are General Physicians who can help.`,
       speciality: "General Physician",
       data: generalDoctors
     });
@@ -406,7 +413,7 @@ router.get("/recommend", async (req: Request, res: Response): Promise<void> => {
   }
 
   res.json({
-    recommendationReason: `Based on your symptoms, we recommend seeing a ${recommendedSpeciality}.`,
+    recommendationReason: `Found doctors matching your query. Symptom analysis suggests a ${recommendedSpeciality}.`,
     speciality: recommendedSpeciality,
     data: doctorsList
   });

@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from 'react-router-dom';
 import type { Appointment } from '../types';
 import { Video, Phone, MessageSquare, WifiOff, Clock, User, Check, X } from 'lucide-react';
@@ -30,12 +31,19 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     }
   };
 
+  const [now, setNow] = React.useState(new Date());
+
+  React.useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 10000); // update every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
+
   const getStatusBadge = () => {
     const statusColors: Record<string, string> = {
       requested: 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30',
       confirmed: 'bg-green-500/20 text-green-500 border-green-500/30',
       rejected: 'bg-red-500/20 text-red-500 border-red-500/30',
-      cancelled: 'bg-gray-500/20 text-gray-500 border-gray-500/30',
+      cancelled: 'bg-slate-500/20 text-slate-500 border-gray-500/30',
     };
 
     const styles = statusColors[appointment.status] || 'bg-blue-500/20 text-blue-500 border-blue-500/30';
@@ -47,16 +55,23 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
     );
   };
 
+  const scheduledAtDate = new Date(appointment.scheduledAt);
+  const endsAtDate = appointment.endsAt ? new Date(appointment.endsAt) : new Date(scheduledAtDate.getTime() + 30 * 60000);
+  
+  const isBefore = now < scheduledAtDate;
+  const isAfter = now > endsAtDate;
+  const isDuring = !isBefore && !isAfter;
+
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4 shadow-sm hover:shadow-md transition-all">
       <div className="flex justify-between items-start mb-4">
         <div className="flex gap-4 items-center">
-          <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
-            <User size={24} className="text-gray-400" />
+          <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border border-gray-100">
+            <User size={24} className="text-slate-400" />
           </div>
           <div>
-            <h4 className="font-bold text-lg text-gray-900 mb-0.5">Patient ID: {appointment.patientId.substring(0, 8)}...</h4>
-            <div className="flex gap-3 text-gray-500 text-sm">
+            <h4 className="font-bold text-lg text-navy-900 mb-0.5">Patient ID: {appointment.patientId.substring(0, 8)}...</h4>
+            <div className="flex gap-3 text-slate-500 text-sm">
               <span className="flex items-center gap-1">
                 <Clock size={14} /> {dateString}, {timeString}
               </span>
@@ -69,8 +84,8 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         {getStatusBadge()}
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-xl mb-4 text-sm border border-gray-100">
-        <div className="font-semibold mb-1 text-teal-600">
+      <div className="bg-slate-50 p-4 rounded-xl mb-4 text-sm border border-gray-100">
+        <div className="font-semibold mb-1 text-brand-600">
           {appointment.concernCategory}
         </div>
         <p className="text-gray-600">
@@ -100,14 +115,41 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       )}
 
       {appointment.status === 'confirmed' && (
-        <div className="flex justify-end mt-4">
-          <Link 
-            to={`/consultation/${appointment.id}`}
-            className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 no-underline"
-            aria-label="Start Consultation"
-          >
-            <Video size={16} /> Start Consultation
-          </Link>
+        <div className="flex flex-col items-end mt-4">
+          {isBefore && (
+             <div className="text-sm font-medium text-orange-500 mb-2">
+               Starts at {timeString}
+             </div>
+          )}
+          {isAfter && (
+             <div className="text-sm font-medium text-red-500 mb-2">
+               Appointment Ended ({timeString} – {endsAtDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+             </div>
+          )}
+          {isDuring && (
+             <div className="text-sm font-medium text-green-500 mb-2 flex items-center gap-1">
+               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+               Consultation Available
+             </div>
+          )}
+          
+          {isDuring ? (
+            <Link 
+              to={`/consultation/${appointment.id}`}
+              className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2 no-underline"
+              aria-label="Start Consultation"
+            >
+              <Video size={16} /> Start Consultation
+            </Link>
+          ) : (
+            <button 
+              disabled
+              className="px-4 py-2 text-sm font-semibold text-slate-400 bg-gray-100 rounded-xl cursor-not-allowed flex items-center gap-2"
+              aria-label="Consultation disabled"
+            >
+              <Video size={16} /> {isAfter ? "Ended" : "Start Consultation"}
+            </button>
+          )}
         </div>
       )}
     </div>

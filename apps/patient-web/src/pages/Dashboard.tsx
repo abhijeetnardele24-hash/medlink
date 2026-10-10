@@ -7,32 +7,85 @@ import {
   DollarSign, Zap, Search
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { syncDb } from '../lib/sync/SyncDB';
+import { syncManager } from '../lib/sync/SyncManager';
 
 export const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { doctors, appointments, openSlots, loading } = usePatientDashboard();
+  const { doctors, appointments, openSlots, loading, now } = usePatientDashboard();
+  
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+
+  React.useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const outboxItems = useLiveQuery(() => syncDb.outbox.toArray(), []);
+  const pendingCount = outboxItems?.filter(i => i.status === 'pending' || i.status === 'failed_error').length || 0;
+  const syncingCount = outboxItems?.filter(i => i.status === 'syncing').length || 0;
+  const conflictCount = outboxItems?.filter(i => i.status === 'failed_conflict').length || 0;
 
 
 
   const upcomingAppts = appointments.filter(a => a.status === 'confirmed' || a.status === 'requested');
-  const firstName = user?.displayName?.split(' ')[0] || 'there';
+  const patientName = user?.displayName || user?.email?.split('@')[0] || 'Patient';
 
   const statusConfig: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     confirmed: { label: 'Confirmed', color: '#10b981', bg: 'rgba(16,185,129,0.1)', icon: <CheckCircle size={14} /> },
-    requested: { label: 'Pending', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: <Clock size={14} /> },
-    rejected: { label: 'Rejected', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: <AlertCircle size={14} /> },
+    requested: { label: 'Pending Request', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', icon: <Clock size={14} /> },
+    rejected: { label: 'Declined', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', icon: <AlertCircle size={14} /> },
+    in_progress: { label: 'In Progress', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', icon: <Activity size={14} /> },
+    completed: { label: 'Completed', color: '#6366f1', bg: 'rgba(99,102,241,0.1)', icon: <CheckCircle size={14} /> },
+    cancelled: { label: 'Cancelled', color: '#9ca3af', bg: 'rgba(156,163,175,0.1)', icon: <AlertCircle size={14} /> },
   };
 
   return (
     <div className="fade-in" style={{ padding: '2.5rem', maxWidth: '1200px', margin: '0 auto' }}>
+      
+      {/* Sync Banner */}
+      <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '0.9rem',
+        backgroundColor: !isOnline ? '#fffbeb' : conflictCount > 0 ? '#fef2f2' : syncingCount > 0 ? '#eff6ff' : pendingCount > 0 ? '#fffbeb' : '#ecfdf5',
+        color: !isOnline ? '#b45309' : conflictCount > 0 ? '#b91c1c' : syncingCount > 0 ? '#1d4ed8' : pendingCount > 0 ? '#b45309' : '#047857',
+        border: `1px solid ${!isOnline ? '#fde68a' : conflictCount > 0 ? '#fca5a5' : syncingCount > 0 ? '#bfdbfe' : pendingCount > 0 ? '#fde68a' : '#a7f3d0'}`
+      }}>
+        {!isOnline ? <><AlertCircle size={18} /> 🟠 Offline - Changes saved locally</> : 
+         conflictCount > 0 ? <><AlertCircle size={18} /> ⚠ Sync Failed - Some items conflicted</> :
+         syncingCount > 0 ? <><Activity size={18} className="animate-spin" /> 🔄 Syncing...</> :
+         pendingCount > 0 ? <><Clock size={18} /> 🟠 Online - Pending sync...</> :
+         <><CheckCircle size={18} /> 🟢 Online - Synced</>}
+      </div>
 
       {/* Welcome Header */}
-      <div style={{ marginBottom: '2.5rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.35rem' }}>
-          Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {firstName} 👋
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem' }}>Here's your telehealth overview and open doctor slots for today.</p>
+      <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.35rem' }}>
+            Welcome back, {patientName} 👋
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem' }}>How are you feeling today?</p>
+        </div>
+        <Link to="/triage" style={{ 
+          background: 'var(--accent)', 
+          color: 'white', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '8px', 
+          fontWeight: 600, 
+          textDecoration: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 4px 6px rgba(37, 99, 235, 0.2)'
+        }}>
+          Book a Consultation
+        </Link>
       </div>
 
       {/* Stats Strip */}
@@ -71,41 +124,105 @@ export const Dashboard: React.FC = () => {
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><div className="spinner" /></div>
         ) : upcomingAppts.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <Calendar size={56} style={{ margin: '0 auto 1.25rem', opacity: 0.15 }} />
-            <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No upcoming appointments</h3>
-            <p style={{ marginBottom: '1.5rem' }}>Browse our specialist doctors or book an open slot above.</p>
+            <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No upcoming consultations</h3>
+            <p style={{ marginBottom: '1.5rem' }}>Book a consultation with a doctor to get started.</p>
+            <Link to="/triage" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', textDecoration: 'none' }}>
+              Book Consultation
+            </Link>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.25rem' }}>
             {upcomingAppts.map(appt => {
               const cfg = statusConfig[appt.status] || statusConfig['requested'];
-              return (
-                <div key={appt.id} className="glass-panel" style={{ padding: '1.5rem', borderTop: `3px solid ${cfg.color}` }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-main)' }}>
-                      {appt.concernCategory.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                    </div>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.3rem 0.65rem', borderRadius: '999px', background: cfg.bg, color: cfg.color, fontWeight: 600 }}>
-                      {cfg.icon} {cfg.label}
-                    </span>
-                  </div>
+              const date = new Date(appt.scheduledAt);
+              const scheduledAtDate = new Date(appt.scheduledAt);
+              const endsAtDate = appt.endsAt ? new Date(appt.endsAt) : new Date(scheduledAtDate.getTime() + 30 * 60000);
+              const isBefore = now < scheduledAtDate;
+              const isAfter = now > endsAtDate;
+              const isDuring = !isBefore && !isAfter;
+              
+              let headerLabel = 'UPCOMING CONSULTATION';
+              let displayStatus = { ...cfg };
+              let isPastAndConfirmed = false;
+              
+              if (isAfter) {
+                headerLabel = 'PAST CONSULTATION';
+                if (appt.status === 'confirmed' || appt.status === 'requested') {
+                  displayStatus = { ...cfg, label: 'Ended' };
+                  isPastAndConfirmed = true;
+                }
+              } else if (isDuring || appt.status === 'in_progress') {
+                headerLabel = 'LIVE CONSULTATION';
+                if (appt.status === 'confirmed') {
+                  displayStatus = { ...cfg, label: 'In Progress' };
+                }
+              }
 
-                  {appt.doctor && (
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <User size={14} /> Dr. {appt.doctor.fullName} · {appt.doctor.speciality}
+              return (
+                <div key={appt.id} className="glass-panel" style={{ padding: '1.5rem', borderTop: `3px solid ${displayStatus.color}`, opacity: isAfter ? 0.7 : 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{headerLabel}</span>
+                    {appt.syncStatus === 'pending_push' && (
+                      <span style={{ backgroundColor: '#fffbeb', color: '#d97706', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem' }}>Saved Offline</span>
+                    )}
+                    {appt.syncStatus === 'failed_conflict' && (
+                      <span style={{ backgroundColor: '#fef2f2', color: '#dc2626', padding: '2px 8px', borderRadius: '12px', fontSize: '0.7rem' }}>Sync Failed (Conflict)</span>
+                    )}
+                  </div>
+                  
+                  {appt.doctor ? (
+                    <div style={{ marginBottom: '1.25rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)', marginBottom: '0.25rem' }}>
+                        Dr. {appt.doctor.fullName}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--accent)', fontWeight: 600 }}>
+                        {appt.doctor.speciality}
+                      </div>
+                    </div>
+                  ) : (
+                     <div style={{ marginBottom: '1.25rem' }}>
+                      <div style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--text-main)' }}>
+                        {appt.syncStatus === 'pending_push' ? 'Waiting for connection...' : 'Assigning Doctor...'}
+                      </div>
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-                    <Clock size={14} />
-                    {new Date(appt.scheduledAt).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 500, marginBottom: '1.25rem' }}>
+                    <Calendar size={16} color="var(--accent)" />
+                    {date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • {date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 500, marginBottom: '1.5rem' }}>
+                    <span style={{ color: 'var(--text-muted)' }}>Status:</span> 
+                    <span style={{ color: displayStatus.color, fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      {displayStatus.icon} {displayStatus.label}
+                    </span>
                   </div>
 
                   {appt.status === 'confirmed' && (
-                    <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                      <Video size={16} /> Join Video Consultation
-                    </button>
+                    <div className="flex flex-col items-center mt-4">
+                      {isBefore && (
+                         <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#f59e0b', marginBottom: '0.5rem' }}>
+                           Starts at {scheduledAtDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </div>
+                      )}
+                      
+                      {isDuring ? (
+                        <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700 }}>
+                          <Video size={18} /> Join Consultation
+                        </button>
+                      ) : isAfter ? (
+                        <button disabled className="btn" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700, backgroundColor: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', border: 'none' }}>
+                          <Video size={18} /> Ended
+                        </button>
+                      ) : (
+                        <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700 }}>
+                          <Video size={18} /> Join Consultation
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               );

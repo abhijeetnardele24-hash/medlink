@@ -4,20 +4,21 @@
 @tailwind utilities;
 
 :root {
-  /* Forma.ai Color Palette */
-  --bg-base: #ffffff;
-  --bg-surface: #f9f9fb;
+  /* MedLink Healthcare Color Palette */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
   --bg-surface-elevated: #ffffff;
   
-  --text-main: #000000;
-  --text-muted: #4b5563; /* slightly darker for readability on white */
-  --border: #e5e7eb;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
   
-  --accent: #0d9488;
-  --accent-hover: #0f766e;
+  --accent: #1e40af; /* Blue 800 - Professional Healthcare Navy */
+  --accent-hover: #1e3a8a; /* Blue 900 */
   
   --danger: #ef4444;
   --success: #10b981;
+  --warning: #f59e0b;
 }
 
 * {
@@ -195,3 +196,5 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+
+::placeholder { color: var(--text-muted) !important; opacity: 0.6 !important; font-weight: 400 !important; font-style: italic; }

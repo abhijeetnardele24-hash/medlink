@@ -7,6 +7,8 @@ import {
   Pill, Scissors, HeartPulse, Cigarette, Wine, Utensils, 
   FileText, Sparkles, Save 
 } from 'lucide-react';
+import { syncDb } from '../lib/sync/SyncDB';
+import { syncManager } from '../lib/sync/SyncManager';
 
 interface PatientProfileData {
   id?: string;
@@ -61,12 +63,35 @@ export const HealthProfile: React.FC = () => {
     locationDistrict: "",
   });
 
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get('/patients/me');
-        if (res.data.data) {
-          const d: PatientProfileData = res.data.data;
+        let d: PatientProfileData | undefined;
+        
+        if (navigator.onLine) {
+          const res = await api.get('/patients/me');
+          if (res.data.data) {
+            d = res.data.data;
+            await syncDb.health_profile.put({ id: 'me', ...d });
+          }
+        } else {
+          d = await syncDb.health_profile.get('me');
+        }
+
+        if (d) {
           setFormData({
             fullName: d.fullName || user?.displayName || "",
             gender: d.gender || "",
@@ -88,9 +113,17 @@ export const HealthProfile: React.FC = () => {
             insurancePolicyNumber: d.insurancePolicyNumber || "",
             locationDistrict: d.locationDistrict || "",
           });
+        } else if (!navigator.onLine) {
+          setErrorMsg("Health profile not available offline yet.");
         }
       } catch (err) {
         console.error('Failed to fetch patient health profile', err);
+        const d = await syncDb.health_profile.get('me');
+        if (d) {
+          setFormData(prev => ({ ...prev, fullName: d.fullName || prev.fullName })); // simple fallback
+        } else {
+          setErrorMsg("Health profile not available offline yet.");
+        }
       } finally {
         setLoading(false);
       }
@@ -120,25 +153,32 @@ export const HealthProfile: React.FC = () => {
     setSuccessMsg("");
     setErrorMsg("");
 
-    try {
-      const res = await api.put('/patients/me', {
-        ...formData,
-        height: formData.height ? Number(formData.height) : null,
-        weight: formData.weight ? Number(formData.weight) : null,
-      });
+    const payload = {
+      ...formData,
+      height: formData.height ? Number(formData.height) : null,
+      weight: formData.weight ? Number(formData.weight) : null,
+    };
 
-      setSuccessMsg("Your complete health dossier was saved securely to the database!");
-      if (res.data.data) {
-        const d = res.data.data;
-        setFormData(prev => ({
-          ...prev,
-          fullName: d.fullName || prev.fullName,
-        }));
+    try {
+      if (navigator.onLine) {
+        const res = await api.put('/patients/me', payload);
+        if (res.data.data) {
+          const d = res.data.data;
+          await syncDb.health_profile.put({ id: 'me', ...d });
+          setFormData(prev => ({ ...prev, fullName: d.fullName || prev.fullName }));
+        }
+        setSuccessMsg("Your complete health dossier was saved securely to the database!");
+      } else {
+        // Save to cache for offline display
+        await syncDb.health_profile.put({ id: 'me', ...payload });
+        // Enqueue sync operation
+        await syncManager.enqueueOperation('patient_profile', 'UPDATE', payload);
+        setSuccessMsg("Offline mode: Changes saved locally and will sync when connected.");
       }
       setTimeout(() => setSuccessMsg(""), 5000);
     } catch (err: any) {
       console.error('Failed to update patient profile', err);
-      setErrorMsg(err.response?.data?.error || err.response?.data?.message || 'Failed to save health profile. Please check your connection.');
+      setErrorMsg(err.response?.data?.error || err.response?.data?.message || 'Failed to save health profile.');
     } finally {
       setSaving(false);
     }
@@ -191,24 +231,24 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Full Name</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Full Name</label>
               <input 
                 type="text" 
                 name="fullName" 
                 value={formData.fullName} 
                 onChange={handleChange} 
-                placeholder="e.g. Rahul Sharma" 
-                className="form-input" 
+                placeholder="e.g. Full Name" 
+                className="input-field" 
                 required 
               />
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Email Address</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Email Address</label>
               <input 
                 type="email" 
                 value={user?.email || "patient@medlink.com"} 
                 disabled 
-                className="form-input" 
+                className="input-field" 
                 style={{ opacity: 0.7, cursor: 'not-allowed' }} 
               />
             </div>
@@ -216,8 +256,8 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Gender</label>
-              <select name="gender" value={formData.gender} onChange={handleChange} className="form-input" required>
+              <label className="input-label" style={{ fontWeight: 600 }}>Gender</label>
+              <select name="gender" value={formData.gender} onChange={handleChange} className="input-field" required>
                 <option value="">Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -225,19 +265,19 @@ export const HealthProfile: React.FC = () => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Date of Birth</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Date of Birth</label>
               <input 
                 type="date" 
                 name="dateOfBirth" 
                 value={formData.dateOfBirth} 
                 onChange={handleChange} 
-                className="form-input" 
+                className="input-field" 
                 required 
               />
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Blood Group</label>
-              <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="form-input" required>
+              <label className="input-label" style={{ fontWeight: 600 }}>Blood Group</label>
+              <select name="bloodGroup" value={formData.bloodGroup} onChange={handleChange} className="input-field" required>
                 <option value="">Select Blood Group</option>
                 {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
               </select>
@@ -246,25 +286,25 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>City / District</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>City / District</label>
               <input 
                 type="text" 
                 name="locationDistrict" 
                 value={formData.locationDistrict} 
                 onChange={handleChange} 
-                placeholder="e.g. Mumbai Suburban" 
-                className="form-input" 
+                placeholder="e.g. District / Region" 
+                className="input-field" 
               />
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Full Residential Address</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Full Residential Address</label>
               <input 
                 type="text" 
                 name="address" 
                 value={formData.address} 
                 onChange={handleChange} 
-                placeholder="Flat 402, Sunshine Heights, Andheri West" 
-                className="form-input" 
+                placeholder="e.g. Apartment, Street, City, ZIP" 
+                className="input-field" 
               />
             </div>
           </div>
@@ -278,7 +318,7 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem', alignItems: 'center' }}>
             <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+              <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
                 <Ruler size={16} color="var(--accent)" /> Height (cm)
               </label>
               <input 
@@ -287,12 +327,12 @@ export const HealthProfile: React.FC = () => {
                 value={formData.height} 
                 onChange={handleChange} 
                 placeholder="e.g. 175" 
-                className="form-input" 
+                className="input-field" 
               />
             </div>
             
             <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
+              <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 600 }}>
                 <Scale size={16} color="var(--accent)" /> Weight (kg)
               </label>
               <input 
@@ -301,7 +341,7 @@ export const HealthProfile: React.FC = () => {
                 value={formData.weight} 
                 onChange={handleChange} 
                 placeholder="e.g. 70" 
-                className="form-input" 
+                className="input-field" 
               />
             </div>
 
@@ -330,7 +370,7 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label className="input-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <AlertCircle size={15} color="#ef4444" /> Known Allergies (Drugs, Food, Environmental)
               </label>
               <textarea 
@@ -338,13 +378,13 @@ export const HealthProfile: React.FC = () => {
                 value={formData.allergies} 
                 onChange={handleChange} 
                 placeholder="e.g. Penicillin, Sulfa drugs, Peanuts, Shellfish (comma separated)" 
-                className="form-input" 
+                className="input-field" 
                 style={{ minHeight: '90px', resize: 'vertical' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label className="input-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Activity size={15} color="#f59e0b" /> Chronic Conditions & Long-Term Illnesses
               </label>
               <textarea 
@@ -352,7 +392,7 @@ export const HealthProfile: React.FC = () => {
                 value={formData.chronicConditions} 
                 onChange={handleChange} 
                 placeholder="e.g. Type 2 Diabetes, Hypertension, Asthma, Hypothyroidism" 
-                className="form-input" 
+                className="input-field" 
                 style={{ minHeight: '90px', resize: 'vertical' }}
               />
             </div>
@@ -360,7 +400,7 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label className="input-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Pill size={15} color="var(--accent)" /> Current Daily Medications & Dosages
               </label>
               <textarea 
@@ -368,13 +408,13 @@ export const HealthProfile: React.FC = () => {
                 value={formData.currentMedications} 
                 onChange={handleChange} 
                 placeholder="e.g. Metformin 500mg (1-0-1), Telmisartan 40mg (1-0-0)" 
-                className="form-input" 
+                className="input-field" 
                 style={{ minHeight: '90px', resize: 'vertical' }}
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label className="input-label" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                 <Scissors size={15} color="#6366f1" /> Past Surgeries & Major Hospitalizations
               </label>
               <textarea 
@@ -382,7 +422,7 @@ export const HealthProfile: React.FC = () => {
                 value={formData.pastSurgeries} 
                 onChange={handleChange} 
                 placeholder="e.g. Appendectomy (2020), Knee Arthroscopy (2023)" 
-                className="form-input" 
+                className="input-field" 
                 style={{ minHeight: '90px', resize: 'vertical' }}
               />
             </div>
@@ -397,33 +437,33 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Emergency Contact Person & Relation</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Emergency Contact Person & Relation</label>
               <input 
                 type="text" 
                 name="emergencyContactName" 
                 value={formData.emergencyContactName} 
                 onChange={handleChange} 
-                placeholder="e.g. Sunita Sharma (Spouse)" 
-                className="form-input" 
+                placeholder="e.g. Contact Name (Relation)" 
+                className="input-field" 
               />
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Emergency Contact Phone</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Emergency Contact Phone</label>
               <input 
                 type="text" 
                 name="emergencyContactPhone" 
                 value={formData.emergencyContactPhone} 
                 onChange={handleChange} 
                 placeholder="e.g. +91 98765 43210" 
-                className="form-input" 
+                className="input-field" 
               />
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Smoking Status</label>
-              <select name="smokingStatus" value={formData.smokingStatus} onChange={handleChange} className="form-input">
+              <label className="input-label" style={{ fontWeight: 600 }}>Smoking Status</label>
+              <select name="smokingStatus" value={formData.smokingStatus} onChange={handleChange} className="input-field">
                 <option value="">Select</option>
                 <option value="Non-Smoker">Non-Smoker</option>
                 <option value="Occasional">Occasional Smoker</option>
@@ -432,8 +472,8 @@ export const HealthProfile: React.FC = () => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Alcohol Intake</label>
-              <select name="alcoholStatus" value={formData.alcoholStatus} onChange={handleChange} className="form-input">
+              <label className="input-label" style={{ fontWeight: 600 }}>Alcohol Intake</label>
+              <select name="alcoholStatus" value={formData.alcoholStatus} onChange={handleChange} className="input-field">
                 <option value="">Select</option>
                 <option value="Never">Never / Teetotaler</option>
                 <option value="Socially">Social / Occasional</option>
@@ -441,8 +481,8 @@ export const HealthProfile: React.FC = () => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Diet Preference</label>
-              <select name="dietPreference" value={formData.dietPreference} onChange={handleChange} className="form-input">
+              <label className="input-label" style={{ fontWeight: 600 }}>Diet Preference</label>
+              <select name="dietPreference" value={formData.dietPreference} onChange={handleChange} className="input-field">
                 <option value="">Select</option>
                 <option value="Vegetarian">Vegetarian</option>
                 <option value="Non-Vegetarian">Non-Vegetarian</option>
@@ -461,25 +501,25 @@ export const HealthProfile: React.FC = () => {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>ABHA Health ID (Ayushman Bharat)</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>ABHA Health ID (Ayushman Bharat)</label>
               <input 
                 type="text" 
                 name="abhaId" 
                 value={formData.abhaId} 
                 onChange={handleChange} 
                 placeholder="e.g. 91-1234-5678-9012 or user@abdm" 
-                className="form-input" 
+                className="input-field" 
               />
             </div>
             <div className="form-group">
-              <label className="form-label" style={{ fontWeight: 600 }}>Health Insurance Policy Number</label>
+              <label className="input-label" style={{ fontWeight: 600 }}>Health Insurance Policy Number</label>
               <input 
                 type="text" 
                 name="insurancePolicyNumber" 
                 value={formData.insurancePolicyNumber} 
                 onChange={handleChange} 
                 placeholder="e.g. HDFC-ERGO-MED-89104" 
-                className="form-input" 
+                className="input-field" 
               />
             </div>
           </div>

@@ -46,6 +46,7 @@ async function getAuthorizedEncounterIds(db: any, firebaseUid: string, encounter
 router.post("/push", async (req: Request, res: Response): Promise<void> => {
   try {
     const { operations } = req.body;
+    console.log(`[SYNC DEBUG] Received operations:`, JSON.stringify(operations));
     
     if (!Array.isArray(operations)) {
       res.status(400).json({ error: "operations must be an array" });
@@ -159,26 +160,42 @@ router.post("/push", async (req: Request, res: Response): Promise<void> => {
             continue;
           }
 
+          const [u] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.firebaseUid, res.locals.user.uid))
+            .limit(1);
+
+          if (!u) {
+            results.push({ idempotencyKey, status: "error", error: "User profile not found" });
+            continue;
+          }
+
           const [patient] = await db
             .select({ id: patients.id })
             .from(patients)
-            .where(eq(patients.userId, res.locals.user.uid))
+            .where(eq(patients.userId, u.id))
             .limit(1);
             
           if (!patient) {
+            console.log(`[SYNC ERROR] Patient not found for u.id=${u.id}, firebaseUid=${res.locals.user.uid}`);
             results.push({ idempotencyKey, status: "error", error: "Patient profile not found" });
             continue;
           }
 
           // Check if already processed (Idempotency by slotId)
           const existing = await db
-            .select({ id: appointments.id })
+            .select({ id: appointments.id, patientId: appointments.patientId })
             .from(appointments)
             .where(eq(appointments.slotId, slotId))
             .limit(1);
 
           if (existing.length > 0) {
-            results.push({ idempotencyKey, status: "success", serverId: existing[0].id });
+            if (existing[0].patientId === patient.id) {
+              results.push({ idempotencyKey, status: "success", serverId: existing[0].id });
+            } else {
+              results.push({ idempotencyKey, status: "conflict", error: "Slot already booked by another patient" });
+            }
             continue;
           }
 
@@ -200,12 +217,85 @@ router.post("/push", async (req: Request, res: Response): Promise<void> => {
           logger.error({ err, op }, "Failed to process sync operation");
           results.push({ idempotencyKey, status: "error", error: err.message });
         }
+      } else if (entityType === "patient_profile" && action === "UPDATE") {
+        try {
+          if (!idempotencyKey) {
+            results.push({ status: "error", error: "Missing idempotencyKey" });
+            continue;
+          }
+
+          const [u] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.firebaseUid, res.locals.user.uid))
+            .limit(1);
+
+          if (!u) {
+            results.push({ idempotencyKey, status: "error", error: "User profile not found" });
+            continue;
+          }
+
+          const [patient] = await db
+            .select()
+            .from(patients)
+            .where(eq(patients.userId, u.id))
+            .limit(1);
+            
+          if (!patient) {
+            results.push({ idempotencyKey, status: "error", error: "Patient profile not found" });
+            continue;
+          }
+
+          // Idempotency doesn't strictly apply to basic profile PUT because updates overwrite,
+          // but we process the payload update.
+          const { 
+            fullName, dateOfBirth, gender, bloodGroup, height, weight, 
+            allergies, chronicConditions, currentMedications, pastSurgeries, 
+            emergencyContactName, emergencyContactPhone, address, 
+            smokingStatus, alcoholStatus, dietPreference, abhaId, 
+            insurancePolicyNumber, locationDistrict
+          } = payload;
+
+          await db.update(patients)
+            .set({
+              dateOfBirth: dateOfBirth || patient.dateOfBirth,
+              gender: gender || patient.gender,
+              bloodGroup: bloodGroup || patient.bloodGroup,
+              height: height || patient.height,
+              weight: weight || patient.weight,
+              allergies: allergies ? (typeof allergies === 'string' ? allergies.split(',').map((s: string) => s.trim()) : allergies) : patient.allergies,
+              chronicConditions: chronicConditions ? (typeof chronicConditions === 'string' ? chronicConditions.split(',').map((s: string) => s.trim()) : chronicConditions) : patient.chronicConditions,
+              currentMedications: currentMedications ? (typeof currentMedications === 'string' ? currentMedications.split(',').map((s: string) => s.trim()) : currentMedications) : patient.currentMedications,
+              pastSurgeries: pastSurgeries ? (typeof pastSurgeries === 'string' ? pastSurgeries.split(',').map((s: string) => s.trim()) : pastSurgeries) : patient.pastSurgeries,
+              emergencyContactName: emergencyContactName || patient.emergencyContactName,
+              emergencyContactPhone: emergencyContactPhone || patient.emergencyContactPhone,
+              address: address || patient.address,
+              smokingStatus: smokingStatus || patient.smokingStatus,
+              alcoholStatus: alcoholStatus || patient.alcoholStatus,
+              dietPreference: dietPreference || patient.dietPreference,
+              abhaId: abhaId || patient.abhaId,
+              insurancePolicyNumber: insurancePolicyNumber || patient.insurancePolicyNumber,
+              locationDistrict: locationDistrict || patient.locationDistrict,
+            })
+            .where(eq(patients.id, patient.id));
+
+          // Also update users.fullName if needed
+          if (fullName) {
+            await db.update(users).set({ displayName: fullName, updatedAt: new Date() }).where(eq(users.id, u.id));
+          }
+
+          results.push({ idempotencyKey, status: "success", serverId: patient.id });
+        } catch (err: any) {
+          logger.error({ err, op }, "Failed to process sync operation");
+          results.push({ idempotencyKey, status: "error", error: err.message });
+        }
       } else {
         // Unrecognized entity/action
         results.push({ idempotencyKey, status: "error", error: `Unsupported operation: ${entityType} ${action}` });
       }
     }
 
+    console.log(`[SYNC DEBUG] Sending results:`, JSON.stringify(results));
     res.json({ results });
   } catch (err) {
     logger.error({ err }, "Push sync failed");

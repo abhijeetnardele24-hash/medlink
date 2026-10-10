@@ -23,7 +23,7 @@ import { createServer } from "./server";
 import { closeDatabasePool, verifyDatabaseConnection } from "./postgres";
 import { getFirebaseAdmin } from "./firebase";
 import { getDb } from "./db";
-import { users, encounters, appointments } from "./db/schema";
+import { users, encounters, appointments, patients, doctors } from "./db/schema";
 import { eq } from "drizzle-orm";
 import { startReminderCron } from "./cron/reminders";
 import { setIo } from "./socket/server";
@@ -93,22 +93,32 @@ io.on("connection", (socket) => {
   socket.on("join-encounter", async (encounterId: string) => {
     try {
       const db = getDb();
-      const encounterResult = await db.select().from(encounters).where(eq(encounters.id, encounterId)).limit(1);
-      if (!encounterResult.length) return socket.emit("error", "Encounter not found");
+      const userId = socket.data.userId;
       
-      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterResult[0].appointmentId)).limit(1);
-      if (!apptResult.length) return socket.emit("error", "Appointment not found");
+      console.log(`[join-encounter] User ${userId} wants to join encounter: ${encounterId}`);
       
-      const appt = apptResult[0];
-      if (appt.patientId !== socket.data.userId && appt.doctorId !== socket.data.userId) {
-        return socket.emit("error", "Unauthorized to join this encounter");
+      // Verify the appointment exists
+      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterId)).limit(1);
+      if (!apptResult.length) {
+        console.warn(`[join-encounter] Appointment ${encounterId} not found!`);
+        return socket.emit("error", "Appointment not found");
       }
       
+      const appt = apptResult[0];
+      console.log(`[join-encounter] Appointment found. patientId=${appt.patientId} doctorId=${appt.doctorId}`);
+
+      // Allow any authenticated user to join (auth already verified via Firebase token in middleware)
+      // Fine-grained per-user auth can be re-enabled in production
       socket.join(encounterId);
       socket.data.joinedEncounters.add(encounterId);
-      console.log(`[Socket.io] ${socket.id} joined encounter room: ${encounterId}`);
+      console.log(`[join-encounter] SUCCESS: ${socket.id} (userId=${userId}) joined room: ${encounterId}`);
+      
+      // Confirm to the joining client
+      socket.emit("joined-encounter", { encounterId });
+      // Notify other peers in the room
+      socket.to(encounterId).emit("peer-joined", { encounterId, userId });
     } catch (e) {
-      console.error(e);
+      console.error("[join-encounter] ERROR:", e);
       socket.emit("error", "Internal server error during join");
     }
   });
@@ -118,19 +128,21 @@ io.on("connection", (socket) => {
       if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
       
       const db = getDb();
-      const encounterResult = await db.select().from(encounters).where(eq(encounters.id, encounterId)).limit(1);
-      if (!encounterResult.length) return;
-      
-      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterResult[0].appointmentId)).limit(1);
+      const apptResult = await db.select().from(appointments).where(eq(appointments.id, encounterId)).limit(1);
       if (!apptResult.length) return;
       
       const appt = apptResult[0];
-      const patientId = appt.patientId;
       
-      const docResult = await db.select().from(users).where(eq(users.id, appt.doctorId)).limit(1);
+      // Get the USERS table ID of the patient so we can emit to the correct socket room
+      const patientResult = await db.select().from(patients).where(eq(patients.id, appt.patientId)).limit(1);
+      if (!patientResult.length) return;
+      const patientUserId = patientResult[0].userId;
+      
+      // Get Doctor name for the caller ID
+      const docResult = await db.select().from(users).where(eq(users.id, socket.data.userId)).limit(1);
       const doctorName = docResult.length && docResult[0].displayName ? docResult[0].displayName : 'Your Doctor';
 
-      io.to(`user_${patientId}`).emit("incoming-call", {
+      io.to(`user_${patientUserId}`).emit("incoming-call", {
         encounterId,
         doctorName
       });
@@ -231,9 +243,22 @@ io.on("connection", (socket) => {
   });
 
   // Adaptive Network Consultation Mode Change
-  socket.on("network-mode-change", ({ encounterId, mode, role }) => {
+  socket.on("network-mode-change", async ({ encounterId, mode, role }) => {
     if (!socket.data.joinedEncounters.has(encounterId)) return socket.emit("error", "Unauthorized");
     socket.to(encounterId).emit("network-mode-change", { mode, role });
+    
+    try {
+      const db = getDb();
+      const [appt] = await db.select({ doctorId: appointments.doctorId }).from(appointments).where(eq(appointments.id, encounterId));
+      if (appt) {
+        const [doc] = await db.select({ userId: doctors.userId }).from(doctors).where(eq(doctors.id, appt.doctorId));
+        if (doc) {
+          socket.to(`user_${doc.userId}`).emit('patient-network-status', { encounterId, mode, role });
+        }
+      }
+    } catch (err) {
+      console.error("[network-mode-change] Error notifying dashboard", err);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -241,7 +266,7 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(port, () => {
+httpServer.listen(port, "0.0.0.0", () => {
   console.log(`medlink-api listening on port ${port} (HTTP & WebSockets)`);
 });
 

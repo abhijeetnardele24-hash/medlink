@@ -16,10 +16,8 @@ export const useAppointments = () => {
     setError('');
 
     try {
-      const [apptRes, msgRes] = await Promise.all([
-        api.get('/appointments'),
-        api.get('/doctors/me/messages/unread')
-      ]);
+      const apptRes = await api.get('/appointments');
+      const msgRes = await api.get('/doctors/me/messages/unread');
       if (apptRes.data) {
         setAppointments(apptRes.data.data || []);
       }

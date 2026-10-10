@@ -14,6 +14,13 @@ const resources = {
         "noSlots": "No available slots found for this doctor."
       },
       "consultation": {
+        "title": "Doctor Consultation",
+        "connecting": "Connecting to secure medical gateway...",
+        "connectedSecurely": "Connected Securely",
+        "waitingForDoctor": "Waiting for Doctor to connect...",
+        "waitingForPatient": "Waiting for Patient",
+        "permissionError": "Please check camera and microphone permissions.",
+        "goBack": "Go Back",
         "hqConnection": "HQ Connection",
         "poorConnection": "Poor Connection",
         "audioOnly": "Audio Only",

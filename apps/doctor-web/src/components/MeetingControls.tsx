@@ -92,7 +92,7 @@ export const MeetingControls: React.FC<MeetingControlsProps> = ({
       )}
 
       {/* Main Bottom Floating Dock */}
-      <div className="bg-neutral-900/80 backdrop-blur-2xl border border-white/10 px-6 py-3.5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center gap-3">
+      <div className="bg-neutral-900/80 backdrop-blur-2xl border border-white/10 px-6 py-3.5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] flex items-center gap-3">
         {/* 1. Microphone Toggle */}
         <div className="relative">
           <button

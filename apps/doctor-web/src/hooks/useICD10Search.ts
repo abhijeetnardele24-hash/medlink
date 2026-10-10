@@ -14,7 +14,7 @@ export const useICD10Search = () => {
     const timer = setTimeout(async () => {
       setIsSearchingDiagnosis(true);
       try {
-        const res = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(diagnosisQuery)}`);
+        const res = await fetch(`https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&cf=code,name&terms=${encodeURIComponent(diagnosisQuery)}`);
         const data = await res.json();
         // data format: [count, [codes], null, [[code, name], ...]]
         setDiagnosisResults(data[3] || []);

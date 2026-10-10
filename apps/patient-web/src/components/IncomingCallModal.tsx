@@ -42,7 +42,7 @@ export const IncomingCallModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+      <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl animate-in zoom-in-95 duration-200 text-center">
         
         {/* Pulsing Avatar/Icon */}
         <div className="relative w-24 h-24 mx-auto mb-6">
@@ -52,7 +52,7 @@ export const IncomingCallModal: React.FC = () => {
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Incoming Call</h2>
+        <h2 className="text-2xl font-bold text-navy-900 mb-2">Incoming Call</h2>
         <p className="text-gray-600 mb-8">{incomingCall.doctorName} is calling you for your consultation.</p>
 
         <div className="flex justify-center gap-6">
@@ -76,7 +76,7 @@ export const IncomingCallModal: React.FC = () => {
             <div className="w-14 h-14 bg-green-500 text-white rounded-full flex items-center justify-center group-hover:bg-green-600 transition-all shadow-lg shadow-green-500/30">
               <Phone size={24} className="animate-bounce" />
             </div>
-            <span className="text-sm font-medium text-gray-900 group-hover:text-green-600">Accept</span>
+            <span className="text-sm font-medium text-navy-900 group-hover:text-green-600">Accept</span>
           </button>
         </div>
       </div>

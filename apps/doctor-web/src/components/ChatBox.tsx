@@ -237,7 +237,7 @@ export const ChatBox: React.FC<{ encounterId: string }> = ({ encounterId }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-neutral-900/90 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden font-['Inter',sans-serif]">
+    <div className="flex flex-col h-full bg-neutral-900/90 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden font-['Inter',sans-serif]">
       {/* Header */}
       <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between">
         <div>

@@ -30,6 +30,9 @@ export const getDb = (): NodePgDatabase<Schema> => {
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
   });
+  pool.on("error", (err) => {
+    console.error("Unexpected error on idle PostgreSQL client", err);
+  });
   
   _db = drizzle(pool, { schema });
   return _db;

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
-import { FileText, Download, Calendar, Activity } from 'lucide-react';
+import { FileText, Download, Calendar, Activity, CheckCircle, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { syncDb } from '../lib/sync/SyncDB';
 
 interface Encounter {
   id: string;
@@ -21,16 +22,36 @@ interface Encounter {
 export const History: React.FC = () => {
   const [encounters, setEncounters] = useState<Encounter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchHistory = async () => {
       try {
-        const res = await api.get('/encounters');
-        // Filter to only ended/completed encounters
-        const past = res.data.data.filter((e: any) => e.status === 'ended');
-        setEncounters(past);
+        if (navigator.onLine) {
+          const res = await api.get('/encounters');
+          const past = res.data.data.filter((e: any) => e.status === 'ended');
+          setEncounters(past);
+          await syncDb.encounters_cache.clear();
+          await syncDb.encounters_cache.bulkPut(past);
+        } else {
+          const cached = await syncDb.encounters_cache.toArray();
+          setEncounters(cached);
+        }
       } catch (err) {
         console.error("Failed to fetch history", err);
+        const cached = await syncDb.encounters_cache.toArray();
+        setEncounters(cached);
       } finally {
         setLoading(false);
       }
@@ -76,12 +97,19 @@ export const History: React.FC = () => {
         </div>
       </div>
 
+      {isOffline && (
+        <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '0.9rem', backgroundColor: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+          <AlertCircle size={18} /> 🟠 Offline - Showing locally cached consultation history
+        </div>
+      )}
+
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}><div className="spinner"></div></div>
       ) : encounters.length === 0 ? (
         <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
           <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.2 }} />
-          <p>No past medical history found.</p>
+          <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No past history found</h3>
+          <p>Your completed consultations and prescriptions will appear here.</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -107,13 +135,16 @@ export const History: React.FC = () => {
                     <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>Prescription & Notes</span>
                   </div>
                   {encounter.prescriptionId ? (
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 600, marginRight: '1rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        Prescription Available <CheckCircle size={14} />
+                      </span>
                       <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-secondary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
-                        <Download size={14} style={{ marginRight: '0.25rem' }} /> Download
+                        <Download size={14} style={{ marginRight: '0.25rem' }} /> Download PDF
                       </button>
-                      <Link to={`/pharmacy?rxId=${encounter.prescriptionId}`} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem', textDecoration: 'none' }}>
-                        Order Medicines
-                      </Link>
+                      <button onClick={() => handleDownload(encounter.prescriptionId)} className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.875rem' }}>
+                        View Prescription
+                      </button>
                     </div>
                   ) : (
                     <span style={{ fontSize: '0.875rem', color: 'var(--text-muted)' }}>Not available</span>

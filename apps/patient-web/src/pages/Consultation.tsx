@@ -18,6 +18,7 @@ import { auth } from '../lib/firebase';
 import { ChatBox } from '../components/ChatBox';
 import { MeetingControls } from '../components/MeetingControls';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
+import { NetworkHealthPanel } from '../components/NetworkHealthPanel';
 import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
@@ -31,10 +32,14 @@ export const Consultation: React.FC = () => {
     isConnected,
     error,
     connectionQuality,
+    networkStats,
     endMeetingReason,
 
     isAudioMuted,
     isVideoOff,
+    isAutoAudioOnly,
+    isSimulating,
+    toggleSimulatePoorNetwork,
     toggleAudio,
     toggleVideo,
     remoteAudioMuted,
@@ -55,6 +60,8 @@ export const Consultation: React.FC = () => {
     switchCamera,
     switchMicrophone,
     switchAudioOutput,
+    pc,
+    socket
   } = useWebRTC(id || null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -74,16 +81,31 @@ export const Consultation: React.FC = () => {
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  // Video track assignments
+  // Video track assignments - keep refs always synced to streams
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
+    if (localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
 
+  // Re-attach srcObject when toggling video (stream ref may not change)
+  const effectiveVideoOff = isVideoOff || isAutoAudioOnly;
+  
+  useEffect(() => {
+    if (localVideoRef.current && localStream && !effectiveVideoOff) {
+      if (localVideoRef.current.srcObject !== localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, [effectiveVideoOff, localStream]);
+
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      // CRITICAL FIX: Remote WebRTC streams often require an explicit .play()
+      // call after attaching to srcObject, otherwise they render as a black screen.
+      remoteVideoRef.current.play().catch(e => console.error("Error playing remote video:", e));
     }
   }, [remoteStream]);
 
@@ -127,16 +149,19 @@ export const Consultation: React.FC = () => {
 
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh', background: '#0a0a0a', overflow: 'hidden', userSelect: 'none' }}>
+      <NetworkHealthPanel connectionQuality={connectionQuality} networkStats={networkStats} isConnected={isConnected} />
+      
       {/* Main Video Feed / Remote Participant */}
       <div style={{ position: 'absolute', inset: 0, background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {remoteStream && !remoteVideoOff ? (
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-        ) : (
+        {/* Remote video always mounted so srcObject works */}
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none', width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        {/* Placeholder when no remote stream or camera off */}
+        {(!remoteStream || remoteVideoOff) && (
           <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#818cf8' }}>DR</span>
@@ -197,6 +222,54 @@ export const Consultation: React.FC = () => {
 
           {/* Badges & Alerts */}
           <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {connectionQuality === 'audio-only' ? (
+              <span style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                border: '1px solid rgba(245, 158, 11, 0.3)',
+                color: '#fcd34d',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}>
+                <Mic size={12} /> AUDIO CONSULTATION
+              </span>
+            ) : (
+              <span style={{
+                background: 'rgba(59, 130, 246, 0.2)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                color: '#93c5fd',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}>
+                <Video size={12} /> VIDEO CONSULTATION
+              </span>
+            )}
+            {/* Development-only simulation button */}
+            <button
+              onClick={toggleSimulatePoorNetwork}
+              style={{
+                background: isSimulating ? 'rgba(239, 68, 68, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                border: `1px solid ${isSimulating ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)'}`,
+                color: isSimulating ? '#fca5a5' : '#e5e7eb',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '999px',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {isSimulating ? 'Stop Simulation' : 'Simulate Bad Network'}
+            </button>
         </div>
       </div>
 
@@ -214,26 +287,27 @@ export const Consultation: React.FC = () => {
         border: '2px solid rgba(255,255,255,0.15)',
         boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
       }}>
-        {localStream && !isVideoOff ? (
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              transform: 'scaleX(-1)',
-              filter: isBlurActive ? 'blur(3px)' : 'none'
-            }}
-          />
-        ) : (
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{
+            display: effectiveVideoOff ? 'none' : 'block',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transform: 'scaleX(-1)',
+            filter: isBlurActive ? 'blur(3px)' : 'none'
+          }}
+        />
+        {/* Camera-off placeholder */}
+        {effectiveVideoOff && (
           <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', gap: '0.5rem' }}>
             <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.875rem' }}>
               PT
             </div>
-            <span style={{ fontSize: '0.75rem' }}>Camera Off</span>
+            <span style={{ fontSize: '0.75rem' }}>{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
           </div>
         )}
 
@@ -249,11 +323,10 @@ export const Consultation: React.FC = () => {
         </div>
       </div>
 
-      {/* Floating Bottom Meeting Controls */}
       <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
         <MeetingControls
           isAudioMuted={isAudioMuted}
-          isVideoOff={isVideoOff}
+          isVideoOff={effectiveVideoOff}
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
           audioLevel={audioLevel}

@@ -38,7 +38,7 @@ export const DeviceSettingsModal: React.FC<DeviceSettingsModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="bg-[#18181B] border border-white/10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="bg-[#18181B] border border-white/10 w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between bg-black/40">
           <div>

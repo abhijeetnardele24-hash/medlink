@@ -117,9 +117,18 @@ export const PrescribeModal: React.FC<PrescribeModalProps> = ({
     }
 
     try {
+      const medicinesJson = medicines.map(m => ({
+        medicineId: m.medicineId,
+        name: m.name,
+        dosage: m.dosage,
+        frequency: m.frequency,
+        durationDays: parseInt(m.duration) || undefined,
+        recommend: m.recommend
+      }));
+
       const payload = {
         doctorId,
-        medicinesJson: medicines,
+        medicinesJson,
         instructionsText: finalInstructions
       };
 

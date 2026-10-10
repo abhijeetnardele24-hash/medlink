@@ -16,7 +16,8 @@ import {
   Hand,
   ScreenShare,
   LayoutGrid,
-  Maximize2
+  Maximize2,
+  AlertCircle
 } from 'lucide-react';
 import { useWebRTC } from '../hooks/useWebRTC';
 import { auth } from '../lib/firebase';
@@ -24,6 +25,7 @@ import { ChatBox } from '../components/ChatBox';
 import { PrescribeModal } from '../components/PrescribeModal';
 import { MeetingControls } from '../components/MeetingControls';
 import { DeviceSettingsModal } from '../components/DeviceSettingsModal';
+import { NetworkHealthPanel } from '../components/NetworkHealthPanel';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 
@@ -41,11 +43,12 @@ export const Consultation: React.FC = () => {
     error,
     connectionQuality,
     remoteConnectionQuality,
+    networkStats,
     startCall,
     endMeetingReason,
-
     isAudioMuted,
     isVideoOff,
+    isAutoAudioOnly,
     toggleAudio,
     toggleVideo,
     remoteAudioMuted,
@@ -68,7 +71,9 @@ export const Consultation: React.FC = () => {
     switchAudioOutput,
 
     muteRemoteParticipant,
-    endMeetingForAll
+    endMeetingForAll,
+    pc,
+    socket
   } = useWebRTC(id || null);
 
   // UI States
@@ -90,16 +95,31 @@ export const Consultation: React.FC = () => {
     return () => clearInterval(timer);
   }, [isConnected]);
 
-  // Video track assignments
+  // Video track assignments - keep refs always synced to streams
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
+    if (localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
 
+  // Re-attach srcObject when toggling video (stream ref may not change)
+  const effectiveVideoOff = isVideoOff || isAutoAudioOnly;
+
+  useEffect(() => {
+    if (localVideoRef.current && localStream && !effectiveVideoOff) {
+      if (localVideoRef.current.srcObject !== localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+      localVideoRef.current.play().catch(() => {});
+    }
+  }, [effectiveVideoOff, localStream]);
+
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
       remoteVideoRef.current.srcObject = remoteStream;
+      // CRITICAL FIX: Remote WebRTC streams often require an explicit .play()
+      // call after attaching to srcObject, otherwise they render as a black screen.
+      remoteVideoRef.current.play().catch(e => console.error("Error playing remote video:", e));
     }
   }, [remoteStream]);
 
@@ -124,7 +144,7 @@ export const Consultation: React.FC = () => {
   if (error) {
     return (
       <div className="flex-1 min-h-screen bg-[#0A0A0A] p-8 flex items-center justify-center">
-        <div className="bg-neutral-900 border border-red-500/30 text-center p-8 rounded-3xl max-w-md shadow-2xl">
+        <div className="bg-neutral-900 border border-red-500/30 text-center p-8 rounded-2xl max-w-md shadow-2xl">
           <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
             <VideoOff size={32} />
           </div>
@@ -139,17 +159,22 @@ export const Consultation: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 bg-[#0A0A0A] relative flex flex-col h-screen overflow-hidden select-none">
-      {/* Main Video Presentation / Remote Participant */}
-      <div className="absolute inset-0 z-0 bg-neutral-950 flex items-center justify-center">
-        {remoteStream && !remoteVideoOff ? (
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className="w-full h-full object-cover"
-          />
-        ) : (
+    <div className="flex-1 bg-[#0A0A0A] flex h-screen overflow-hidden select-none">
+      <NetworkHealthPanel connectionQuality={connectionQuality} networkStats={networkStats} isConnected={isConnected} />
+      {/* Left: Video Area */}
+      <div className="relative flex-1 flex flex-col border-r border-white/10">
+        {/* Main Video Presentation / Remote Participant */}
+        <div className="absolute inset-0 z-0 bg-neutral-950 flex items-center justify-center">
+        {/* Remote video always mounted so srcObject works */}
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none' }}
+          className="w-full h-full object-cover"
+        />
+        {/* Placeholder when no remote stream */}
+        {(!remoteStream || remoteVideoOff) && (
           <div className="text-white/60 flex flex-col items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-neutral-800/80 border border-white/10 flex items-center justify-center shadow-2xl">
               <span className="text-4xl font-bold text-blue-400">PT</span>
@@ -228,6 +253,37 @@ export const Consultation: React.FC = () => {
 
         {/* Top Badges & Notifications */}
         <div className="pointer-events-auto flex items-center gap-3">
+          {connectionQuality === 'audio-only' ? (
+            <span style={{
+              background: 'rgba(245, 158, 11, 0.2)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#fcd34d',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '999px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              <Mic size={12} /> AUDIO CONSULTATION
+            </span>
+          ) : (
+            <span style={{
+              background: 'rgba(59, 130, 246, 0.2)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              color: '#93c5fd',
+              padding: '0.25rem 0.75rem',
+              borderRadius: '999px',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              <Video size={12} /> VIDEO CONSULTATION
+            </span>
+          )}
 
           {/* Screen Share Alert */}
           {(isScreenSharing || remoteScreenSharing) && (
@@ -242,23 +298,22 @@ export const Consultation: React.FC = () => {
       </div>
 
       {/* Picture-in-Picture / Local Video Tile */}
-      <div className="absolute bottom-28 right-8 z-20 w-72 aspect-video bg-neutral-900/90 backdrop-blur-md rounded-3xl overflow-hidden border-2 border-white/10 shadow-2xl transition-all hover:scale-105 group">
-        {localStream && !isVideoOff ? (
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`w-full h-full object-cover transform -scale-x-100 ${
-              isBlurActive ? 'filter blur-[3px]' : ''
-            }`}
-          />
-        ) : (
+      <div className="absolute bottom-28 right-8 z-20 w-72 aspect-video bg-neutral-900/90 backdrop-blur-md rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl transition-all hover:scale-105 group">
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{ display: effectiveVideoOff ? 'none' : 'block' }}
+          className={`w-full h-full object-cover transform -scale-x-100 ${isBlurActive ? 'filter blur-[3px]' : ''}`}
+        />
+        {/* Camera-off placeholder overlay */}
+        {effectiveVideoOff && (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-neutral-800 text-white/50">
             <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-white text-lg">
               DR
             </div>
-            <span className="text-xs text-white/50">Camera Off</span>
+            <span className="text-xs text-white/50">{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
           </div>
         )}
 
@@ -275,11 +330,10 @@ export const Consultation: React.FC = () => {
         </div>
       </div>
 
-      {/* Meeting Controls Floating Dock */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
         <MeetingControls
           isAudioMuted={isAudioMuted}
-          isVideoOff={isVideoOff}
+          isVideoOff={effectiveVideoOff}
           onToggleAudio={toggleAudio}
           onToggleVideo={toggleVideo}
           audioLevel={audioLevel}
@@ -295,12 +349,63 @@ export const Consultation: React.FC = () => {
         />
       </div>
 
-      {/* In-Call Chat Sidebar */}
+      {/* In-Call Chat Overlay (if chat opened over video) */}
       {isChatOpen && id && (
         <div className="absolute right-8 top-24 bottom-28 w-96 z-30 animate-in slide-in-from-right duration-200">
           <ChatBox encounterId={id} />
         </div>
       )}
+      </div>
+
+      {/* Right Sidebar: Clinical Panel */}
+      <div className="w-[380px] bg-[#111111] border-l border-white/10 flex flex-col z-20 shadow-2xl relative">
+        <div className="p-5 border-b border-white/10 bg-black/40">
+          <h3 className="text-white font-bold text-lg mb-1 flex items-center gap-2">
+            <FileText size={18} className="text-teal-500" /> Clinical Panel
+          </h3>
+          <p className="text-white/50 text-xs">Patient notes & prescriptions</p>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-5 space-y-6">
+          {/* Action Cards */}
+          <div className="space-y-3">
+            <button 
+              onClick={() => setIsPrescribeOpen(true)}
+              className="w-full p-4 bg-brand-500/10 hover:bg-brand-500/20 border border-teal-500/30 rounded-xl flex items-start gap-3 transition-colors text-left"
+            >
+              <div className="p-2 bg-brand-500/20 text-teal-400 rounded-lg">
+                <FileText size={20} />
+              </div>
+              <div>
+                <h4 className="text-teal-400 font-bold text-sm">Issue Prescription</h4>
+                <p className="text-white/60 text-xs mt-0.5">Write Rx, diagnosis & notes</p>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className="w-full p-4 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl flex items-start gap-3 transition-colors text-left"
+            >
+              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg">
+                <MessageSquare size={20} />
+              </div>
+              <div>
+                <h4 className="text-blue-400 font-bold text-sm">Patient Chat</h4>
+                <p className="text-white/60 text-xs mt-0.5">Share links or text</p>
+              </div>
+            </button>
+          </div>
+          
+          <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+            <h4 className="text-white/80 font-semibold text-sm mb-2 flex items-center gap-2">
+              <AlertCircle size={14} className="text-amber-500" /> Encounter Notes
+            </h4>
+            <p className="text-white/50 text-xs leading-relaxed">
+              Use the Prescription form to finalize your clinical notes and ICD-10 diagnosis. These will be automatically synced to the patient's medical history.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Device & Hardware Settings Modal */}
       <DeviceSettingsModal

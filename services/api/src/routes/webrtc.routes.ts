@@ -3,36 +3,47 @@ import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
-router.get("/credentials", authenticate, (req: Request, res: Response) => {
-  const servers: any[] = [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
-  ];
+router.get("/credentials", authenticate, async (req: Request, res: Response) => {
+  try {
+    let servers: any[] = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ];
 
-  if (process.env.TURN_URL && process.env.TURN_STATIC_AUTH_SECRET) {
-    const secret = process.env.TURN_STATIC_AUTH_SECRET;
-    // Expire in 24 hours (86400 seconds)
-    const expiry = Math.floor(Date.now() / 1000) + 86400;
-    
-    // User is attached by the authenticate middleware
-    const userId = (req as any).user?.uid || 'anonymous';
-    const turnUsername = `${expiry}:${userId}`;
-    
-    // Generate password via HMAC-SHA1
-    const crypto = require("crypto");
-    const turnPassword = crypto
-      .createHmac("sha1", secret)
-      .update(turnUsername)
-      .digest("base64");
+    const keyId = process.env.CLOUDFLARE_TURN_KEY_ID;
+    const apiToken = process.env.CLOUDFLARE_TURN_API_TOKEN;
 
-    servers.push({
-      urls: process.env.TURN_URL,
-      username: turnUsername,
-      credential: turnPassword
-    });
+    if (keyId && apiToken) {
+      const response = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${keyId}/credentials/generate-ice-servers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
+        body: JSON.stringify({ ttl: 86400 })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.iceServers) {
+          // We can append or replace; Cloudflare typically returns STUN and TURN UDP/TCP/TLS
+          // To ensure Google STUN fallback remains, we merge them:
+          servers = [...servers, ...data.iceServers];
+        }
+      } else {
+        console.error("Cloudflare TURN API error:", await response.text());
+      }
+    }
+
+    res.json({ iceServers: servers });
+  } catch (err) {
+    console.error("Error generating TURN credentials:", err);
+    // Send fallback STUN servers rather than failing completely if TURN fails
+    res.json({ iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]});
   }
-
-  res.json({ iceServers: servers });
 });
 
 export default router;

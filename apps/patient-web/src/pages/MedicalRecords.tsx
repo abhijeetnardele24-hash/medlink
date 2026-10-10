@@ -4,8 +4,10 @@ import {
   FileText,
   Download,
   Calendar,
-  Stethoscope
+  Stethoscope,
+  AlertCircle
 } from 'lucide-react';
+import { syncDb } from '../lib/sync/SyncDB';
 
 interface Prescription {
   id: string;
@@ -17,14 +19,36 @@ interface Prescription {
 export const MedicalRecords: React.FC = () => {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchRecords = async () => {
       try {
-        const res = await api.get('/prescriptions/me');
-        setPrescriptions(res.data.data || []);
+        if (navigator.onLine) {
+          const res = await api.get('/prescriptions/me');
+          const data = res.data.data || [];
+          setPrescriptions(data);
+          await syncDb.prescriptions_cache.clear();
+          await syncDb.prescriptions_cache.bulkPut(data);
+        } else {
+          const cached = await syncDb.prescriptions_cache.toArray();
+          setPrescriptions(cached);
+        }
       } catch (err) {
         console.error('Failed to fetch medical records', err);
+        const cached = await syncDb.prescriptions_cache.toArray();
+        setPrescriptions(cached);
       } finally {
         setLoading(false);
       }
@@ -69,6 +93,12 @@ export const MedicalRecords: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {isOffline && (
+        <div style={{ marginBottom: '1.5rem', padding: '0.75rem 1.25rem', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600, fontSize: '0.9rem', backgroundColor: '#fffbeb', color: '#b45309', border: '1px solid #fde68a' }}>
+          <AlertCircle size={18} /> 🟠 Offline - Showing locally cached prescriptions
+        </div>
+      )}
 
       {/* Prescriptions List */}
       <div>
@@ -76,7 +106,7 @@ export const MedicalRecords: React.FC = () => {
           <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)' }}>
             <FileText size={56} style={{ margin: '0 auto 1.25rem', opacity: 0.15 }} />
             <h3 style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text-main)', marginBottom: '0.5rem' }}>No medical records yet</h3>
-            <p>Your prescriptions will appear here after your consultations.</p>
+            <p>Your prescriptions and consultation records will appear here after your consultation.</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>

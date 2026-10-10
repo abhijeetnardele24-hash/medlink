@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
-import { eq, inArray, and, desc } from "drizzle-orm";
+import { eq, inArray, and, desc, or } from "drizzle-orm";
 import { getDb } from "../db";
-import { encounters, prescriptions, appointments, users as dbUsers, doctors, patients, doctorMedicineRecommendations } from "../db/schema";
+import { encounters, prescriptions, appointments, users as dbUsers, doctors, patients, doctorMedicineRecommendations, availabilitySlots } from "../db/schema";
 import { authenticate } from "../middleware/auth";
 import { requireRole } from "../middleware/requireRole";
 import { validateBody } from "../middleware/validateBody";
@@ -52,7 +52,7 @@ async function verifyEncounterAccess(
     .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .innerJoin(patients, eq(appointments.patientId, patients.id))
-    .where(eq(encounters.id, encounterId))
+    .where(or(eq(encounters.id, encounterId), eq(appointments.id, encounterId)))
     .limit(1);
 
   if (rows.length === 0) throw new NotFoundError("Encounter");
@@ -170,14 +170,41 @@ router.post(
     if (!doc) throw new ForbiddenError("Doctor profile not found");
 
     const apptRows = await getDb()
-      .select()
+      .select({
+        appointment: appointments,
+        endsAt: availabilitySlots.endsAt
+      })
       .from(appointments)
+      .leftJoin(availabilitySlots, eq(appointments.slotId, availabilitySlots.id))
       .where(eq(appointments.id, appointmentId))
       .limit(1);
 
     if (apptRows.length === 0) throw new NotFoundError("Appointment");
-    if (apptRows[0].doctorId !== doc.id && res.locals.user.role !== "admin") {
+    if (apptRows[0].appointment.doctorId !== doc.id && res.locals.user.role !== "admin") {
       throw new ForbiddenError("You are not the assigned doctor for this appointment");
+    }
+
+    // Time window enforcement
+    const now = new Date();
+    const scheduledAt = apptRows[0].appointment.scheduledAt;
+    const endsAt = apptRows[0].endsAt || new Date(scheduledAt.getTime() + 30 * 60000);
+
+    if (now < scheduledAt) {
+      throw new ForbiddenError(`Consultation not available yet. Starts at ${scheduledAt.toLocaleTimeString()}`);
+    }
+    if (now > endsAt) {
+      throw new ForbiddenError(`Appointment time has ended. Ended at ${endsAt.toLocaleTimeString()}`);
+    }
+
+    const existingEnc = await getDb()
+      .select()
+      .from(encounters)
+      .where(eq(encounters.appointmentId, appointmentId))
+      .limit(1);
+
+    if (existingEnc.length > 0) {
+      res.status(200).json(existingEnc[0]);
+      return;
     }
 
     // Atomic creation and status update
@@ -187,7 +214,7 @@ router.post(
         .values({
           appointmentId,
           status: "active",
-          currentMode: apptRows[0].preferredMode || "video",
+          currentMode: apptRows[0].appointment.preferredMode || "video",
           startedAt: new Date(),
         })
         .returning();
@@ -236,7 +263,7 @@ router.post(
       const [newPrescription] = await tx
         .insert(prescriptions)
         .values({
-          encounterId: id,
+          encounterId: access.encounter.id,
           doctorId: access.doctorId,
           medicinesJson,
           instructionsText,
@@ -260,7 +287,7 @@ router.post(
       await tx
         .update(encounters)
         .set({ status: "ended", endedAt: new Date(), updatedAt: new Date() })
-        .where(eq(encounters.id, id));
+        .where(eq(encounters.id, access.encounter.id));
 
       await tx
         .update(appointments)
@@ -311,7 +338,7 @@ router.post(
           networkEventSummary: summaryNotes ? { notes: summaryNotes } : undefined,
           updatedAt: new Date(),
         })
-        .where(eq(encounters.id, id))
+        .where(eq(encounters.id, access.encounter.id))
         .returning();
 
       await tx
@@ -358,7 +385,7 @@ router.post(
       .insert(attachments)
       .values({
         ownerId: res.locals.user.uid,
-        encounterId: id,
+        encounterId: access.encounter.id,
         storageKey: storagePath,
         contentType: file.mimetype,
         byteSize: file.size,
@@ -377,7 +404,7 @@ router.get(
   authenticate,
   async (_req: Request, res: Response): Promise<void> => {
     const id = _req.params.id as string;
-    await verifyEncounterAccess(id, res.locals.user);
+    const access = await verifyEncounterAccess(id, res.locals.user);
     const firebaseUid = res.locals.user.uid;
     let userId = firebaseUid;
     if (process.env.TEST_BYPASS_AUTH !== "true") {
@@ -385,32 +412,12 @@ router.get(
       if (!u) throw new ForbiddenError("User not found in db");
       userId = u.id;
     }
-
-    // Verify ownership
-    const encounterRows = await getDb()
-      .select({ 
-        doctorId: appointments.doctorId, 
-        patientId: appointments.patientId 
-      })
-      .from(encounters)
-      .innerJoin(appointments, eq(encounters.appointmentId, appointments.id))
-      .where(eq(encounters.id, id))
-      .limit(1);
-
-    if (encounterRows.length === 0) {
-      throw new NotFoundError("Encounter");
-    }
-
-    const { doctorId, patientId } = encounterRows[0];
-    if (userId !== doctorId && userId !== patientId) {
-      throw new ForbiddenError("Not authorized to view this recording");
-    }
     
     // Find the attachment
     const attachmentRows = await getDb()
       .select()
       .from(attachments)
-      .where(eq(attachments.encounterId, id))
+      .where(eq(attachments.encounterId, access.encounter.id))
       .limit(1);
 
     if (attachmentRows.length === 0) {

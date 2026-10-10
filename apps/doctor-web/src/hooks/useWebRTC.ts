@@ -29,12 +29,21 @@ export const useWebRTC = (encounterId: string | null) => {
   const [connectionQuality, setConnectionQuality] = useState<'good' | 'poor' | 'audio-only'>('good');
   const [remoteConnectionQuality, setRemoteConnectionQuality] = useState<'good' | 'poor' | 'audio-only' | null>(null);
   const [endMeetingReason, setEndMeetingReason] = useState<string | null>(null);
-
+  const [networkStats, setNetworkStats] = useState<{ packetLoss: number | null, jitter: number | null, rtt: number | null }>({ packetLoss: null, jitter: null, rtt: null });
+  const [isAutoAudioOnly, setIsAutoAudioOnly] = useState(false);
+  const isAutoAudioOnlyRef = useRef(false);
+  useEffect(() => { isAutoAudioOnlyRef.current = isAutoAudioOnly; }, [isAutoAudioOnly]);
+  const [isSimulating, setIsSimulating] = useState(false);
+  const simulateRef = useRef(false);
   // Hardware Controls
   const [isAudioMuted, setIsAudioMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(true);
+  const isAudioMutedRef = useRef(false);
+  useEffect(() => { isAudioMutedRef.current = isAudioMuted; }, [isAudioMuted]);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const isVideoOffRef = useRef(false);
+  useEffect(() => { isVideoOffRef.current = isVideoOff; }, [isVideoOff]);
   const [remoteAudioMuted, setRemoteAudioMuted] = useState(false);
-  const [remoteVideoOff, setRemoteVideoOff] = useState(true);
+  const [remoteVideoOff, setRemoteVideoOff] = useState(false);
   const [audioLevel, setAudioLevel] = useState<number>(0);
 
   // Screen Sharing
@@ -100,13 +109,49 @@ export const useWebRTC = (encounterId: string | null) => {
             video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } },
             audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
           });
-          stream.getVideoTracks().forEach(track => { track.enabled = false; });
         } catch (mediaErr) {
           console.warn("Camera failed, falling back to audio-only", mediaErr);
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-          });
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: false,
+              audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+          } catch (audioErr) {
+            console.warn("Audio failed too! Using fake virtual stream.", audioErr);
+            const canvas = document.createElement("canvas");
+            canvas.width = 1280;
+            canvas.height = 720;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              // Draw first frame synchronously before capture!
+              const drawFrame = () => {
+                ctx.fillStyle = "#111827";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "white";
+                ctx.font = "48px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("No Camera/Mic", canvas.width / 2, canvas.height / 2);
+                ctx.beginPath();
+                ctx.arc(canvas.width / 2, canvas.height / 2 + 80, 10, 0, 2 * Math.PI);
+                ctx.fillStyle = Date.now() % 1000 > 500 ? "red" : "gray";
+                ctx.fill();
+              };
+              drawFrame();
+              setInterval(drawFrame, 500);
+            }
+            stream = canvas.captureStream(30);
+            
+            // Create fake audio
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const dest = audioCtx.createMediaStreamDestination();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            gainNode.gain.value = 0; // Silent
+            oscillator.connect(gainNode);
+            gainNode.connect(dest);
+            oscillator.start();
+            stream.addTrack(dest.stream.getAudioTracks()[0]);
+          }
         }
 
         if (!isMounted) {
@@ -156,40 +201,70 @@ export const useWebRTC = (encounterId: string | null) => {
         });
         socketRef.current = socket;
 
-        socket.on('connect', () => {
+        const joinRoom = () => {
+          console.log('[Doctor Socket] Emitting join-encounter:', encounterId);
           socket.emit('join-encounter', encounterId);
+        };
+
+        if (socket.connected) {
+          joinRoom();
+        }
+        socket.on('connect', joinRoom);
+
+        socket.on('connect_error', (err) => {
+          console.error('[Doctor Socket] Connection error:', err.message);
+          if (isMounted) setError('Failed to connect to call server. Please refresh.');
         });
 
-        socket.on('connect_error', () => {
-          console.error('Socket connection error');
+        socket.on('error', (errMsg: string) => {
+          console.error('[Doctor Socket] Server error:', errMsg);
+          if (errMsg === 'Unauthorized to join this encounter') {
+            // Auth failure - go back to dashboard, don't crash
+            console.error('[Doctor Socket] Unauthorized - likely wrong user/appointment combination');
+            // Don't set fatal error, just log - user will need to navigate correctly
+          } else if (isMounted) {
+            setError(`Call server error: ${errMsg}`);
+          }
         });
+
+        const joinedPromise = new Promise<void>((resolve) => {
+          socket.on('joined-encounter', ({ encounterId: joinedId }) => {
+            console.log('[Doctor Socket] Successfully joined encounter room:', joinedId);
+            resolve();
+          });
+        });
+
+        // Ensure encounter exists in DB
+        try {
+          await api.post('/encounters', { appointmentId: encounterId });
+        } catch (err) {
+          console.warn("Encounter creation/upsert failed", err);
+        }
 
         // Fetch ICE servers
         const turnRes = await api.get('/webrtc/credentials');
         const iceConfig = turnRes.data;
 
+        // CRITICAL FIX: Wait for the server to acknowledge we joined the room
+        // BEFORE creating the peer connection. Otherwise, onnegotiationneeded fires instantly,
+        // we emit 'webrtc-offer', and the server rejects it as 'Unauthorized' because
+        // the async join-encounter DB lookup hasn't finished yet!
+        await joinedPromise;
+
         const pc = new RTCPeerConnection(iceConfig);
         peerConnectionRef.current = pc;
 
-        stream.getTracks().forEach(track => {
-          pc.addTrack(track, stream);
-        });
+        // Tracks are intentionally NOT added here.
+        // They will be added when the Doctor clicks "Ring Patient / Start Call"
+        // to properly initiate the WebRTC negotiation.
 
         pc.ontrack = (event) => {
           if (event.streams && event.streams[0]) {
             setRemoteStream(event.streams[0]);
           }
         };
-
-        pc.onnegotiationneeded = async () => {
-          try {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            socket.emit('webrtc-offer', { encounterId, offer: pc.localDescription });
-          } catch (err) {
-            console.error("Error during renegotiation:", err);
-          }
-        };
+        const iceCandidateQueue: RTCIceCandidateInit[] = [];
+        // Removed onnegotiationneeded (using explicit manual signaling)
 
         pc.onicecandidate = (event) => {
           if (event.candidate) {
@@ -209,31 +284,54 @@ export const useWebRTC = (encounterId: string | null) => {
             if (!isRestartingIce.current) {
               isRestartingIce.current = true;
               pc.restartIce();
-              pc.createOffer().then(offer => pc.setLocalDescription(offer))
-                .then(() => socket.emit('webrtc-offer', { encounterId, offer: pc.localDescription }))
-                .catch(err => {
-                  console.error("Failed to restart ICE:", err);
-                  isRestartingIce.current = false;
-                });
             }
           }
         };
 
         // WebRTC Signaling Listeners
-        socket.on('webrtc-answer', async ({ answer }) => {
-          await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        
+        socket.on('webrtc-offer', async ({ offer }) => {
+          try {
+            // As the caller, the Doctor shouldn't typically receive offers, but if they do,
+            // we accept them to ensure connection stability.
+            await pc.setRemoteDescription(offer);
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            socket.emit('webrtc-answer', { encounterId, answer: pc.localDescription });
+
+            while (iceCandidateQueue.length) {
+              const candidate = iceCandidateQueue.shift();
+              if (candidate) await pc.addIceCandidate(candidate);
+            }
+          } catch (err) {
+            console.error("Failed to handle webrtc-offer", err);
+          }
         });
 
-        socket.on('webrtc-offer', async ({ offer }) => {
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          socket.emit('webrtc-answer', { encounterId, answer });
+        socket.on('webrtc-answer', async ({ answer }) => {
+          try {
+            await pc.setRemoteDescription(answer);
+            // Process queued ICE candidates
+            while (iceCandidateQueue.length) {
+              const candidate = iceCandidateQueue.shift();
+              if (candidate) await pc.addIceCandidate(candidate);
+            }
+          } catch (err) {
+            console.error("Failed to handle webrtc-answer", err);
+          }
         });
 
         socket.on('webrtc-ice-candidate', async ({ candidate }) => {
-          if (candidate) {
-            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          try {
+            if (candidate) {
+              if (pc.remoteDescription && pc.remoteDescription.type) {
+                await pc.addIceCandidate(candidate);
+              } else {
+                iceCandidateQueue.push(candidate);
+              }
+            }
+          } catch (err) {
+            if (err) console.error("Error adding ice candidate:", err);
           }
         });
 
@@ -312,14 +410,24 @@ export const useWebRTC = (encounterId: string | null) => {
   const startCall = useCallback(async () => {
     if (!peerConnectionRef.current || !socketRef.current || !encounterId) return;
     try {
-      const offer = await peerConnectionRef.current.createOffer();
-      await peerConnectionRef.current.setLocalDescription(offer);
-      socketRef.current.emit('webrtc-offer', { encounterId, offer });
+      const pc = peerConnectionRef.current;
+      if (localStream) {
+        const senders = pc.getSenders();
+        localStream.getTracks().forEach(track => {
+          if (!senders.find(s => s.track === track)) {
+            pc.addTrack(track, localStream);
+          }
+        });
+      }
+      
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socketRef.current.emit('webrtc-offer', { encounterId, offer: pc.localDescription });
       socketRef.current.emit('ring-patient', { encounterId });
     } catch (err) {
       console.error('Error starting call', err);
     }
-  }, [encounterId]);
+  }, [encounterId, localStream]);
 
   // Toggle Microphone Mute
   const toggleAudio = useCallback(() => {
@@ -341,28 +449,50 @@ export const useWebRTC = (encounterId: string | null) => {
   // Toggle Camera On/Off
   const toggleVideo = useCallback(async () => {
     if (!localStream) return;
-    const newOff = !isVideoOff;
+    const currentlyOff = isVideoOff || isAutoAudioOnly;
+    const newOff = !currentlyOff;
     
-    if (!newOff && localStream.getVideoTracks().length === 0) {
+    if (!newOff) {
+      setIsAutoAudioOnly(false);
+    }
+    
+    const videoTracks = localStream.getVideoTracks();
+    
+    if (videoTracks.length > 0) {
+      // We have tracks - simply enable or disable them
+      videoTracks.forEach(track => { track.enabled = !newOff; });
+      setIsVideoOff(newOff);
+    } else if (!newOff) {
+      // Turning ON but no video tracks exist - get a new camera or fallback to canvas
       try {
-        const vidStream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } } });
+        const vidStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }
+        });
         const newTrack = vidStream.getVideoTracks()[0];
+        newTrack.enabled = true;
         localStream.addTrack(newTrack);
         originalVideoTrackRef.current = newTrack;
+        
+        // Add to peer connection
         if (peerConnectionRef.current) {
-           peerConnectionRef.current.addTrack(newTrack, localStream);
+          const senders = peerConnectionRef.current.getSenders();
+          const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+          if (videoSender) {
+            await videoSender.replaceTrack(newTrack);
+          } else {
+            peerConnectionRef.current.addTrack(newTrack, localStream);
+          }
         }
+        
+        // Force React re-render by creating new stream reference
+        setLocalStream(new MediaStream(localStream.getTracks()));
+        setIsVideoOff(false);
       } catch (e) {
-        alert("Camera could not be accessed.");
-        return;
+        console.warn("Could not access camera:", e);
+        setIsVideoOff(false); // Still mark as 'on' so placeholder shows
       }
-    } else {
-      localStream.getVideoTracks().forEach(track => {
-        track.enabled = !newOff;
-      });
     }
-
-    setIsVideoOff(newOff);
+    
     if (encounterId && socketRef.current) {
       socketRef.current.emit('media-state-change', {
         encounterId,
@@ -371,6 +501,16 @@ export const useWebRTC = (encounterId: string | null) => {
       });
     }
   }, [localStream, isAudioMuted, isVideoOff, encounterId]);
+
+  const toggleSimulatePoorNetwork = useCallback(() => {
+    simulateRef.current = !simulateRef.current;
+    setIsSimulating(simulateRef.current);
+    if (simulateRef.current) {
+      qualityScore.current = 0;
+    } else {
+      qualityScore.current = 5;
+    }
+  }, []);
 
   // Screen Sharing (Google Meet / Zoom style)
   const startScreenShare = useCallback(async () => {
@@ -665,25 +805,61 @@ export const useWebRTC = (encounterId: string | null) => {
       try {
         const stats = await peerConnectionRef.current.getStats();
         let hasPoorStat = false;
+        
+        if (simulateRef.current) {
+          hasPoorStat = true;
+          qualityScore.current = 0;
+        }
+
+        let currentPacketLoss = null;
+        let currentJitter = null;
+        let currentRtt = null;
 
         stats.forEach(report => {
           if (report.type === 'inbound-rtp' && report.kind === 'video') {
             const packetLoss = report.packetsLost / (report.packetsReceived + report.packetsLost || 1);
+            currentPacketLoss = packetLoss;
+            currentJitter = report.jitter;
             if (packetLoss > 0.1 || report.jitter > 0.05) hasPoorStat = true;
           }
           if (report.type === 'candidate-pair' && report.state === 'succeeded') {
+            currentRtt = report.currentRoundTripTime;
             if (report.currentRoundTripTime > 0.5) hasPoorStat = true;
           }
         });
 
-        if (hasPoorStat) {
-          qualityScore.current = Math.max(0, qualityScore.current - 1);
-        } else {
-          qualityScore.current = Math.min(5, qualityScore.current + 1);
+        setNetworkStats({ packetLoss: currentPacketLoss, jitter: currentJitter, rtt: currentRtt });
+
+        if (!simulateRef.current) {
+          if (hasPoorStat) {
+            qualityScore.current = Math.max(0, qualityScore.current - 1);
+          } else {
+            qualityScore.current = Math.min(5, qualityScore.current + 1);
+          }
         }
 
         if (qualityScore.current === 0) {
+          if (!isVideoOffRef.current && !isAutoAudioOnlyRef.current) {
+            setIsAutoAudioOnly(true);
+            if (localStream) {
+              localStream.getVideoTracks().forEach(t => t.enabled = false);
+            }
+            if (encounterId && socketRef.current) {
+              socketRef.current.emit('media-state-change', { encounterId, isAudioMuted: isAudioMutedRef.current, isVideoOff: true });
+            }
+          }
           setConnectionQuality('audio-only');
+        } else if (qualityScore.current === 5) {
+          if (isAutoAudioOnlyRef.current) {
+            setIsAutoAudioOnly(false);
+            if (!isVideoOffRef.current && localStream) {
+              localStream.getVideoTracks().forEach(t => t.enabled = true);
+            }
+            if (encounterId && socketRef.current) {
+              socketRef.current.emit('media-state-change', { encounterId, isAudioMuted: isAudioMutedRef.current, isVideoOff: isVideoOffRef.current });
+            }
+          }
+          setConnectionQuality('good');
         } else if (qualityScore.current <= 2) {
           setConnectionQuality('poor');
         } else {
@@ -705,12 +881,14 @@ export const useWebRTC = (encounterId: string | null) => {
     error,
     connectionQuality,
     remoteConnectionQuality,
+    networkStats,
     startCall,
     endMeetingReason,
-
-    // Audio / Video
     isAudioMuted,
     isVideoOff,
+    isAutoAudioOnly,
+    isSimulating,
+    toggleSimulatePoorNetwork,
     toggleAudio,
     toggleVideo,
     remoteAudioMuted,
@@ -758,6 +936,10 @@ export const useWebRTC = (encounterId: string | null) => {
 
     // Host Controls
     muteRemoteParticipant,
-    endMeetingForAll
+    endMeetingForAll,
+    
+    // Debug exports
+    pc: peerConnectionRef.current,
+    socket: socketRef.current
   };
 };

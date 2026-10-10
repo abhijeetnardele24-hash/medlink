@@ -66,34 +66,33 @@ async function main() {
     console.log('🚀 Provisioning realistic test data...');
 
     // --- Create Patient ---
-    const patientUid = await createFirebaseUser('patient@medlink.com');
+    const patientUid = await createFirebaseUser('rahul.sharma@medlink.com');
     const patientUserRes = await pool.query(`
       INSERT INTO "users" (firebase_uid, role, email, display_name)
-      VALUES ($1, 'patient', $2, 'John Doe')
+      VALUES ($1, 'patient', $2, 'Rahul Sharma')
       RETURNING id
-    `, [patientUid, 'patient@medlink.com']);
+    `, [patientUid, 'rahul.sharma@medlink.com']);
     
     await pool.query(`
-      INSERT INTO "patients" (user_id, preferred_language)
-      VALUES ($1, 'en');
+      INSERT INTO "patients" (
+        user_id, preferred_language, age_group, gender, gender_self_described,
+        date_of_birth, blood_group, height, weight, allergies, chronic_conditions,
+        emergency_contact_name, emergency_contact_phone, address, smoking_status,
+        alcohol_status, diet_preference, location_district
+      )
+      VALUES (
+        $1, 'hi', 'adult', 'male', 'Male',
+        '1985-06-15', 'O+', 175, 70, ARRAY['Dust', 'Pollen'], ARRAY['Mild Asthma'],
+        'Priya Sharma', '+91-9876543210', 'Andheri West, Mumbai, Maharashtra 400053', 'never',
+        'occasional', 'vegetarian', 'Mumbai'
+      );
     `, [patientUserRes.rows[0].id]);
 
-    // --- Create Doctors ---
-    const doctors = [
-      { name: 'Sarah Mitchell', spec: 'Neurologist', bio: 'Expert in treating headaches, migraines, seizures, and nervous system disorders.', email: 'sarah@medlink.com', languages: ['English', 'Spanish'] },
-      { name: 'David Chen', spec: 'Cardiologist', bio: 'Specializing in heart conditions, chest pain, hypertension, and cardiac care.', email: 'david@medlink.com', languages: ['English', 'Mandarin'] },
-      { name: 'Priya Sharma', spec: 'Dermatologist', bio: 'Treats skin rashes, acne, psoriasis, and other dermatological issues.', email: 'priya@medlink.com', languages: ['English', 'Hindi'] },
-      { name: 'James Wilson', spec: 'General Physician', bio: 'Primary care for fevers, colds, flu, and general health checkups.', email: 'james@medlink.com', languages: ['English'] },
-      { name: 'Emily White', spec: 'Pediatrician', bio: 'Specialist in child health, vaccinations, and infant care.', email: 'emily@medlink.com', languages: ['English', 'French'] },
-      { name: 'Michael Brown', spec: 'Orthopedist', bio: 'Treats bone, joint, and muscle issues including fractures and arthritis.', email: 'michael@medlink.com', languages: ['English'] },
-      { name: 'Lisa Taylor', spec: 'Gastroenterologist', bio: 'Specialist in digestive system, stomach pains, and gastric disorders.', email: 'lisa@medlink.com', languages: ['English', 'Spanish'] },
-      { name: 'Robert Lee', spec: 'Ophthalmologist', bio: 'Expert in eye care, vision issues, cataracts, and glaucoma.', email: 'robert@medlink.com', languages: ['English', 'Korean'] },
-      { name: 'Amanda Davis', spec: 'Dentist', bio: 'General dentistry, tooth pain, cavity treatment, and oral hygiene.', email: 'amanda@medlink.com', languages: ['English'] },
-      { name: 'Daniel Clark', spec: 'ENT Specialist', bio: 'Treatment for ear infections, sinus issues, and throat disorders.', email: 'daniel@medlink.com', languages: ['English'] },
-      { name: 'Jessica Moore', spec: 'Psychiatrist', bio: 'Mental health specialist focusing on anxiety, depression, and stress management.', email: 'jessica@medlink.com', languages: ['English'] },
-      { name: 'Maria Garcia', spec: 'Gynecologist', bio: "Women's health, maternity care, and reproductive health.", email: 'maria@medlink.com', languages: ['English', 'Spanish'] },
-      { name: 'Original Doctor', spec: 'General Physician', bio: 'Original test doctor account for backwards compatibility.', email: 'doctor@medlink.com', languages: ['English'] }
-    ];
+    const doctorsJson = require('fs').readFileSync('C:\\\\Users\\\\Abhijeet Nardele\\\\.gemini\\\\antigravity-ide\\\\brain\\\\03424fcf-552b-49ec-b97b-6fc54c7ee458\\\\scratch\\\\generated_doctors.json', 'utf8');
+    const doctors = JSON.parse(doctorsJson);
+    
+    // Add the original doctor back with realistic Indian details
+    doctors.push({ name: 'Vikram Patel', spec: 'Cardiologist', bio: 'Senior Consultant Cardiologist with 20 years of experience in diagnosing and treating complex heart conditions. Awarded the National Medical Excellence Award in 2021.', email: 'dr.vikram.patel@medlink.com', languages: ['English', 'Hindi', 'Gujarati'], city: 'Mumbai', experience: 20, fee: 1500 });
 
     for (const doc of doctors) {
       const docUid = await createFirebaseUser(doc.email);
@@ -109,10 +108,10 @@ async function main() {
           facility_name, bio, experience_years, consultation_fee, languages_spoken, verification_status
         ) VALUES (
           $1, $2, $3, $4, 
-          'City Care Hospital', $5, 10, 500, $6, 'verified'
+          $5, $6, $7, $8, $9, 'verified'
         )
         RETURNING id;
-      `, [userRes.rows[0].id, doc.name, doc.spec, `GMC-${Math.floor(Math.random() * 90000) + 10000}`, doc.bio, doc.languages]);
+      `, [userRes.rows[0].id, doc.name, doc.spec, `GMC-${Math.floor(Math.random() * 90000) + 10000}`, `${doc.city || 'City'} Care Hospital`, doc.bio, doc.experience || 10, doc.fee || 500, doc.languages]);
 
       await pool.query(`
         INSERT INTO "doctor_verifications" (doctor_id, status)

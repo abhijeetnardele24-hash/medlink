@@ -20,15 +20,38 @@ export interface CachedMessage {
   syncStatus: 'synced' | 'pending_push';
 }
 
+export interface CachedAppointment {
+  id: string; // Real ID or temporary pending ID
+  scheduledAt: string;
+  endsAt?: string;
+  status: string;
+  concernCategory: string;
+  doctor?: { fullName: string; speciality: string };
+  syncStatus: 'synced' | 'pending_push' | 'failed_conflict';
+  error?: string;
+}
+
 export class MedLinkSyncDB extends Dexie {
   outbox!: Table<OutboxEntry, string>;
   messages_cache!: Table<CachedMessage, string>;
+  appointments_cache!: Table<CachedAppointment, string>;
+  health_profile!: Table<any, string>;
+  prescriptions_cache!: Table<any, string>;
+  encounters_cache!: Table<any, string>;
+  doctors_cache!: Table<any, string>;
 
   constructor() {
     super('MedLinkSyncDB');
-    this.version(1).stores({
+    this.version(2).stores({
       outbox: 'id, entityType, status, timestamp',
-      messages_cache: 'id, encounterId, createdAt, syncStatus'
+      messages_cache: 'id, encounterId, createdAt, syncStatus',
+      appointments_cache: 'id, scheduledAt, syncStatus, status'
+    });
+    this.version(3).stores({
+      health_profile: 'id',
+      prescriptions_cache: 'id, issuedAt',
+      encounters_cache: 'id, startedAt',
+      doctors_cache: 'id'
     });
   }
 }

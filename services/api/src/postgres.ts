@@ -22,6 +22,9 @@ const getPool = (): Pool => {
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
   });
+  _pool.on("error", (err) => {
+    console.error("Unexpected error on idle PostgreSQL client", err);
+  });
   return _pool;
 };
 
