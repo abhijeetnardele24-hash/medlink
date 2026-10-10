@@ -34,6 +34,7 @@ import medicinesRouter from "./routes/medicines.routes";
 import { notificationsRouter } from "./routes/notifications.routes";
 import syncRouter from "./routes/sync.routes";
 import patientsRouter from "./routes/patients.routes";
+import attachmentsRouter from "./routes/attachments.routes";
 import { authenticate } from "./middleware/auth";
 import { requireRole } from "./middleware/requireRole";
 import { getRateLimitStore } from "./redis";
@@ -156,6 +157,7 @@ export function createServer(): Express {
   v1Router.use("/medicines", medicinesRouter);
   v1Router.use("/notifications", notificationsRouter);
   v1Router.use("/sync", syncRouter);
+  v1Router.use("/attachments", attachmentsRouter);
   v1Router.use("/webhooks", webhooksRouter);
 
   // Mount unversioned external webhooks and health probes

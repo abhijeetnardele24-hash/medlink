@@ -221,9 +221,10 @@ export const Dashboard: React.FC = () => {
                               ? 'bg-brand-600 hover:bg-brand-700 shadow-soft text-white shadow-md shadow-teal-600/20' 
                               : 'bg-gray-900 hover:bg-black text-white'
                           }`}
-                          onClick={() => navigate(`/consultation/${appt.id}`)}
+                          onClick={() => navigate(`/consultation/${appt.id}${appt.preferredMode === 'async_chat' ? '?mode=async' : ''}`)}
                         >
-                          <Video size={18} /> Join Consultation
+                          {appt.preferredMode === 'async_chat' ? <Activity size={18} /> : <Video size={18} />} 
+                          {appt.preferredMode === 'async_chat' ? 'Open Chat' : 'Join Consultation'}
                         </button>
                       </div>
                     </div>

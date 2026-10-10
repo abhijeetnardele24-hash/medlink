@@ -43,6 +43,9 @@ export const DoctorProfile: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   const [selectedSlot, setSelectedSlot] = useState<string>(searchParams.get('slotId') || '');
+  const [bookingMode, setBookingMode] = useState<'video' | 'async'>('video');
+  const [asyncMessage, setAsyncMessage] = useState('');
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [concern, setConcern] = useState('general_consultation');
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState('');
@@ -77,8 +80,48 @@ export const DoctorProfile: React.FC = () => {
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedSlot) {
+    if (bookingMode === 'video' && !selectedSlot) {
       setError('Please select a time slot.');
+      return;
+    }
+    if (bookingMode === 'async' && !asyncMessage.trim()) {
+      setError('Please provide a message describing your symptoms.');
+      return;
+    }
+
+    setBooking(true);
+    setError('');
+
+    if (bookingMode === 'async') {
+      try {
+        let attachmentId = null;
+        if (attachment) {
+          if (navigator.onLine) {
+            const formData = new FormData();
+            formData.append('file', attachment);
+            const res = await api.post('/attachments', formData);
+            attachmentId = res.data.id;
+          } else {
+             attachmentId = await syncManager.enqueueAttachment(attachment, attachment.type);
+          }
+        }
+        
+        const payload = {
+          doctorId: id,
+          concernCategory: concern,
+          messageBody: asyncMessage,
+          attachmentId
+        };
+        
+        await syncManager.enqueueOperation('async_consultation', 'CREATE', payload);
+        
+        setBookingSuccess(true);
+        setTimeout(() => navigate('/'), 1800);
+      } catch (err: any) {
+        console.error(err);
+        setError('Failed to submit async request.');
+        setBooking(false);
+      }
       return;
     }
 
@@ -222,6 +265,45 @@ export const DoctorProfile: React.FC = () => {
           </h2>
 
           <form onSubmit={handleBook}>
+            <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', background: 'var(--bg-surface-elevated)', padding: '0.5rem', borderRadius: '12px' }}>
+              <button 
+                type="button"
+                onClick={() => setBookingMode('video')}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.75rem', 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  fontWeight: 600,
+                  background: bookingMode === 'video' ? 'var(--bg-base)' : 'transparent',
+                  color: bookingMode === 'video' ? 'var(--accent)' : 'var(--text-muted)',
+                  boxShadow: bookingMode === 'video' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Live Video Call
+              </button>
+              <button 
+                type="button"
+                onClick={() => setBookingMode('async')}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.75rem', 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  fontWeight: 600,
+                  background: bookingMode === 'async' ? 'var(--bg-base)' : 'transparent',
+                  color: bookingMode === 'async' ? 'var(--accent)' : 'var(--text-muted)',
+                  boxShadow: bookingMode === 'async' ? '0 2px 8px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Offline / Async Request
+              </button>
+            </div>
+
             <div style={{ marginBottom: '1.5rem' }}>
               <label className="input-label">{t('booking.selectReason')}</label>
               <select className="input-field" value={concern} onChange={(e) => setConcern(e.target.value)} required>
@@ -233,63 +315,94 @@ export const DoctorProfile: React.FC = () => {
               </select>
             </div>
 
-            <div style={{ marginBottom: '2rem' }}>
-              <label className="input-label">{t('booking.availableTimeSlots')}</label>
-              {slots.length === 0 ? (
-                <div style={{ padding: '1.5rem', background: 'var(--bg-surface-elevated)', borderRadius: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  {t('booking.noSlots')}
+            {bookingMode === 'video' ? (
+              <>
+                <div style={{ marginBottom: '2rem' }}>
+                  <label className="input-label">{t('booking.availableTimeSlots')}</label>
+                  {slots.length === 0 ? (
+                    <div style={{ padding: '1.5rem', background: 'var(--bg-surface-elevated)', borderRadius: '12px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                      {t('booking.noSlots')}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                      {slots.map((slot: Slot) => {
+                        const isSelected = selectedSlot === slot.id;
+                        const dateObj = new Date(slot.startsAt);
+                        return (
+                          <div 
+                            key={slot.id} 
+                            role="button"
+                            tabIndex={0}
+                            aria-pressed={isSelected}
+                            onClick={() => setSelectedSlot(slot.id)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot.id); } }}
+                            style={{ 
+                              padding: '1rem', 
+                              border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`, 
+                              borderRadius: '12px', 
+                              cursor: 'pointer',
+                              background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--bg-surface)',
+                              transition: 'all 0.2s',
+                              outline: 'none'
+                            }}
+                          >
+                            <div style={{ fontWeight: 600, color: isSelected ? 'var(--accent)' : 'var(--text-main)', marginBottom: '0.25rem' }}>
+                              {dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                              <Clock size={14} />
+                              <span>{dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-                  {slots.map((slot: Slot) => {
-                    const isSelected = selectedSlot === slot.id;
-                    const dateObj = new Date(slot.startsAt);
-                    return (
-                      <div 
-                        key={slot.id} 
-                        role="button"
-                        tabIndex={0}
-                        aria-pressed={isSelected}
-                        onClick={() => setSelectedSlot(slot.id)}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedSlot(slot.id); } }}
-                        style={{ 
-                          padding: '1rem', 
-                          border: `2px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`, 
-                          borderRadius: '12px', 
-                          cursor: 'pointer',
-                          background: isSelected ? 'rgba(37, 99, 235, 0.05)' : 'var(--bg-surface)',
-                          transition: 'all 0.2s',
-                          outline: 'none'
-                        }}
-                      >
-                        <div style={{ fontWeight: 600, color: isSelected ? 'var(--accent)' : 'var(--text-main)', marginBottom: '0.25rem' }}>
-                          {dateObj.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                          <Clock size={14} />
-                          <span>{dateObj.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
 
-            <div style={{ marginBottom: '1.5rem', padding: '0.85rem 1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '10px', border: '1px solid rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Sparkles size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                <strong>Mock Payment Enabled:</strong> Clicking confirm will simulate a ₹1 payment instantly without opening Razorpay.
-              </span>
-            </div>
+                <div style={{ marginBottom: '1.5rem', padding: '0.85rem 1.25rem', background: 'rgba(37, 99, 235, 0.05)', borderRadius: '10px', border: '1px solid rgba(37, 99, 235, 0.15)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <Sparkles size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    <strong>Mock Payment Enabled:</strong> Clicking confirm will simulate a ₹1 payment instantly without opening Razorpay.
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="input-label">Describe your symptoms (Offline Supported)</label>
+                  <textarea 
+                    className="input-field" 
+                    rows={4} 
+                    value={asyncMessage} 
+                    onChange={e => setAsyncMessage(e.target.value)} 
+                    placeholder="E.g. I have a red rash on my arm that started yesterday..."
+                    required
+                  ></textarea>
+                </div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="input-label">Attach an Image (Optional)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    className="input-field" 
+                    onChange={e => setAttachment(e.target.files?.[0] || null)} 
+                    style={{ padding: '0.75rem' }}
+                  />
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    If you are offline, this image will be saved on your device and sent when connection restores.
+                  </p>
+                </div>
+              </>
+            )}
 
             <button 
               type="submit" 
               className="btn btn-primary" 
               style={{ width: '100%', padding: '1rem', fontSize: '1rem', fontWeight: 700 }}
-              disabled={booking || !selectedSlot}
+              disabled={booking || (bookingMode === 'video' && !selectedSlot)}
             >
-              {booking ? <div className="spinner"></div> : 'Proceed to Pay ₹1 & Confirm Booking'}
+              {booking ? <div className="spinner"></div> : bookingMode === 'video' ? 'Proceed to Pay ₹1 & Confirm Booking' : 'Submit Offline-Ready Request'}
             </button>
           </form>
         </motion.div>

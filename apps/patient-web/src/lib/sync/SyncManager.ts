@@ -67,6 +67,21 @@ class SyncManager {
   }
 
   /**
+   * Enqueues an attachment for offline sending.
+   */
+  async enqueueAttachment(file: Blob, mimeType: string): Promise<string> {
+    const id = crypto.randomUUID();
+    await syncDb.attachments_outbox.put({
+      id,
+      file,
+      mimeType,
+      status: 'pending'
+    });
+    this.sync();
+    return id;
+  }
+
+  /**
    * Syncs the outbox with the server.
    */
   async sync(encounterIds: string[] = []) {
@@ -74,12 +89,53 @@ class SyncManager {
     this.isSyncing = true;
 
     try {
+      await this.pushAttachments();
       await this.pushOutbox();
       if (encounterIds.length > 0) {
         await this.pullChanges(encounterIds);
       }
     } finally {
       this.isSyncing = false;
+    }
+  }
+
+  private async pushAttachments() {
+    const pending = await syncDb.attachments_outbox
+      .where('status')
+      .anyOf('pending', 'failed')
+      .toArray();
+
+    for (const att of pending) {
+      try {
+        await syncDb.attachments_outbox.update(att.id, { status: 'uploading' });
+        
+        const formData = new FormData();
+        formData.append('file', att.file, `attachment-${att.id}`);
+
+        const res = await api.post('/attachments', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        const serverId = res.data.id;
+        
+        await syncDb.attachments_outbox.update(att.id, { 
+          status: 'synced',
+          serverId
+        });
+
+        const outboxEntries = await syncDb.outbox.toArray();
+        for (const entry of outboxEntries) {
+          if (entry.payload && entry.payload.attachmentId === att.id) {
+            entry.payload.attachmentId = serverId;
+            await syncDb.outbox.put(entry);
+          }
+        }
+      } catch (err) {
+        console.error('Attachment upload failed:', err);
+        await syncDb.attachments_outbox.update(att.id, { status: 'failed' });
+      }
     }
   }
 
@@ -123,13 +179,40 @@ class SyncManager {
 
     if (pending.length === 0) return;
 
+    // Check if any operations are waiting on pending attachments
+    const waitingForAttachments = pending.some(p => 
+      p.payload?.attachmentId && 
+      !p.payload.attachmentId.includes('-') === false // If it still has a UUID hyphens, it might be a local ID
+      // Actually, a real server ID is also a UUID!
+      // But we replace `attachmentId` with `serverId` which is a real UUID.
+      // So we can check if it exists in `attachments_outbox` and is not 'synced'
+    );
+    
+    let safePending = pending;
+    
+    try {
+      const allAttachments = await syncDb.attachments_outbox.toArray();
+      const pendingLocalIds = allAttachments.filter(a => a.status !== 'synced').map(a => a.id);
+      
+      safePending = pending.filter(p => {
+        if (p.payload?.attachmentId && pendingLocalIds.includes(p.payload.attachmentId)) {
+          return false; // Skip pushing this outbox item until attachment is synced
+        }
+        return true;
+      });
+    } catch (e) {
+      console.error(e);
+    }
+    
+    if (safePending.length === 0) return;
+
     // Mark as syncing locally
     await syncDb.outbox.bulkPut(
-      pending.map(p => ({ ...p, status: 'syncing' }))
+      safePending.map(p => ({ ...p, status: 'syncing' }))
     );
 
     try {
-      const payload = pending.map(p => ({
+      const payload = safePending.map(p => ({
         idempotencyKey: p.id,
         entityType: p.entityType,
         action: p.action,
@@ -165,7 +248,7 @@ class SyncManager {
       console.error('Push sync failed:', err);
       // Revert status to pending/error and increment retry count
       await syncDb.outbox.bulkPut(
-        pending.map(p => ({ 
+        safePending.map(p => ({ 
           ...p, 
           status: 'failed_error', 
           retryCount: p.retryCount + 1,

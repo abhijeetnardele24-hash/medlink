@@ -23,8 +23,11 @@ import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = window.location.search ? [new URLSearchParams(window.location.search)] : [new URLSearchParams()];
   const navigate = useNavigate();
   const { t } = useTranslation();
+  
+  const isAsyncMode = searchParams.get('mode') === 'async';
 
   const {
     localStream,
@@ -62,9 +65,9 @@ export const Consultation: React.FC = () => {
     switchAudioOutput,
     pc,
     socket
-  } = useWebRTC(id || null);
+  } = useWebRTC(isAsyncMode ? null : (id || null));
 
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(isAsyncMode ? true : false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBlurActive, setIsBlurActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -152,31 +155,33 @@ export const Consultation: React.FC = () => {
       <NetworkHealthPanel connectionQuality={connectionQuality} networkStats={networkStats} isConnected={isConnected} />
       
       {/* Main Video Feed / Remote Participant */}
-      <div style={{ position: 'absolute', inset: 0, background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {/* Remote video always mounted so srcObject works */}
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none', width: '100%', height: '100%', objectFit: 'cover' }}
-        />
-        {/* Placeholder when no remote stream or camera off */}
-        {(!remoteStream || remoteVideoOff) && (
-          <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
-            <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#818cf8' }}>DR</span>
+      {!isAsyncMode && (
+        <div style={{ position: 'absolute', inset: 0, background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Remote video always mounted so srcObject works */}
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
+          {/* Placeholder when no remote stream or camera off */}
+          {(!remoteStream || remoteVideoOff) && (
+            <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.6)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+              <div style={{ width: '5rem', height: '5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 700, color: '#818cf8' }}>DR</span>
+              </div>
+              <div>
+                <p style={{ fontWeight: 700, fontSize: '1.5rem', color: 'white', margin: '0 0 0.25rem 0' }}>
+                  {remoteVideoOff ? 'Doctor Camera is Off' : t('consultation.waitingForDoctor') || 'Waiting for Doctor to connect...'}
+                </p>
+                <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                  {remoteVideoOff ? 'Audio consultation in progress' : 'Please stay on this page. Your doctor has been notified.'}
+                </p>
+              </div>
             </div>
-            <div>
-              <p style={{ fontWeight: 700, fontSize: '1.5rem', color: 'white', margin: '0 0 0.25rem 0' }}>
-                {remoteVideoOff ? 'Doctor Camera is Off' : t('consultation.waitingForDoctor') || 'Waiting for Doctor to connect...'}
-              </p>
-              <p style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                {remoteVideoOff ? 'Audio consultation in progress' : 'Please stay on this page. Your doctor has been notified.'}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* Top Header Overlay */}
       <div style={{
@@ -273,89 +278,110 @@ export const Consultation: React.FC = () => {
         </div>
       </div>
 
-      {/* Picture-in-Picture Local Video */}
-      <div style={{
-        position: 'absolute',
-        bottom: '7rem',
-        right: '2rem',
-        zIndex: 20,
-        width: '18rem',
-        aspectRatio: '16/9',
-        background: '#18181B',
-        borderRadius: '1.25rem',
-        overflow: 'hidden',
-        border: '2px solid rgba(255,255,255,0.15)',
-        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
-      }}>
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          style={{
-            display: effectiveVideoOff ? 'none' : 'block',
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transform: 'scaleX(-1)',
-            filter: isBlurActive ? 'blur(3px)' : 'none'
-          }}
-        />
-        {/* Camera-off placeholder */}
-        {effectiveVideoOff && (
-          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', gap: '0.5rem' }}>
-            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.875rem' }}>
-              PT
-            </div>
-            <span style={{ fontSize: '0.75rem' }}>{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
-          </div>
-        )}
-
-        <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'white', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '0.125rem 0.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
-            You (Patient)
-          </span>
-          {isAudioMuted && (
-            <span style={{ padding: '0.25rem', borderRadius: '0.375rem', background: '#ef4444', color: 'white', display: 'flex' }}>
-              <MicOff size={10} />
-            </span>
-          )}
+      {isChatOpen && (
+        <div style={{
+          position: 'absolute',
+          right: isAsyncMode ? '50%' : '2rem',
+          transform: isAsyncMode ? 'translateX(50%)' : 'none',
+          top: '5.5rem',
+          bottom: '6.5rem',
+          width: isAsyncMode ? '100%' : '380px',
+          maxWidth: isAsyncMode ? '800px' : '380px',
+          zIndex: 30
+        }}>
+          <ChatBox encounterId={id!} />
         </div>
-      </div>
+      )}
 
-      <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
-        <MeetingControls
-          isAudioMuted={isAudioMuted}
-          isVideoOff={effectiveVideoOff}
-          onToggleAudio={toggleAudio}
-          onToggleVideo={toggleVideo}
-          audioLevel={audioLevel}
-          isScreenSharing={isScreenSharing}
-          onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
-          onToggleSettings={() => setIsSettingsOpen(true)}
-          isChatOpen={isChatOpen}
-          onToggleChat={() => setIsChatOpen(!isChatOpen)}
-          onEndCall={() => navigate('/')}
-        />
-      </div>
+      {/* Picture-in-Picture Local Video */}
+      {!isAsyncMode && (
+        <div style={{
+          position: 'absolute',
+          bottom: '7rem',
+          right: '2rem',
+          zIndex: 20,
+          width: '18rem',
+          aspectRatio: '16/9',
+          background: '#18181B',
+          borderRadius: '1.25rem',
+          overflow: 'hidden',
+          border: '2px solid rgba(255,255,255,0.15)',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+        }}>
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{
+              display: effectiveVideoOff ? 'none' : 'block',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transform: 'scaleX(-1)',
+              filter: isBlurActive ? 'blur(3px)' : 'none'
+            }}
+          />
+          {/* Camera-off placeholder */}
+          {effectiveVideoOff && (
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)', gap: '0.5rem' }}>
+              <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.875rem' }}>
+                PT
+              </div>
+              <span style={{ fontSize: '0.75rem' }}>{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
+            </div>
+          )}
+
+          <div style={{ position: 'absolute', bottom: '0.5rem', left: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'white', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '0.125rem 0.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+              You (Patient)
+            </span>
+            {isAudioMuted && (
+              <span style={{ padding: '0.25rem', borderRadius: '0.375rem', background: '#ef4444', color: 'white', display: 'flex' }}>
+                <MicOff size={10} />
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isAsyncMode && (
+        <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 20 }}>
+          <MeetingControls
+            isAudioMuted={isAudioMuted}
+            isVideoOff={effectiveVideoOff}
+            onToggleAudio={toggleAudio}
+            onToggleVideo={toggleVideo}
+            audioLevel={audioLevel}
+            isScreenSharing={isScreenSharing}
+            onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
+            onToggleSettings={() => setIsSettingsOpen(true)}
+            isChatOpen={isChatOpen}
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onEndCall={() => navigate('/')}
+          />
+        </div>
+      )}
 
       {/* Hardware Settings Modal */}
-      <DeviceSettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        audioInputDevices={audioInputDevices}
-        videoInputDevices={videoInputDevices}
-        audioOutputDevices={audioOutputDevices}
-        selectedCameraId={selectedCameraId}
-        selectedMicId={selectedMicId}
-        selectedSpeakerId={selectedSpeakerId}
-        onSwitchCamera={switchCamera}
-        onSwitchMicrophone={switchMicrophone}
-        onSwitchAudioOutput={switchAudioOutput}
-        audioLevel={audioLevel}
-        isBlurActive={isBlurActive}
-        onToggleBlur={() => setIsBlurActive(!isBlurActive)}
-      />
+      {!isAsyncMode && (
+        <DeviceSettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          audioInputDevices={audioInputDevices}
+          videoInputDevices={videoInputDevices}
+          audioOutputDevices={audioOutputDevices}
+          selectedCameraId={selectedCameraId}
+          selectedMicId={selectedMicId}
+          selectedSpeakerId={selectedSpeakerId}
+          onSwitchCamera={switchCamera}
+          onSwitchMicrophone={switchMicrophone}
+          onSwitchAudioOutput={switchAudioOutput}
+          audioLevel={audioLevel}
+          isBlurActive={isBlurActive}
+          onToggleBlur={() => setIsBlurActive(!isBlurActive)}
+        />
+      )}
     </div>
   );
 };

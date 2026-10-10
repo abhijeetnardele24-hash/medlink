@@ -209,9 +209,10 @@ export const Dashboard: React.FC = () => {
                          </div>
                       )}
                       
-                      {isDuring ? (
-                        <button onClick={() => navigate(`/consultation/${appt.id}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700 }}>
-                          <Video size={18} /> Join Consultation
+                      {isDuring || appt.preferredMode === 'async_chat' ? (
+                        <button onClick={() => navigate(`/consultation/${appt.id}${appt.preferredMode === 'async_chat' ? '?mode=async' : ''}`)} className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700 }}>
+                          {appt.preferredMode === 'async_chat' ? <Activity size={18} /> : <Video size={18} />} 
+                          {appt.preferredMode === 'async_chat' ? 'Open Chat' : 'Join Consultation'}
                         </button>
                       ) : isAfter ? (
                         <button disabled className="btn" style={{ width: '100%', padding: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', fontWeight: 700, backgroundColor: '#f3f4f6', color: '#9ca3af', cursor: 'not-allowed', border: 'none' }}>

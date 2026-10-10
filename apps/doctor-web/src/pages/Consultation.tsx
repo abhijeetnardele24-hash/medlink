@@ -31,9 +31,12 @@ import { useTranslation } from 'react-i18next';
 
 export const Consultation: React.FC = () => {
   const { id } = useParams();
+  const [searchParams] = window.location.search ? [new URLSearchParams(window.location.search)] : [new URLSearchParams()];
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { profile } = useAuth();
+  
+  const isAsyncMode = searchParams.get('mode') === 'async';
 
   // WebRTC Hook
   const {
@@ -74,10 +77,10 @@ export const Consultation: React.FC = () => {
     endMeetingForAll,
     pc,
     socket
-  } = useWebRTC(id || null);
+  } = useWebRTC(isAsyncMode ? null : (id || null));
 
   // UI States
-  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(isAsyncMode ? true : false);
   const [isPrescribeOpen, setIsPrescribeOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBlurActive, setIsBlurActive] = useState(false);
@@ -164,40 +167,42 @@ export const Consultation: React.FC = () => {
       {/* Left: Video Area */}
       <div className="relative flex-1 flex flex-col border-r border-white/10">
         {/* Main Video Presentation / Remote Participant */}
-        <div className="absolute inset-0 z-0 bg-neutral-950 flex items-center justify-center">
-        {/* Remote video always mounted so srcObject works */}
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none' }}
-          className="w-full h-full object-cover"
-        />
-        {/* Placeholder when no remote stream */}
-        {(!remoteStream || remoteVideoOff) && (
-          <div className="text-white/60 flex flex-col items-center gap-6">
-            <div className="w-24 h-24 rounded-full bg-neutral-800/80 border border-white/10 flex items-center justify-center shadow-2xl">
-              <span className="text-4xl font-bold text-blue-400">PT</span>
+        {!isAsyncMode && (
+          <div className="absolute inset-0 z-0 bg-neutral-950 flex items-center justify-center">
+          {/* Remote video always mounted so srcObject works */}
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            style={{ display: remoteStream && !remoteVideoOff ? 'block' : 'none' }}
+            className="w-full h-full object-cover"
+          />
+          {/* Placeholder when no remote stream */}
+          {(!remoteStream || remoteVideoOff) && (
+            <div className="text-white/60 flex flex-col items-center gap-6">
+              <div className="w-24 h-24 rounded-full bg-neutral-800/80 border border-white/10 flex items-center justify-center shadow-2xl">
+                <span className="text-4xl font-bold text-blue-400">PT</span>
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-2xl text-white mb-1">
+                  {remoteVideoOff ? 'Patient Camera is Off' : 'Waiting for Patient'}
+                </p>
+                <p className="text-sm text-white/50">
+                  {remoteVideoOff ? 'Audio connection active' : "Click 'Ring Patient' to notify them to join."}
+                </p>
+              </div>
+              {!isConnected && (
+                <button
+                  onClick={startCall}
+                  className="px-8 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95"
+                >
+                  Ring Patient (Start Call)
+                </button>
+              )}
             </div>
-            <div className="text-center">
-              <p className="font-bold text-2xl text-white mb-1">
-                {remoteVideoOff ? 'Patient Camera is Off' : 'Waiting for Patient'}
-              </p>
-              <p className="text-sm text-white/50">
-                {remoteVideoOff ? 'Audio connection active' : "Click 'Ring Patient' to notify them to join."}
-              </p>
-            </div>
-            {!isConnected && (
-              <button
-                onClick={startCall}
-                className="px-8 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all hover:scale-105 active:scale-95"
-              >
-                Ring Patient (Start Call)
-              </button>
-            )}
-          </div>
+          )}
+        </div>
         )}
-      </div>
 
       {/* Top Navigation / Status Header */}
       <div className="absolute top-0 left-0 right-0 p-6 z-20 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex justify-between items-center pointer-events-none">
@@ -215,7 +220,9 @@ export const Consultation: React.FC = () => {
               )}
             </div>
             <p className="text-white/60 text-xs flex items-center gap-2 mt-0.5">
-              {isConnected ? (
+              {isAsyncMode ? (
+                'Async Request • Patient is offline-ready'
+              ) : isConnected ? (
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <span
@@ -298,60 +305,64 @@ export const Consultation: React.FC = () => {
       </div>
 
       {/* Picture-in-Picture / Local Video Tile */}
-      <div className="absolute bottom-28 right-8 z-20 w-72 aspect-video bg-neutral-900/90 backdrop-blur-md rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl transition-all hover:scale-105 group">
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          style={{ display: effectiveVideoOff ? 'none' : 'block' }}
-          className={`w-full h-full object-cover transform -scale-x-100 ${isBlurActive ? 'filter blur-[3px]' : ''}`}
-        />
-        {/* Camera-off placeholder overlay */}
-        {effectiveVideoOff && (
-          <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-neutral-800 text-white/50">
-            <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-white text-lg">
-              DR
+      {!isAsyncMode && (
+        <div className="absolute bottom-28 right-8 z-20 w-72 aspect-video bg-neutral-900/90 backdrop-blur-md rounded-2xl overflow-hidden border-2 border-white/10 shadow-2xl transition-all hover:scale-105 group">
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            style={{ display: effectiveVideoOff ? 'none' : 'block' }}
+            className={`w-full h-full object-cover transform -scale-x-100 ${isBlurActive ? 'filter blur-[3px]' : ''}`}
+          />
+          {/* Camera-off placeholder overlay */}
+          {effectiveVideoOff && (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-neutral-800 text-white/50">
+              <div className="w-12 h-12 rounded-full bg-neutral-700 flex items-center justify-center font-bold text-white text-lg">
+                DR
+              </div>
+              <span className="text-xs text-white/50">{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
             </div>
-            <span className="text-xs text-white/50">{isAutoAudioOnly ? 'Auto Disabled' : 'Camera Off'}</span>
-          </div>
-        )}
-
-        {/* Local Stream Status Badges */}
-        <div className="absolute bottom-2 left-3 flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-white/90 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
-            You (Dr. {profile?.fullName || 'Doctor'})
-          </span>
-          {isAudioMuted && (
-            <span className="p-1 rounded-md bg-red-500/80 text-white">
-              <MicOff size={12} />
-            </span>
           )}
-        </div>
-      </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
-        <MeetingControls
-          isAudioMuted={isAudioMuted}
-          isVideoOff={effectiveVideoOff}
-          onToggleAudio={toggleAudio}
-          onToggleVideo={toggleVideo}
-          audioLevel={audioLevel}
-          isScreenSharing={isScreenSharing}
-          onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
-          onToggleSettings={() => setIsSettingsOpen(true)}
-          isChatOpen={isChatOpen}
-          onToggleChat={() => setIsChatOpen(!isChatOpen)}
-          onOpenPrescribe={() => setIsPrescribeOpen(true)}
-          onEndCall={() => navigate('/dashboard')}
-          onEndMeetingForAll={endMeetingForAll}
-          isDoctor={true}
-        />
-      </div>
+          {/* Local Stream Status Badges */}
+          <div className="absolute bottom-2 left-3 flex items-center gap-2">
+            <span className="text-[11px] font-semibold text-white/90 bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10">
+              You (Dr. {profile?.fullName || 'Doctor'})
+            </span>
+            {isAudioMuted && (
+              <span className="p-1 rounded-md bg-red-500/80 text-white">
+                <MicOff size={12} />
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isAsyncMode && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20">
+          <MeetingControls
+            isAudioMuted={isAudioMuted}
+            isVideoOff={effectiveVideoOff}
+            onToggleAudio={toggleAudio}
+            onToggleVideo={toggleVideo}
+            audioLevel={audioLevel}
+            isScreenSharing={isScreenSharing}
+            onToggleScreenShare={isScreenSharing ? stopScreenShare : startScreenShare}
+            onToggleSettings={() => setIsSettingsOpen(true)}
+            isChatOpen={isChatOpen}
+            onToggleChat={() => setIsChatOpen(!isChatOpen)}
+            onOpenPrescribe={() => setIsPrescribeOpen(true)}
+            onEndCall={() => navigate('/dashboard')}
+            onEndMeetingForAll={endMeetingForAll}
+            isDoctor={true}
+          />
+        </div>
+      )}
 
       {/* In-Call Chat Overlay (if chat opened over video) */}
       {isChatOpen && id && (
-        <div className="absolute right-8 top-24 bottom-28 w-96 z-30 animate-in slide-in-from-right duration-200">
+        <div className={`absolute ${isAsyncMode ? 'inset-x-8 top-24 bottom-12 max-w-4xl mx-auto' : 'right-8 top-24 bottom-28 w-96'} z-30 animate-in slide-in-from-right duration-200`}>
           <ChatBox encounterId={id} />
         </div>
       )}

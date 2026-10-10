@@ -31,6 +31,14 @@ export interface CachedAppointment {
   error?: string;
 }
 
+export interface QueuedAttachment {
+  id: string; // uuid
+  file: Blob;
+  mimeType: string;
+  status: 'pending' | 'uploading' | 'failed' | 'synced';
+  serverId?: string;
+}
+
 export class MedLinkSyncDB extends Dexie {
   outbox!: Table<OutboxEntry, string>;
   messages_cache!: Table<CachedMessage, string>;
@@ -39,6 +47,7 @@ export class MedLinkSyncDB extends Dexie {
   prescriptions_cache!: Table<any, string>;
   encounters_cache!: Table<any, string>;
   doctors_cache!: Table<any, string>;
+  attachments_outbox!: Table<QueuedAttachment, string>;
 
   constructor() {
     super('MedLinkSyncDB');
@@ -52,6 +61,9 @@ export class MedLinkSyncDB extends Dexie {
       prescriptions_cache: 'id, issuedAt',
       encounters_cache: 'id, startedAt',
       doctors_cache: 'id'
+    });
+    this.version(4).stores({
+      attachments_outbox: 'id, status'
     });
   }
 }

@@ -217,6 +217,91 @@ router.post("/push", async (req: Request, res: Response): Promise<void> => {
           logger.error({ err, op }, "Failed to process sync operation");
           results.push({ idempotencyKey, status: "error", error: err.message });
         }
+      } else if (entityType === "async_consultation" && action === "CREATE") {
+        try {
+          const { doctorId, concernCategory, messageBody, attachmentId } = payload;
+          
+          if (!idempotencyKey) {
+            results.push({ status: "error", error: "Missing idempotencyKey" });
+            continue;
+          }
+
+          const [u] = await db
+            .select({ id: users.id })
+            .from(users)
+            .where(eq(users.firebaseUid, res.locals.user.uid))
+            .limit(1);
+
+          if (!u) {
+            results.push({ idempotencyKey, status: "error", error: "User profile not found" });
+            continue;
+          }
+
+          const [patient] = await db
+            .select({ id: patients.id })
+            .from(patients)
+            .where(eq(patients.userId, u.id))
+            .limit(1);
+            
+          if (!patient) {
+            results.push({ idempotencyKey, status: "error", error: "Patient profile not found" });
+            continue;
+          }
+
+          const existingMsg = await db
+            .select({ id: messages.id, encounterId: messages.encounterId })
+            .from(messages)
+            .where(eq(messages.idempotencyKey, idempotencyKey))
+            .limit(1);
+
+          if (existingMsg.length > 0) {
+            results.push({ idempotencyKey, status: "success", serverId: existingMsg[0].encounterId });
+            continue;
+          }
+
+          const resultEncounterId = await db.transaction(async (tx: any) => {
+            const [appointment] = await tx
+              .insert(appointments)
+              .values({
+                patientId: patient.id,
+                doctorId,
+                scheduledAt: new Date(),
+                concernCategory,
+                preferredMode: "async_chat",
+                status: "requested",
+              })
+              .returning({ id: appointments.id });
+
+            const [encounter] = await tx
+              .insert(encounters)
+              .values({
+                appointmentId: appointment.id,
+                status: "active",
+                currentMode: "async_chat",
+                startedAt: new Date(),
+              })
+              .returning({ id: encounters.id });
+
+            await tx
+              .insert(messages)
+              .values({
+                encounterId: encounter.id,
+                senderId: res.locals.user.uid,
+                body: messageBody || "",
+                attachmentId: attachmentId || null,
+                idempotencyKey,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              });
+              
+            return encounter.id;
+          });
+
+          results.push({ idempotencyKey, status: "success", serverId: resultEncounterId });
+        } catch (err: any) {
+          logger.error({ err, op }, "Failed to process async_consultation sync operation");
+          results.push({ idempotencyKey, status: "error", error: err.message });
+        }
       } else if (entityType === "patient_profile" && action === "UPDATE") {
         try {
           if (!idempotencyKey) {

@@ -31,6 +31,7 @@ export interface Appointment {
   endsAt?: string;
   status: string;
   concernCategory: string;
+  preferredMode?: string;
   doctor?: { fullName: string; speciality: string };
   syncStatus?: 'synced' | 'pending_push' | 'failed_conflict';
 }
